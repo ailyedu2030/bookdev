@@ -15,6 +15,7 @@ from api.routes.security import router as security_router
 from api.routes.monitor import router as monitor_router
 from api.routes.workflows import router as workflows_router
 from api.routes.admin import router as admin_router
+from api.routes.dashboard import router as dashboard_router
 
 api_router = APIRouter()
 
@@ -29,3 +30,4 @@ api_router.include_router(security_router)
 api_router.include_router(monitor_router)
 api_router.include_router(workflows_router)
 api_router.include_router(admin_router)
+api_router.include_router(dashboard_router)

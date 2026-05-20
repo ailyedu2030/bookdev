@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.dirname(__file__))
 
 from api.router import api_router
 from api.middleware.rate_limit import RateLimitMiddleware, RateLimitConfig
@@ -78,11 +78,13 @@ def create_app() -> FastAPI:
         allow_origins=[
             "http://localhost:3000",
             "http://localhost:8080",
+            "http://127.0.0.1:3000",
             "https://textbook.example.com",
         ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-Request-ID", "X-CSRF-Token"],
     )
 
     app.add_middleware(
