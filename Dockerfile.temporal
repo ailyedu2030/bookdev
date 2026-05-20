@@ -1,0 +1,69 @@
+# =============================================================================
+# AI多Agent教材编写系统 - Temporal Server Dockerfile
+# Includes Temporal server + Redis for search workflow
+# =============================================================================
+
+FROM temporalio/auto-setup:1.23.0 AS temporal
+
+ENV DB=postgresql \
+    DB_PORT=5432 \
+    POSTGRES_USER=textbook \
+    POSTGRES_PWD=textbook \
+    POSTGRES_SEEDS=postgres \
+    TEMPORAL_ADDRESS=temporal:7233
+
+EXPOSE 7233 7234
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -sf localhost:7233/health || exit 1
+
+# =============================================================================
+# Redis for Temporal Search (separate container for search workflow)
+# =============================================================================
+FROM redis:7-alpine AS redis-search
+
+ENV REDIS_PORT=6379 \
+    REDIS_PASSWORD=textbook-redis-password
+
+COPY <<EOF /usr/local/bin/redis-setup.sh
+#!/bin/sh
+cat > /usr/local/etc/redis/redis.conf <<'CONF'
+port 6379
+requirepass textbook-redis-password
+loglevel notice
+logfile ""
+databases 16
+save 900 1
+save 300 10
+save 60 10000
+stop-writes-on-bgsave-error yes
+rdbcompression yes
+rdbchecksum yes
+dbfilename dump.rdb
+dir /data
+appendonly yes
+appendfilename "appendonly.aof"
+appendfsync everysec
+no-appendfsync-on-rewrite no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+maxmemory 512mb
+maxmemory-policy allkeys-lru
+lazyfree-lazy-eviction no
+lazyfree-lazy-expire no
+lazyfree-lazy-server-del no
+replica-lazy-flush no
+CONF
+
+mkdir -p /usr/local/etc/redis /data
+redis-server /usr/local/etc/redis/redis.conf
+EOF
+
+RUN chmod +x /usr/local/bin/redis-setup.sh
+
+EXPOSE 6379
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD redis-cli -a textbook-redis-password ping || exit 1
+
+ENTRYPOINT ["redis-server", "/usr/local/etc/redis/redis.conf"]

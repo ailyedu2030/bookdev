@@ -1,0 +1,137 @@
+{
+  "sample_id": "GD-005",
+  "quality_level": "regulation_error",
+  "expected_score": 2.5,
+  "metadata": {
+    "created_at": "2025-01-15T14:00:00Z",
+    "author": "test-regulation",
+    "domain": "law_compliance",
+    "topic": "人工智能法规与合规",
+    "purpose": "用于测试LLM对法规引用错误的检测能力"
+  },
+  "content": {
+    "title": "人工智能法规与合规",
+    "sections": [
+      {
+        "heading": "1. 法规概述",
+        "paragraphs": [
+          "人工智能法第二条规定，人工智能是指利用计算机或者其控制的设备，通过对环境感知，做出合理行动，跟踪可观测到的状态，来模拟、延伸和扩展人的智能的理论、方法、技术。",
+          "根据《人工智能法》第二十八条的规定，人工智能企业应当对算法进行备案。"
+        ]
+      },
+      {
+        "heading": "2. 企业合规要求",
+        "paragraphs": [
+          "人工智能企业应当遵守人工智能法第七十二条的规定。",
+          "企业需要按照《人工智能法》第三十五条进行安全评估。"
+        ]
+      },
+      {
+        "heading": "3. 违规处罚",
+        "paragraphs": [
+          "根据《关于人工智能伦理审查的暂行规定》第十五条，违规企业将被处以罚款。",
+          "严重违规者将面临刑事责任，依据《人工智能法》第九十九条。"
+        ]
+      }
+    ]
+  },
+  "quality_metrics": {
+    "terminology_consistency": 0.85,
+    "knowledge_accuracy": 0.60,
+    "citation_validity": 0.15,
+    "logical_coherence": 0.75,
+    "format_compliance": 0.80
+  },
+  "regulation_errors": [
+    {
+      "type": "nonexistent_article",
+      "law": "人工智能法",
+      "cited_article": "第二条",
+      "issue": "人工智能法实际共72条，第二条内容与引用不符"
+    },
+    {
+      "type": "nonexistent_article",
+      "law": "人工智能法",
+      "cited_article": "第七十二条",
+      "issue": "人工智能法共72条，不存在第七十二条"
+    },
+    {
+      "type": "nonexistent_article",
+      "law": "人工智能法",
+      "cited_article": "第三十五条",
+      "issue": "人工智能法不存在第三十五条"
+    },
+    {
+      "type": "nonexistent_regulation",
+      "law": "关于人工智能伦理审查的暂行规定",
+      "cited_article": "第十五条",
+      "issue": "该法规不存在"
+    },
+    {
+      "type": "nonexistent_article",
+      "law": "人工智能法",
+      "cited_article": "第九十九条",
+      "issue": "人工智能法共72条，不存在第九十九条"
+    }
+  ],
+  "validation": {
+    "terminology_check": {
+      "status": "pass",
+      "issues": []
+    },
+    "citation_check": {
+      "status": "fail",
+      "citations": [
+        {
+          "ref": "人工智能法第二条",
+          "status": "invalid",
+          "note": "条款内容与实际不符"
+        },
+        {
+          "ref": "人工智能法第二十八条",
+          "status": "valid",
+          "note": "此条款存在且内容正确"
+        },
+        {
+          "ref": "人工智能法第七十二条",
+          "status": "nonexistent",
+          "note": "超出法规条款总数"
+        },
+        {
+          "ref": "人工智能法第三十五条",
+          "status": "nonexistent",
+          "note": "条款不存在"
+        },
+        {
+          "ref": "关于人工智能伦理审查的暂行规定",
+          "status": "nonexistent",
+          "note": "该法规不在白名单中"
+        },
+        {
+          "ref": "人工智能法第九十九条",
+          "status": "nonexistent",
+          "note": "超出法规条款总数"
+        }
+      ]
+    },
+    "factual_check": {
+      "status": "pass",
+      "verified_facts": [
+        "人工智能法共72条",
+        "企业有合规义务"
+      ]
+    }
+  },
+  "usage_guidelines": {
+    "can_be_used_for": [
+      "法规引用核实测试",
+      "条款验证测试",
+      "合规检查测试"
+    ],
+    "restrictions": [
+      "不可作为法规参考",
+      "所有引用均为虚构",
+      "明确标注为测试用内容"
+    ]
+  }
+}

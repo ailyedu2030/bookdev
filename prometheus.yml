@@ -1,0 +1,143 @@
+# =============================================================================
+# AI多Agent教材编写系统 - Prometheus 配置
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'textbook-production'
+    env: '${ENVIRONMENT:-production}'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files:
+  - "alerts/*.yml"
+
+scrape_configs:
+  # ===================================================================
+  # Prometheus 自身
+  # ===================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # ===================================================================
+  # textbook-api (FastAPI + uvicorn)
+  # ===================================================================
+  - job_name: 'textbook-api'
+    static_configs:
+      - targets: ['textbook-api:8000']
+        labels:
+          service: 'textbook-api'
+          app: 'textbook'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    honor_labels: true
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'textbook-api'
+
+  # ===================================================================
+  # Temporal Server
+  # ===================================================================
+  - job_name: 'temporal'
+    static_configs:
+      - targets: ['temporal:7233']
+        labels:
+          service: 'temporal'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # ===================================================================
+  # PostgreSQL (通过 postgres-exporter)
+  # ===================================================================
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+        labels:
+          service: 'postgres'
+    scrape_interval: 30s
+
+  # ===================================================================
+  # Redis
+  # ===================================================================
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'redis'
+    scrape_interval: 30s
+
+  # ===================================================================
+  # Kafka
+  # ===================================================================
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+        labels:
+          service: 'kafka'
+    scrape_interval: 30s
+
+  # ===================================================================
+  # Qdrant Vector DB
+  # ===================================================================
+  - job_name: 'qdrant'
+    static_configs:
+      - targets: ['qdrant:6333']
+        labels:
+          service: 'qdrant'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # ===================================================================
+  # Node Exporter (主机指标)
+  # ===================================================================
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+    scrape_interval: 15s
+
+  # ===================================================================
+  # Grafana
+  # ===================================================================
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          service: 'grafana'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # ===================================================================
+  # Nginx (需要 nginx_exporter)
+  # ===================================================================
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+        labels:
+          service: 'nginx'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # ===================================================================
+  # Vault (可选 - 如果启用)
+  # ===================================================================
+  - job_name: 'vault'
+    static_configs:
+      - targets: ['vault:8200']
+        labels:
+          service: 'vault'
+    metrics_path: '/v1/sys/metrics'
+    scrape_interval: 60s
+    scheme: http

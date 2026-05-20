@@ -1,0 +1,16 @@
+# =============================================================================
+# AI多Agent教材编写系统 - Grafana Dashboard 配置
+# =============================================================================
+
+apiVersion: 1
+
+providers:
+  - name: Textbook System
+    folder: Textbook
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true

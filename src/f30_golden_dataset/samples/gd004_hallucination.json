@@ -1,0 +1,107 @@
+{
+  "sample_id": "GD-004",
+  "quality_level": "hallucination",
+  "expected_score": 2.0,
+  "metadata": {
+    "created_at": "2025-01-15T13:00:00Z",
+    "author": "test-hallucination",
+    "domain": "economics",
+    "topic": "中国经济增长分析",
+    "purpose": "用于测试LLM对幻觉内容的检测能力"
+  },
+  "content": {
+    "title": "中国经济增长分析",
+    "sections": [
+      {
+        "heading": "1. 经济增长概况",
+        "paragraphs": [
+          "2024年，中国GDP增长率为30%，远超市场预期。",
+          "根据国家统计局数据，2024年中国GDP总量达到250万亿元人民币。"
+        ]
+      },
+      {
+        "heading": "2. 主要驱动因素",
+        "paragraphs": [
+          "技术创新是经济增长的主要驱动力。",
+          "消费升级带动了服务业的快速发展。"
+        ]
+      },
+      {
+        "heading": "3. 未来展望",
+        "paragraphs": [
+          "预计2025年GDP增长率将达到35%。",
+          "[@ref:inexistent_source]指出，中国经济将在未来十年保持高速增长。"
+        ]
+      }
+    ]
+  },
+  "quality_metrics": {
+    "terminology_consistency": 0.80,
+    "knowledge_accuracy": 0.20,
+    "citation_validity": 0.10,
+    "logical_coherence": 0.70,
+    "format_compliance": 0.75
+  },
+  "hallucination_markers": [
+    {
+      "type": "numerical_hallucination",
+      "location": "1.1",
+      "content": "2024年，中国GDP增长率为30%",
+      "issue": "实际GDP增长率约5%，30%为明显夸大"
+    },
+    {
+      "type": "numerical_hallucination",
+      "location": "1.2",
+      "content": "GDP总量达到250万亿元人民币",
+      "issue": "2024年中国GDP约130万亿元人民币，250万亿为捏造"
+    },
+    {
+      "type": "numerical_hallucination",
+      "location": "3.1",
+      "content": "预计2025年GDP增长率将达到35%",
+      "issue": "35%增长率为不现实的预测"
+    },
+    {
+      "type": "citation_hallucination",
+      "location": "3.2",
+      "content": "[@ref:inexistent_source]",
+      "issue": "引用来源不存在"
+    }
+  ],
+  "validation": {
+    "terminology_check": {
+      "status": "pass",
+      "issues": []
+    },
+    "citation_check": {
+      "status": "fail",
+      "citations": [
+        {
+          "ref": "[@ref:inexistent_source]",
+          "status": "nonexistent",
+          "note": "引用来源无法追溯"
+        }
+      ]
+    },
+    "factual_check": {
+      "status": "fail",
+      "verified_facts": [],
+      "fabricated_facts": [
+        "30% GDP增长率",
+        "250万亿GDP总量",
+        "35% 2025年预测"
+      ]
+    }
+  },
+  "usage_guidelines": {
+    "can_be_used_for": [
+      "LLM幻觉检测测试",
+      "数值核实引擎测试",
+      "引用验证测试"
+    ],
+    "restrictions": [
+      "不可作为任何评分标准参考",
+      "明确标注为测试用虚假内容"
+    ]
+  }
+}

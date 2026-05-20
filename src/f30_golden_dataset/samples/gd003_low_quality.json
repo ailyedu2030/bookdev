@@ -1,0 +1,83 @@
+{
+  "sample_id": "GD-003",
+  "quality_level": "low",
+  "expected_score": 3.5,
+  "metadata": {
+    "created_at": "2025-01-15T12:00:00Z",
+    "author": "novice-writer",
+    "domain": "computer_science",
+    "topic": "深度学习入门"
+  },
+  "content": {
+    "title": "深度学习入门",
+    "sections": [
+      {
+        "heading": "1. 什么是深度学习",
+        "paragraphs": [
+          "深度学习是一种机器学习技术，它使用多层神经网络来学习数据的层次化表示。",
+          "深度学习在2012年的ImageNet竞赛中取得了突破性成果。"
+        ]
+      },
+      {
+        "heading": "2. 神经网络基础",
+        "paragraphs": [
+          "神经网络由输入层、隐藏层和输出层组成。",
+          "每个神经元接收来自上一层神经元的输入，通过激活函数处理后输出到下一层。"
+        ]
+      },
+      {
+        "heading": "3. 常见应用",
+        "paragraphs": [
+          "深度学习广泛应用于图像识别、语音识别、自然语言处理等领域。",
+          "自动驾驶汽车使用深度学习进行环境感知和决策。"
+        ]
+      }
+    ]
+  },
+  "quality_metrics": {
+    "terminology_consistency": 0.75,
+    "knowledge_accuracy": 0.70,
+    "citation_validity": 0.60,
+    "logical_coherence": 0.65,
+    "format_compliance": 0.70
+  },
+  "validation": {
+    "terminology_check": {
+      "status": "warning",
+      "issues": [
+        "激活函数概念描述不够准确",
+        "层次化表示表述模糊"
+      ]
+    },
+    "citation_check": {
+      "status": "fail",
+      "citations": [
+        {
+          "ref": "[@ref:unverified]",
+          "status": "missing",
+          "note": "2012年ImageNet竞赛具体年份存疑"
+        }
+      ]
+    },
+    "factual_check": {
+      "status": "warning",
+      "verified_facts": [
+        "神经网络有输入、隐藏、输出层"
+      ],
+      "issues": [
+        "激活函数描述不够准确",
+        "自动驾驶应用描述过于简化"
+      ]
+    }
+  },
+  "usage_guidelines": {
+    "can_be_used_for": [
+      "低质量内容反例",
+      "需要改进的示例"
+    ],
+    "restrictions": [
+      "不可作为评分标准参考",
+      "存在多处知识性错误"
+    ]
+  }
+}

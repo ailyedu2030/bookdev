@@ -1,0 +1,127 @@
+[project]
+name = "textbook-writing-system"
+version = "1.0.0"
+description = "AI多Agent教材编写系统 - 基于MiniMax-M2.7"
+requires-python = ">=3.11"
+dependencies = [
+    # FastAPI生态
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+    "python-multipart>=0.0.9",
+
+    # 数据库
+    "sqlalchemy>=2.0.0",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.0",
+    "pg8000>=1.29.0",
+
+    # Redis
+    "redis>=5.0.0",
+    "aioredis>=2.0.0",
+
+    # Kafka
+    "aiokafka>=0.10.0",
+    "kafka-python>=2.0.2",
+
+    # Temporal
+    "temporalio>=1.0.0",
+
+    # MiniMax
+    "aiohttp>=3.9.0",
+    "httpx>=0.27.0",
+
+    # 安全
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt>=4.1.0",
+    "cryptography>=42.0.0",
+
+    # 验证 (使用requests作为fallback)
+    "requests>=2.31.0",
+
+    # 向量检索
+    "qdrant-client>=1.7.0",
+
+    # 监控
+    "prometheus-client>=0.19.0",
+    "prometheus-fastapi-instrumentator>=6.1.0",
+
+    # 配置
+    "pyyaml>=6.0.0",
+    "python-dotenv>=1.0.0",
+
+    # 测试
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-xdist>=3.5.0",
+    "httpx>=0.27.0",
+    "fakeredis>=2.21.0",
+    "coverage>=7.4.0",
+
+    # 工具
+    "networkx>=3.2.0",
+    "python-json-logger>=2.0.0",
+    "structlog>=24.0.0",
+    "tenacity>=8.2.0",
+    "langdetect>=1.0.9",
+    "tiktoken>=0.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4.0",
+    "mypy>=1.9.0",
+    "bandit>=1.7.0",
+    "safety>=3.0.0",
+    "pre-commit>=3.6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["src"]
+pythonpath = ["src"]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "src/*/test_*.py",
+    "src/*/__pycache__/*",
+    "src/tests/*",
+    "src/main.py",
+    "src/web_app/",
+    "src/f32_pg_knowledge_graph/*",
+    "src/f32_pg_knowledge_graph/**",
+    "src/f00_kafka_eventbus/*",
+    "src/f04_temporal_workflow/*",
+]
+
+[tool.coverage.report]
+fail_under = 60
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+

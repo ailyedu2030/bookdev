@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI多Agent教材编写系统</title>
+<style>
+:root {
+  --bg: #0f1117; --card: #1a1d27; --border: #2a2d3a;
+  --text: #e1e4e8; --dim: #8b949e; --accent: #58a6ff;
+  --green: #3fb950; --red: #f85149; --yellow: #d29922;
+  --purple: #a371f7;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh; }
+nav { background:var(--card); border-bottom:1px solid var(--border);
+  padding:12px 24px; display:flex; align-items:center; gap:24px;
+  position:sticky; top:0; z-index:100; }
+nav h1 { font-size:18px; color:var(--accent); }
+nav a { color:var(--dim); text-decoration:none; font-size:14px; padding:6px 12px;
+  border-radius:6px; transition:all .2s; }
+nav a:hover, nav a.active { color:var(--text); background:var(--border); }
+main { max-width:1200px; margin:0 auto; padding:24px; }
+.page { display:none; }
+.page.active { display:block; }
+h2 { font-size:20px; margin-bottom:16px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.card { background:var(--card); border:1px solid var(--border);
+  border-radius:8px; padding:20px; }
+.card h3 { font-size:14px; color:var(--dim); margin-bottom:8px; }
+.card .value { font-size:28px; font-weight:600; }
+.card .sub { font-size:12px; color:var(--dim); margin-top:4px; }
+.badge { display:inline-block; padding:2px 8px; border-radius:12px;
+  font-size:11px; font-weight:600; }
+.badge-ok { background:#1a3a2a; color:var(--green); }
+.badge-warn { background:#3a2e0a; color:var(--yellow); }
+.badge-err { background:#3a1a1a; color:var(--red); }
+.btn { padding:10px 20px; border:none; border-radius:6px; font-size:14px;
+  cursor:pointer; transition:all .2s; font-weight:500; }
+.btn-primary { background:var(--accent); color:#000; }
+.btn-primary:hover { opacity:.85; }
+.btn-danger { background:var(--red); color:#fff; }
+.btn-secondary { background:var(--border); color:var(--text); }
+input, textarea, select { width:100%; padding:10px 12px; background:var(--bg);
+  border:1px solid var(--border); border-radius:6px; color:var(--text);
+  font-size:14px; font-family:inherit; }
+textarea { resize:vertical; min-height:80px; }
+label { display:block; font-size:13px; color:var(--dim); margin-bottom:4px; margin-top:12px; }
+.form-group { margin-bottom:12px; }
+.result-card { background:var(--bg); border:1px solid var(--border);
+  border-radius:6px; padding:16px; margin-top:16px; }
+.result-card pre { white-space:pre-wrap; font-size:13px; line-height:1.6;
+  max-height:300px; overflow-y:auto; margin-top:8px; }
+.status-bar { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border);
+  border-top-color:var(--accent); border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+table { width:100%; border-collapse:collapse; margin-top:12px; }
+th, td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); font-size:13px; }
+th { color:var(--dim); font-weight:600; }
+tr:hover { background:var(--border); }
+.inline-flex { display:flex; gap:8px; align-items:center; }
+.mt-16 { margin-top:16px; }
+.mb-8 { margin-bottom:8px; }
+</style>
+</head>
+<body>
+<nav>
+  <h1>📚 AI教材编写系统</h1>
+  <a href="#" class="active" data-page="dashboard">仪表盘</a>
+  <a href="#" data-page="projects">项目管理</a>
+  <a href="#" data-page="editor">章节编辑器</a>
+  <a href="#" data-page="security">安全扫描</a>
+</nav>
+<main>
+  <!-- 仪表盘 -->
+  <div id="dashboard" class="page active">
+    <h2>系统仪表盘</h2>
+    <div class="grid3" id="status-cards">
+      <div class="card"><h3>加载中...</h3></div>
+    </div>
+    <div class="grid2 mt-16">
+      <div class="card">
+        <h3>最近日志</h3>
+        <div id="recent-logs" style="font-size:12px;color:var(--dim);max-height:200px;overflow-y:auto;"></div>
+      </div>
+      <div class="card">
+        <h3>模块状态</h3>
+        <div id="module-status" style="font-size:13px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 项目管理 -->
+  <div id="projects" class="page">
+    <h2>项目管理</h2>
+    <div class="card">
+      <h3>新建项目</h3>
+      <div class="form-group"><label>项目名称</label><input id="prj-name" placeholder="例如：人工智能导论"></div>
+      <div class="form-group"><label>描述</label><textarea id="prj-desc" placeholder="教材简介..."></textarea></div>
+      <div class="form-group"><label>预计章节数</label><input id="prj-chapters" type="number" value="5" min="1" max="20"></div>
+      <button class="btn btn-primary" onclick="createProject()">创建项目</button>
+    </div>
+    <div class="mt-16" id="project-list"></div>
+  </div>
+
+  <!-- 章节编辑器 -->
+  <div id="editor" class="page">
+    <h2>章节编辑器</h2>
+    <div class="card">
+      <div class="form-group"><label>选择项目</label><select id="editor-project"></select></div>
+      <div class="form-group"><label>章节标题</label><input id="editor-title" placeholder="例如：机器学习基础"></div>
+      <div class="form-group"><label>生成提示词</label><textarea id="editor-prompt" placeholder="例如：请用500字介绍机器学习的基本概念、分类和应用场景。"></textarea></div>
+      <div class="inline-flex">
+        <button class="btn btn-primary" onclick="generateChapter()">🤖 MiniMax 生成</button>
+        <span id="editor-spinner" style="display:none"><span class="spinner"></span> 生成中...</span>
+      </div>
+      <div id="editor-result"></div>
+    </div>
+    <div class="mt-16" id="chapter-list"></div>
+  </div>
+
+  <!-- 安全扫描 -->
+  <div id="security" class="page">
+    <h2>安全扫描</h2>
+    <div class="card">
+      <div class="form-group"><label>待检查文本</label><textarea id="sec-text" placeholder="输入待检查的文本..."></textarea></div>
+      <button class="btn btn-primary" onclick="scanSecurity()">🔍 扫描</button>
+      <div id="sec-result"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API = '';
+
+async function loadStatus() {
+  const r = await fetch(API+'/api/status'); const d = await r.json();
+  document.getElementById('status-cards').innerHTML = `
+    <div class="card"><h3>MiniMax API</h3><div class="value" style="color:${d.minimax.connected?'var(--green)':'var(--red)'}">${d.minimax.connected?'已连接':'未连接'}</div><div class="sub">${d.minimax.model}</div></div>
+    <div class="card"><h3>项目/章节</h3><div class="value">${d.projects} / ${d.chapters}</div><div class="sub">活跃项目</div></div>
+    <div class="card"><h3>质量门禁</h3><div class="value" style="color:${d.quality_gate.passed?'var(--green)':'var(--yellow)'}">${d.quality_gate.passed?'PASS':'WARN'}</div><div class="sub">${d.quality_gate.summary.passed}/${d.quality_gate.total} 通过</div></div>
+  `;
+  document.getElementById('module-status').innerHTML = Object.entries(d.modules).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>${k}</span><span style="color:var(--accent)">${v}</span></div>`).join('');
+  document.getElementById('recent-logs').innerText = JSON.stringify(d, null, 2);
+}
+
+async function createProject() {
+  const r = await fetch(API+'/api/projects', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:document.getElementById('prj-name').value,
+      description:document.getElementById('prj-desc').value,
+      chapter_count:parseInt(document.getElementById('prj-chapters').value)||5})
+  });
+  const d = await r.json();
+  document.getElementById('prj-name').value='';
+  document.getElementById('prj-desc').value='';
+  loadProjects(); loadStatus();
+}
+
+async function loadProjects() {
+  const r = await fetch(API+'/api/projects'); const d = await r.json();
+  const sel = document.getElementById('editor-project');
+  sel.innerHTML = '<option value="">-- 选择项目 --</option>'+d.map(p=>`<option value="${p.id}">${p.name} (${p.status})</option>`).join('');
+  document.getElementById('project-list').innerHTML = d.length ? `
+    <table><tr><th>ID</th><th>名称</th><th>状态</th><th>章节</th><th>创建时间</th></tr>
+    ${d.map(p=>`<tr><td>${p.id}</td><td>${p.name}</td><td><span class="badge badge-${p.status==='draft'?'warn':'ok'}">${p.status}</span></td><td>${p.chapter_count}</td><td>${p.created_at}</td></tr>`).join('')}</table>
+  ` : '<div class="card"><p style="color:var(--dim)">暂无项目</p></div>';
+}
+
+async function generateChapter() {
+  const pid = document.getElementById('editor-project').value;
+  if(!pid) return alert('请先选择项目');
+  const sp = document.getElementById('editor-spinner');
+  sp.style.display='inline-flex';
+  try {
+    const r = await fetch(API+'/api/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        project_id:pid,
+        chapter_id:`ch-${Date.now()}`,
+        title:document.getElementById('editor-title').value||'未命名',
+        prompt:document.getElementById('editor-prompt').value||'请生成内容。',
+        max_tokens:500
+      })
+    });
+    const d = await r.json();
+    document.getElementById('editor-result').innerHTML = `
+      <div class="result-card">
+        <div class="status-bar">
+          <span class="badge ${d.security.safe?'badge-ok':'badge-err'}">${d.security.safe?'安全':'风险'}</span>
+          <span class="badge badge-ok">${d.tokens} tokens</span>
+          <span style="color:var(--dim);font-size:12px">${d.latency}</span>
+          ${d.quality.score?`<span class="badge badge-${d.quality.score>=8?'ok':d.quality.score>=6?'warn':'err'}">评分 ${d.quality.score}</span>`:''}
+          <span class="badge badge-warn">${d.quality.risk}</span>
+        </div>
+        <pre>${d.content||'(空)'}</pre>
+      </div>`;
+    loadStatus();
+  } catch(e) {
+    document.getElementById('editor-result').innerHTML = `<div class="result-card" style="color:var(--red)">错误: ${e.message}</div>`;
+  }
+  sp.style.display='none';
+}
+
+async function scanSecurity() {
+  const text = document.getElementById('sec-text').value;
+  if(!text) return;
+  const r = await fetch(API+'/api/security/scan?text='+encodeURIComponent(text));
+  const d = await r.json();
+  document.getElementById('sec-result').innerHTML = `
+    <div class="result-card">
+      <div class="status-bar">
+        <span class="badge ${d.safe?'badge-ok':'badge-err'}">${d.safe?'✅ 安全':'🚫 风险'}</span>
+        <span class="badge badge-${d.action==='BLOCK'?'err':'ok'}">${d.action}</span>
+        <span style="color:var(--dim);font-size:12px">置信度: ${d.confidence.toFixed(2)}</span>
+      </div>
+      ${d.categories.length?`<div style="color:var(--red);margin-top:8px">类别: ${d.categories.join(', ')}</div>`:''}
+      ${d.violations.length?`<pre style="margin-top:8px">${JSON.stringify(d.violations,null,2)}</pre>`:''}
+    </div>`;
+}
+
+// Nav
+document.querySelectorAll('nav a').forEach(a=>{
+  a.onclick=e=>{
+    e.preventDefault();
+    document.querySelectorAll('nav a').forEach(x=>x.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(a.dataset.page).classList.add('active');
+    if(a.dataset.page==='dashboard') loadStatus();
+    if(a.dataset.page==='projects') loadProjects();
+  };
+});
+
+// Init
+loadStatus();
+setInterval(loadStatus, 10000);
+</script>
+</body>
+</html>

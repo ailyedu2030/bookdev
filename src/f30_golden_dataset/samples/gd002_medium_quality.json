@@ -1,0 +1,80 @@
+{
+  "sample_id": "GD-002",
+  "quality_level": "medium",
+  "expected_score": 7.5,
+  "metadata": {
+    "created_at": "2025-01-15T11:00:00Z",
+    "author": "standard-reviewer",
+    "domain": "computer_science",
+    "topic": "机器学习基础"
+  },
+  "content": {
+    "title": "机器学习基础",
+    "sections": [
+      {
+        "heading": "1. 机器学习定义",
+        "paragraphs": [
+          "机器学习（Machine Learning）是人工智能的一个子领域，专注于让计算机系统能够从数据中学习和改进，而无需被明确编程。",
+          "Arthur Samuel在1959年首次提出了机器学习的概念。"
+        ]
+      },
+      {
+        "heading": "2. 机器学习的类型",
+        "paragraphs": [
+          "监督学习：从标注数据中学习，输入输出对应关系已知。典型应用包括分类和回归任务。",
+          "无监督学习：从无标注数据中发现模式，如聚类和降维。",
+          "强化学习：通过与环境交互学习最优策略，适用于游戏和机器人控制等场景。"
+        ]
+      },
+      {
+        "heading": "3. 常用算法",
+        "paragraphs": [
+          "决策树、随机森林、支持向量机、神经网络等是常用的机器学习算法。",
+          "近年来，深度学习在图像识别、自然语言处理等领域取得了突破性进展。"
+        ]
+      }
+    ]
+  },
+  "quality_metrics": {
+    "terminology_consistency": 0.92,
+    "knowledge_accuracy": 0.88,
+    "citation_validity": 0.85,
+    "logical_coherence": 0.80,
+    "format_compliance": 0.90
+  },
+  "validation": {
+    "terminology_check": {
+      "status": "pass",
+      "issues": [
+        "部分术语使用不够精确"
+      ]
+    },
+    "citation_check": {
+      "status": "warning",
+      "citations": [
+        {
+          "ref": "[@ref:placeholder]",
+          "status": "missing",
+          "note": "引用来源未明确"
+        }
+      ]
+    },
+    "factual_check": {
+      "status": "pass",
+      "verified_facts": [
+        "机器学习是AI子领域",
+        "Arthur Samuel 1959年提出概念"
+      ]
+    }
+  },
+  "usage_guidelines": {
+    "can_be_used_for": [
+      "中等质量内容参考",
+      "评分标准校准"
+    ],
+    "restrictions": [
+      "需要人工审核引用来源",
+      "部分表述需精炼"
+    ]
+  }
+}

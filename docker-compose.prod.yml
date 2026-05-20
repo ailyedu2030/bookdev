@@ -1,0 +1,535 @@
+# =============================================================================
+# AI多Agent教材编写系统 - 生产环境 docker-compose
+# Complete production setup with all services
+# =============================================================================
+# 使用方法:
+#   1. cp .env.example .env && vim .env (填入生产密钥)
+#   2. docker compose -f docker-compose.prod.yml up -d
+# =============================================================================
+
+version: "3.8"
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "5"
+    compress: "true"
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-api-defaults: &api-defaults
+  logging: *default-logging
+  restart: unless-stopped
+  networks:
+    - textbook-network
+
+services:
+  # ===========================================================================
+  # 教材编写系统 API
+  # ===========================================================================
+  textbook-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: textbook-system/api:${APP_VERSION:-latest}
+    container_name: textbook-api
+    <<: *api-defaults
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=production
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DATABASE_URL=postgresql://textbook:textbook@postgres:5432/textbook
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - TEMPORAL_HOST=temporal
+      - TEMPORAL_PORT=7233
+      - VAULT_ADDR=http://vault:8200
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+    expose:
+      - "8000"
+    volumes:
+      - ./src:/app/src:ro
+      - ./config:/app/config:ro
+      - api_data:/app/data
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "/app/scripts/healthcheck.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      temporal:
+        condition: service_started
+      vault:
+        condition: service_started
+
+  # ===========================================================================
+  # Temporal Worker (后台任务处理)
+  # ===========================================================================
+  textbook-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: textbook-system/worker:${APP_VERSION:-latest}
+    container_name: textbook-worker
+    <<: *api-defaults
+    env_file:
+      - .env
+    command: ["python", "-m", "temporal_worker"]
+    environment:
+      - PYTHONPATH=/app
+      - TEMPORAL_HOST=temporal
+      - TEMPORAL_PORT=7233
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DATABASE_URL=postgresql://textbook:textbook@postgres:5432/textbook
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.create_connection(('temporal',7233),timeout=5); s.close(); print('ok')\""]
+
+  # ===========================================================================
+  # Frontend (React + Vite + Nginx)
+  # ===========================================================================
+  textbook-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: textbook-system/frontend:${APP_VERSION:-latest}
+    container_name: textbook-frontend
+    <<: *api-defaults
+    expose:
+      - "80"
+    volumes:
+      - frontend_static:/usr/share/nginx/html:ro
+    depends_on:
+      - textbook-api
+    networks:
+      - textbook-network
+
+  # ===========================================================================
+  # PostgreSQL 15 + pgvector
+  # ===========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: textbook-postgres
+    <<: *api-defaults
+    environment:
+      - POSTGRES_DB=textbook
+      - POSTGRES_USER=textbook
+      - POSTGRES_PASSWORD=textbook
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=C
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements,vector"
+      - "-c"
+      - "pg_stat_statements.track=all"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=512MB"
+      - "-c"
+      - "effective_cache_size=2GB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "max_wal_size=4GB"
+      - "-c"
+      - "min_wal_size=1GB"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U textbook -d textbook"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================================================
+  # Redis 7 (缓存 + 会话)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: textbook-redis
+    <<: *api-defaults
+    command:
+      - redis-server
+      - --appendonly yes
+      - --maxmemory 512mb
+      - --maxmemory-policy allkeys-lru
+      - --save 900 1
+      - --save 300 10
+      - --save 60 10000
+      - --requirepass textbook
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "textbook", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ===========================================================================
+  # Kafka Broker (KRaft mode - no Zookeeper)
+  # ===========================================================================
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: textbook-kafka
+    <<: *api-defaults
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_NUM_PARTITIONS=3
+      - KAFKA_CFG_DEFAULT_REPLICATION_FACTOR=1
+      - KAFKA_CFG_LOG_RETENTION_HOURS=168
+      - KAFKA_CFG_LOG_SEGMENT_BYTES=1073741824
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka_data:/bitnami/kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ===========================================================================
+  # Temporal Server
+  # ===========================================================================
+  temporal:
+    image: temporalio/auto-setup:1.23.0
+    container_name: textbook-temporal
+    <<: *api-defaults
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=textbook
+      - POSTGRES_PWD=textbook
+      - POSTGRES_SEEDS=postgres
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    expose:
+      - "7233"
+    volumes:
+      - temporal_data:/var/lib/temporal
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf localhost:7233/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # Temporal Web UI
+  # ===========================================================================
+  temporal-web:
+    image: temporalio/web:1.23.0
+    container_name: textbook-temporal-web
+    <<: *api-defaults
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_UI_PORT=8088
+    expose:
+      - "8088"
+    depends_on:
+      - temporal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8088 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # Qdrant Vector Database
+  # ===========================================================================
+  qdrant:
+    image: qdrant/qdrant:v1.7.0
+    container_name: textbook-qdrant
+    <<: *api-defaults
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:6333/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # HashiCorp Vault (密钥管理)
+  # ===========================================================================
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: textbook-vault
+    <<: *api-defaults
+    environment:
+      - VAULT_ADDR=http://127.0.0.1:8200
+      - VAULT_API_ADDR=http://127.0.0.1:8200
+      - VAULT_DEV_ROOT_TOKEN_ID=textbook-dev-token
+      - VAULT_SEAL_TYPE=dev
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault_data:/vault/data
+    healthcheck:
+      test: ["CMD-SHELL", "vault status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ===========================================================================
+  # Prometheus (监控)
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: textbook-prometheus
+    <<: *api-defaults
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--storage.tsdb.retention.size=10GB"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+      - "--storage.tsdb.max-block-duration=2h"
+      - "--storage.tsdb.min-block-duration=2h"
+      - "--query.max-concurrency=20"
+      - "--query.timeout=2m"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # Grafana (可视化)
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: textbook-grafana
+    <<: *api-defaults
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_DISABLE_LOGIN_FORM=false
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # Nginx (API Gateway + Frontend)
+  # ===========================================================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: textbook-nginx
+    <<: *api-defaults
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_certs:/etc/nginx/certs:ro
+      - nginx_acme:/var/www/certbot
+      - frontend_static:/usr/share/nginx/html:ro
+    environment:
+      - NGINX_HOST=${NGINX_HOST:-localhost}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - textbook-api
+      - textbook-frontend
+      - temporal-web
+      - grafana
+
+  # ===========================================================================
+  # Redis Commander (调试工具)
+  # ===========================================================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: textbook-redis-commander
+    <<: *api-defaults
+    environment:
+      - REDIS_HOSTS=local:redis:6379:textbook
+      - HTTP_PORT=8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8081"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # Node Exporter (主机指标)
+  # ===========================================================================
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: textbook-node-exporter
+    <<: *api-defaults
+    command:
+      - "--path.rootfs=/host"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+      - "--collector.diskstats"
+      - "--collector.meminfo"
+      - "--collector.cpu"
+      - "--collector.loadavg"
+      - "--collector.netdev"
+      - "--collector.stat"
+      - "--collector.textfile"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host:ro,rslave
+    ports:
+      - "9100:9100"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  kafka_data:
+    driver: local
+  temporal_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  vault_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  nginx_certs:
+    driver: local
+  nginx_acme:
+    driver: local
+  frontend_static:
+    driver: local
+  api_data:
+    driver: local
+
+networks:
+  textbook-network:
+    name: textbook-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

@@ -1,0 +1,52 @@
+# =============================================================================
+# AI多Agent教材编写系统 - 开发环境 Dockerfile
+# 支持热重载的 development 模式
+# =============================================================================
+
+FROM python:3.11-slim-bookworm AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    ENVIRONMENT=development \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Development dependencies
+# =============================================================================
+FROM base AS development
+
+RUN pip install --no-cache-dir \
+    -e ".[dev]" \
+    uvicorn[standard]>=0.30.0 \
+    fastapi>=0.115.0 \
+    temporalio>=1.0.0 \
+    aiokafka>=0.10.0 \
+    pytest \
+    pytest-cov \
+    pytest-asyncio \
+    pytest-xdist \
+    pytest-debugpy
+
+RUN groupadd --system --gid 1001 textbook && \
+    useradd --system --uid 1001 --gid textbook --shell /bin/bash --create-home textbook
+
+COPY --chown=textbook:textbook . .
+
+RUN chmod +x /app/scripts/*.sh 2>/dev/null || true
+
+USER textbook:1001
+
+EXPOSE 8000 5678
+
+CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

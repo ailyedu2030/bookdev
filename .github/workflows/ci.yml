@@ -1,0 +1,654 @@
+# =============================================================================
+# AI多Agent教材编写系统 - CI/CD Workflow (GitHub Actions)
+# Complete pipeline: lint → typecheck → test → security-scan → build → deploy
+# =============================================================================
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+  DOCKER_BUILDX_PLUGINS: "ghcr.io/docker/buildx-bin:@sha256:a838ed8c09b4bfed97b3ea8a1e4d1d5c4b9e7f3c8d9e0a1b2c3d4e5f6a7b8c"
+
+jobs:
+  # ===========================================================================
+  # Job 1: 代码检查 (Lint + Format)
+  # ===========================================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          pip install ruff black mypy
+
+      - name: Ruff linter
+        run: |
+          ruff check src/ --output-format=github
+
+      - name: Black formatter check
+        run: |
+          black --check --diff src/ || true
+
+      - name: MyPy type check
+        run: |
+          pip install -e . --quiet
+          mypy src/ --ignore-missing-imports --warn-unused-ignores --no-error-summary || true
+
+  # ===========================================================================
+  # Job 2: 前端 Lint
+  # ===========================================================================
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: |
+          corepack enable pnpm
+          pnpm install --frozen-lockfile
+
+      - name: ESLint
+        run: |
+          pnpm lint
+
+  # ===========================================================================
+  # Job 3: 单元测试 + 集成测试
+  # ===========================================================================
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: lint
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: textbook_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        env:
+          REDIS_PASSWORD: test_redis
+        options: >-
+          --health-cmd "redis-cli -a test_redis ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]" --quiet
+          pip install pytest pytest-cov pytest-asyncio pytest-xdist pytest-mock
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/textbook_test
+          REDIS_URL: redis://:test_redis@localhost:6379
+          KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+          TEMPORAL_HOST: localhost
+          MINIMAX_API_KEY: test_key
+          ENVIRONMENT: test
+          MOCK_EXTERNAL_SERVICES: "true"
+        run: |
+          python -m pytest src/ \
+            -v \
+            --tb=short \
+            --cov=src \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            --cov-fail-under=80 \
+            --timeout=60 \
+            -n auto \
+            -p no:warnings \
+            --junitxml=junit.xml
+
+      - name: Upload coverage
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+            junit.xml
+          retention-days: 30
+
+      - name: Codecov upload
+        if: success()
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage.xml
+          flags: unittests
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # ===========================================================================
+  # Job 4: 前端测试
+  # ===========================================================================
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: |
+          corepack enable pnpm
+          pnpm install --frozen-lockfile
+
+      - name: TypeScript check
+        run: |
+          pnpm exec tsc --noEmit
+
+      - name: Build
+        run: |
+          pnpm build
+
+  # ===========================================================================
+  # Job 5: 安全扫描 (SAST)
+  # ===========================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install security tools
+        run: |
+          pip install bandit safety pip-audit grpcio-tools
+
+      - name: Bandit SAST
+        run: |
+          bandit -r src/ -f json -o bandit-report.json --confidence-level high --severity-level high
+
+      - name: Safety dependency check
+        run: |
+          safety check --full-report --json > safety-report.json || true
+
+      - name: Pip audit
+        run: |
+          pip-audit --format=json --output pip-audit-report.json || true
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+            pip-audit-report.json
+          retention-days: 30
+
+      - name: Check security results
+        run: |
+          if grep -q '"errors":' bandit-report.json 2>/dev/null; then
+            echo "High severity security issues found!"
+            cat bandit-report.json | grep -A5 '"issue_severity": "HIGH"'
+            exit 1
+          fi
+
+  # ===========================================================================
+  # Job 6: Docker 构建 (API)
+  # ===========================================================================
+  build-api:
+    name: Build API Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [test, security]
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=,format=short
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+          outputs: type=oci,dest=/tmp/api-image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-image
+          path: /tmp/api-image.tar
+          retention-days: 7
+
+  # ===========================================================================
+  # Job 7: Docker 构建 (Frontend)
+  # ===========================================================================
+  build-frontend:
+    name: Build Frontend Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [test-frontend, test]
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=,format=short
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.frontend
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=oci,dest=/tmp/frontend-image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp/frontend-image.tar
+          retention-days: 7
+
+  # ===========================================================================
+  # Job 8: 部署到 Staging
+  # ===========================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build-api, build-frontend]
+    if: |
+      (github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch') &&
+      (github.event.inputs.environment == 'staging' || github.ref == 'refs/heads/develop')
+    environment:
+      name: staging
+      url: https://staging.textbook.example.com
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download API image
+        uses: actions/download-artifact@v4
+        with:
+          name: api-image
+          path: /tmp
+
+      - name: Download Frontend image
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp
+
+      - name: Load and push images
+        run: |
+          docker load --input /tmp/api-image.tar
+          docker load --input /tmp/frontend-image.tar
+          docker tag $(docker images --format '{{.Repository}}:{{.Tag}}' | grep api | head -1) ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+          docker tag $(docker images --format '{{.Repository}}:{{.Tag}}' | grep frontend | head -1) ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/textbook-system
+
+            # Pull latest images
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+
+            # Update compose file
+            sed -i 's|image: .*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest|' docker-compose.prod.yml
+            sed -i 's|image: .*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest|' docker-compose.prod.yml
+
+            # Pull and restart services
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # Run migrations
+            docker compose -f docker-compose.prod.yml exec -T textbook-api /app/scripts/migrate.sh || true
+
+            # Cleanup
+            docker system prune -f
+            docker image prune -f
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do
+            STATUS=$(curl -sf "https://staging.textbook.example.com/healthz" && echo "ok" || echo "fail")
+            if [ "$STATUS" = "ok" ]; then
+              echo "✅ Staging health check passed"
+              exit 0
+            fi
+            echo "Attempt $i: not ready, retrying..."
+            sleep 10
+          done
+          echo "❌ Staging health check failed"
+          exit 1
+
+      - name: Notify deployment
+        if: success()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "✅ Textbook System deployed to *staging*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ===========================================================================
+  # Job 9: 部署到 Production
+  # ===========================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [build-api, build-frontend]
+    if: |
+      github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://textbook.example.com
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download API image
+        uses: actions/download-artifact@v4
+        with:
+          name: api-image
+          path: /tmp
+
+      - name: Download Frontend image
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp
+
+      - name: Load and push images
+        run: |
+          docker load --input /tmp/api-image.tar
+          docker load --input /tmp/frontend-image.tar
+          docker tag $(docker images --format '{{.Repository}}:{{.Tag}}' | grep api | head -1) ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+          docker tag $(docker images --format '{{.Repository}}:{{.Tag}}' | grep frontend | head -1) ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+
+      - name: Create Sentry release
+        if: success()
+        uses: getsentry/action-release@v1
+        with:
+          environment: production
+          version: ${{ github.ref_name }}-${{ github.sha }}
+          projects: textbook-api
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /opt/textbook-system
+
+            # Backup current state
+            docker compose -f docker-compose.prod.yml exec -T postgres pg_dump -U textbook textbook > backups/pre-deploy-$(date +%Y%m%d-%H%M%S).sql || true
+
+            # Pull latest images
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+
+            # Rolling update - one replica at a time
+            docker compose -f docker-compose.prod.yml up -d --no-deps textbook-api
+            sleep 30
+            docker compose -f docker-compose.prod.yml up -d --no-deps textbook-worker
+            sleep 30
+            docker compose -f docker-compose.prod.yml up -d textbook-frontend
+
+            # Run migrations
+            docker compose -f docker-compose.prod.yml exec -T textbook-api /app/scripts/migrate.sh || true
+
+            # Verify
+            docker compose -f docker-compose.prod.yml ps
+
+      - name: Production health check
+        run: |
+          for i in $(seq 1 30); do
+            STATUS=$(curl -sf "https://textbook.example.com/healthz" && echo "ok" || echo "fail")
+            if [ "$STATUS" = "ok" ]; then
+              echo "✅ Production health check passed"
+              exit 0
+            fi
+            echo "Attempt $i: not ready, retrying..."
+            sleep 10
+          done
+          echo "❌ Production health check failed"
+          exit 1
+
+      - name: Notify deployment
+        if: success()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "🚀 Textbook System *${{ github.ref_name }}* deployed to *production*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "❌ Textbook System deployment to *production* FAILED!\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ===========================================================================
+  # Job 10: 生成 Release Notes
+  # ===========================================================================
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [deploy-production]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(git log --oneline --pretty='%h %s' $(git describe --tags --abbrev=0 HEAD~1)..HEAD)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

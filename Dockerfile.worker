@@ -1,0 +1,49 @@
+# =============================================================================
+# AI多Agent教材编写系统 - Temporal Worker 镜像
+# 运行 Temporal Workflow 和 Activity Workers
+# =============================================================================
+
+FROM python:3.11-slim-bookworm AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r textbook && useradd -r -g textbook -d /app textbook
+
+WORKDIR /app
+
+COPY pyproject.toml .
+
+RUN pip install --no-cache-dir \
+    temporalio>=1.5 \
+    kafka-python>=2.0 \
+    pydantic>=2.0 \
+    pydantic-settings>=2.0 \
+    python-dotenv>=1.0 \
+    structlog>=23.0 \
+    psycopg2-binary>=2.9 \
+    sqlalchemy>=2.0 \
+    httpx>=0.24 \
+    redis>=5.0 \
+    networkx>=3.0 \
+    tenacity>=8.0
+
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+
+RUN chown -R textbook:textbook /app
+RUN chmod +x /app/scripts/*.sh
+
+USER textbook
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD curl -sf http://localhost:7233/ || exit 1
+
+ENTRYPOINT ["python", "-m", "f04_temporal_workflow.worker"]

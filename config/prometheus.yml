@@ -1,0 +1,65 @@
+# =============================================================================
+# AI多Agent教材编写系统 - Prometheus 配置
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    app: textbook-writing-system
+    environment: production
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # ---- 教材编写系统 API ----
+  - job_name: textbook-api
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - textbook-api:8000
+        labels:
+          service: api
+    scrape_interval: 15s
+
+  # ---- Node Exporter (主机指标) ----
+  - job_name: node
+    static_configs:
+      - targets:
+          - node-exporter:9100
+        labels:
+          service: node
+    scrape_interval: 30s
+
+  # ---- PostgreSQL Exporter (如果部署了) ----
+  # - job_name: postgres
+  #   static_configs:
+  #     - targets:
+  #         - postgres-exporter:9187
+  #       labels:
+  #         service: postgres
+  #   scrape_interval: 30s
+
+  # ---- Kafka Exporter (如果部署了) ----
+  # - job_name: kafka
+  #   static_configs:
+  #     - targets:
+  #         - kafka-exporter:9308
+  #       labels:
+  #         service: kafka
+  #   scrape_interval: 30s
+
+  # ---- Redis Exporter (如果部署了) ----
+  # - job_name: redis
+  #   static_configs:
+  #     - targets:
+  #         - redis-exporter:9121
+  #       labels:
+  #         service: redis
+  #   scrape_interval: 30s
