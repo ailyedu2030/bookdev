@@ -1,0 +1,96 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+coverage/
+htmlcov/
+junit.xml
+.tox/
+.hypothesis/
+
+# Environment
+.env
+.env.local
+.env.*.local
+.envrc
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+.npm
+.yarn/
+*.log
+
+# Build
+*.whl
+*.tar.gz
+
+# Security
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite3
+
+# Docker
+docker-compose.override.yml
+
+# Coverage
+cov_*.json
+new_coverage.json
+monitor_cov.json
+
+# Playwright
+.playwright-mcp/
+test-results/
+playwright-report/
+
+# Obsidian (vault-specific, don't track)
+.obsidian/workspace.json
+.obsidian/app.json
+.obsidian/*.json
