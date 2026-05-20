@@ -105,6 +105,13 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router)
 
+    from api.websocket import websocket_endpoint
+
+    @app.websocket("/ws")
+    async def websocket_route(websocket):
+        from fastapi import WebSocket
+        await websocket_endpoint(websocket)
+
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         return JSONResponse(
