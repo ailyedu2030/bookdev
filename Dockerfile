@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY pyproject.toml .
 
-RUN pip install --prefix=/install --no-build-isolation --no-cache-dir \
+RUN pip install --prefix=/install --no-build-isolation \
     cython \
     && pip install --prefix=/install --no-build-isolation --no-cache-dir \
     -r pyproject.toml \
