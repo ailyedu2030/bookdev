@@ -160,6 +160,7 @@ jobs:
           MINIMAX_API_KEY: test_key
           ENVIRONMENT: test
           MOCK_EXTERNAL_SERVICES: "true"
+          JWT_SECRET_KEY: test_secret_key_for_ci_12345
         run: |
           python -m pytest tests/ \
             -v \
