@@ -810,7 +810,7 @@ class TestErrorEdgeCases:
 
         large_payload = {
             "content": "人工智能" * 10000,
-            "metadata": {"key": f"value-{i}" for i in range(100)},
+            "metadata": {f"key-{i}": f"value-{i}" for i in range(100)},
         }
 
         event = Event(
