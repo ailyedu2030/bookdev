@@ -24,20 +24,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY pyproject.toml .
 
-RUN pip install --prefix=/install --no-build-isolation \
-    cython \
-    && pip install --prefix=/install --no-build-isolation --no-cache-dir \
-    -r pyproject.toml \
-    pytest>=7.0 \
-    pytest-cov>=4.0 \
-    pytest-asyncio>=0.21 \
-    pytest-xdist>=3.5
-
-RUN pip install --prefix=/install --no-cache-dir \
-    uvicorn[standard]>=0.30.0 \
-    fastapi>=0.115.0 \
-    temporalio>=1.0.0 \
-    aiokafka>=0.10.0
+RUN pip install --prefix=/install \
+    -r pyproject.toml
 
 # =============================================================================
 # Stage 2: Runtime
