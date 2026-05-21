@@ -293,6 +293,7 @@ jobs:
     timeout-minutes: 30
     needs: [test, security]
     if: |
+      false &&  # Temporarily disabled
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
 
@@ -361,6 +362,7 @@ jobs:
     timeout-minutes: 30
     needs: [test-frontend, test]
     if: |
+      false &&  # Temporarily disabled
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
 
@@ -427,6 +429,7 @@ jobs:
     timeout-minutes: 30
     needs: [build-api, build-frontend]
     if: |
+      false &&  # Temporarily disabled
       (github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch') &&
       (github.event.inputs.environment == 'staging' || github.ref == 'refs/heads/develop')
     environment:
@@ -521,7 +524,8 @@ jobs:
     timeout-minutes: 45
     needs: [build-api, build-frontend]
     if: |
-      github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+      false &&  # Temporarily disabled
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     environment:
       name: production
       url: https://textbook.example.com
