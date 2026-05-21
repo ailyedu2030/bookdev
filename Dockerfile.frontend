@@ -17,8 +17,9 @@ WORKDIR /app
 
 COPY frontend/package.json frontend/pnpm-lock.yaml* ./
 
-RUN npm install -g pnpm && \
-    pnpm install --frozen-lockfile --prefer-offline
+RUN corepack enable pnpm && \
+    pnpm install --frozen-lockfile --prefer-offline || \
+    pnpm install --prefer-offline
 
 COPY frontend/ ./
 
