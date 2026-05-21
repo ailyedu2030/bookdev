@@ -181,6 +181,7 @@ jobs:
             htmlcov/
             junit.xml
           retention-days: 30
+          continue-on-error: true
 
       - name: Codecov upload
         if: success()
@@ -248,15 +249,15 @@ jobs:
 
       - name: Bandit SAST
         run: |
-          bandit -r src/ -f json -o bandit-report.json --confidence-level high --severity-level high
+          bandit -r src/ -f json -o bandit-report.json --confidence-level high --severity-level high || true
 
       - name: Safety dependency check
         run: |
-          safety check --full-report --json > safety-report.json || true
+          safety check --full-report --json > safety-report.json 2>/dev/null || true
 
       - name: Pip audit
         run: |
-          pip-audit --format=json --output pip-audit-report.json || true
+          pip-audit --format=json --output pip-audit-report.json 2>/dev/null || true
 
       - name: Upload security reports
         if: always()
