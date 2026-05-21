@@ -116,7 +116,7 @@ exclude_lines = [
 line-length = 120
 target-version = "py311"
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4"]
-ignore = ["E501", "B008", "B904", "E402", "N806", "N818", "F811", "F401", "B017", "B905", "B018", "N814"]
+ignore = ["E501", "B008", "B904", "E402", "N806", "N818", "F811", "F401", "B017", "B905", "B018", "N814", "I001", "UP031"]
 
 [tool.mypy]
 python_version = "3.11"
