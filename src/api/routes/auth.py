@@ -34,6 +34,7 @@ from api.deps import (
     User,
     generate_uuid,
 )
+from jose import JWTError
 from api.middleware.rate_limit import RateLimitConfig, rate_limit
 from api.middleware.csrf import csrf_protect
 
@@ -70,6 +71,19 @@ async def register(
                 "error": {
                     "code": "EMAIL_EXISTS",
                     "message": "A user with this email already exists",
+                }
+            },
+        )
+
+    # API-SEC-009: Validate role during registration
+    valid_roles = {"viewer", "author", "reviewer", "editor", "content_admin", "system_admin"}
+    if user_data.role and user_data.role not in valid_roles:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": {
+                    "code": "INVALID_ROLE",
+                    "message": f"Invalid role. Must be one of: {', '.join(valid_roles)}",
                 }
             },
         )
@@ -126,8 +140,18 @@ async def login(
                 }
             },
         )
+    if not user.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": {
+                    "code": "INVALID_CREDENTIALS",
+                    "message": "Invalid email or password",
+                }
+            },
+        )
 
-    if not verify_password(credentials.email, user.id):
+    if not verify_password(credentials.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
@@ -280,9 +304,8 @@ async def change_password(
     - **old_password**: Current password
     - **new_password**: New password (8-128 characters)
     """
-    stored_hash = get_password_hash(user.email)
-
-    if not verify_password(password_data.old_password, stored_hash):
+    hash_to_check = user.password_hash or ""
+    if not verify_password(password_data.old_password, hash_to_check):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -292,6 +315,10 @@ async def change_password(
                 }
             },
         )
+
+    db.update_user(user.id, {
+        "password_hash": get_password_hash(password_data.new_password)
+    })
 
     return SuccessResponse(
         success=True,

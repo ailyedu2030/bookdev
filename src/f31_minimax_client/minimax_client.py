@@ -91,6 +91,24 @@ class MiniMaxClient:
         self.token_counter = token_counter or TokenCounter(max_context_tokens=200_000)
         self.response_parser = ResponseParser()
 
+        # INF-012: Create session once and reuse instead of creating per-call
+        self._session: Optional[aiohttp.ClientSession] = None
+        self._session_created_at: Optional[float] = None
+        self._session_timeout = aiohttp.ClientTimeout(total=self._timeout)
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create a reusable session"""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(timeout=self._session_timeout)
+            self._session_created_at = time.monotonic()
+        return self._session
+
+    async def close(self) -> None:
+        """Close the client session"""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
+
     async def generate(
         self,
         system_prompt: str,
@@ -122,35 +140,36 @@ class MiniMaxClient:
         if self._is_mock_mode:
             return self._mock_generate(system_prompt, user_prompt, max_tokens, temperature, stream)
 
-        # 等待速率限制
+        # 等待速率限制 - INF-013: check_and_record properly records the request
         await self.rate_limiter.wait_for_available()
 
         start_time = time.monotonic()
 
         try:
-            async with aiohttp.ClientSession() as session:
-                headers = self._build_headers()
-                payload = self._build_payload(system_prompt, user_prompt, max_tokens, temperature, stream)
+            # INF-012: Reuse session instead of creating new one per call
+            session = await self._get_session()
+            headers = self._build_headers()
+            payload = self._build_payload(system_prompt, user_prompt, max_tokens, temperature, stream)
 
-                async with session.post(
-                    f"{self.base_url}{self.CHAT_ENDPOINT}",
-                    json=payload,
-                    headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=self._timeout),
-                ) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        raise MiniMaxClientError(
-                            f"API returned {response.status}: {error_text[:500]}"
-                        )
+            async with session.post(
+                f"{self.base_url}{self.CHAT_ENDPOINT}",
+                json=payload,
+                headers=headers,
+            ) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise MiniMaxClientError(
+                        f"API returned {response.status}: {error_text[:500]}"
+                    )
 
-                    response_data = await response.json()
+                response_data = await response.json()
 
             # 解析响应
             parsed = self.response_parser.parse(response_data, is_stream=stream)
 
-            if self.response_parser.extract_error(response_data):
-                error_msg = self.response_parser.extract_error(response_data)
+            # INF-014: Check for error only once, not twice
+            error_msg = self.response_parser.extract_error(response_data)
+            if error_msg:
                 raise MiniMaxClientError(f"API error: {error_msg}")
 
             # 记录使用量
@@ -277,9 +296,13 @@ class MiniMaxClient:
         Mock生成（无API Key时使用）
 
         行为尽可能接近真实API。
+
+        INF-011: Use check_and_record to properly track mock requests
+        in the rate limiter. This ensures mock mode behaves like real mode.
         """
-        # 速率限制检查
-        if not self.rate_limiter.can_proceed():
+        # INF-011: Use check_and_record instead of can_proceed so the
+        # timestamp is properly recorded in the rate limiter
+        if not self.rate_limiter.check_and_record():
             raise MiniMaxClientError("Rate limit exceeded")
 
         prompt_tokens = self.token_counter.count(system_prompt + user_prompt)
@@ -295,7 +318,7 @@ class MiniMaxClient:
         completion_tokens = min(completion_tokens, max_tokens)
 
         # 如果有JSON关键词，尝试返回JSON
-        if ("json" in system_prompt.lower() or "JSON" in user_prompt):
+        if ("json" in system_prompt.lower() or "json" in user_prompt.lower()):
             try:
                 json_match_start = completion.find("{")
                 json_match_end = completion.rfind("}")

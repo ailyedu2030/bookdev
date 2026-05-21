@@ -7,7 +7,7 @@ F30: Golden Dataset系统 - 样本管理器
 import json
 import os
 from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 
 @dataclass
@@ -35,6 +35,27 @@ class GoldenSample:
     def get(self, key, default=None):
         """支持字典式get访问"""
         return getattr(self, key, default)
+
+    def copy_with_updates(self, updates: Dict[str, Any]) -> "GoldenSample":
+        """
+        创建样本的副本并应用更新（保持不可变性）
+
+        Args:
+            updates: 要更新的字段
+
+        Returns:
+            新的GoldenSample实例
+        """
+        # Get all current field values
+        current_values = {f.name: getattr(self, f.name) for f in fields(self)}
+        
+        # Apply updates
+        for key, value in updates.items():
+            if key in current_values:
+                current_values[key] = value
+        
+        # Return new instance with updated values
+        return GoldenSample(**current_values)
 
 
 class SampleManager:
@@ -129,7 +150,10 @@ class SampleManager:
         updates: Dict[str, Any]
     ) -> Optional[GoldenSample]:
         """
-        更新样本
+        更新样本（保持不可变性）
+
+        INF-009: Instead of mutating the sample object directly, we now
+        create a new instance with the updates applied.
 
         Args:
             sample_id: 样本ID
@@ -142,14 +166,11 @@ class SampleManager:
         if sample is None:
             return None
 
-        if "expected_score" in updates:
-            sample.expected_score = updates["expected_score"]
-        if "quality_metrics" in updates:
-            sample.quality_metrics = updates["quality_metrics"]
-        if "content" in updates:
-            sample.content = updates["content"]
+        # Create a new sample with updates instead of mutating
+        updated_sample = sample.copy_with_updates(updates)
+        self._samples[sample_id] = updated_sample
 
-        return sample
+        return updated_sample
 
     def delete_sample(self, sample_id: str) -> bool:
         """

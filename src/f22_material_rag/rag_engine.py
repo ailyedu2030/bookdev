@@ -7,6 +7,7 @@ F22: 素材RAG召回引擎
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 import numpy as np
+import os
 
 from f22_material_rag.material import Material
 from f22_material_rag.embedding_client import MiniMaxEmbeddingClient
@@ -41,13 +42,17 @@ class MaterialRAGEngine:
         self.kg = knowledge_graph
         self.budget = context_budget
         self.embedding_dim = embedding_dim or self.DEFAULT_EMBEDDING_DIM
+        
+        # KG-003: Use environment variable instead of hardcoded mock key
+        api_key = os.environ.get("MINIMAX_API_KEY", "")
         self.embedding_model = embedding_model or MiniMaxEmbeddingClient(
-            api_key="mock-key",
+            api_key=api_key,
             dimension=self.embedding_dim
         )
         self.vector_store = InMemoryVectorStore(dimension=self.embedding_dim)
         self._materials: Dict[str, Material] = {}
         self._embeddings: Dict[str, np.ndarray] = {}
+        self._embedding_cache: Dict[str, np.ndarray] = {}  # KG-007: Cache for embeddings
 
     def add_material(self, material_data: dict) -> None:
         """
@@ -70,7 +75,7 @@ class MaterialRAGEngine:
 
         self._materials[material.id] = material
 
-        embedding = self.embedding_model.generate_embedding(material.content)
+        embedding = self._get_or_generate_embedding(material.content)
         self._embeddings[material.id] = embedding
         self.vector_store.add(
             material.id,
@@ -112,7 +117,7 @@ class MaterialRAGEngine:
         top_k = top_k or self.DEFAULT_TOP_K
         max_tokens = max_tokens or self.DEFAULT_MAX_TOKENS
 
-        query_embedding = self.embedding_model.generate_embedding(query)
+        query_embedding = self._get_or_generate_embedding(query)
 
         search_results = self.vector_store.search(query_embedding, top_k=top_k * 2)
 
@@ -174,7 +179,8 @@ class MaterialRAGEngine:
             if total_tokens + material_tokens > max_tokens:
                 remaining_tokens = max_tokens - total_tokens
                 if remaining_tokens > 50:
-                    truncated_content = material.content[:remaining_tokens]
+                    # KG-019: Smart truncation at word boundary instead of simple char cut
+                    truncated_content = self._smart_truncate(material.content, remaining_tokens)
                     context_parts.append(truncated_content)
                 break
 
@@ -182,6 +188,21 @@ class MaterialRAGEngine:
             total_tokens += material_tokens
 
         return "\n\n".join(context_parts)
+
+    def _smart_truncate(self, text: str, max_chars: int) -> str:
+        """Smart truncation that breaks at word boundary"""
+        if len(text) <= max_chars:
+            return text
+        
+        truncated = text[:max_chars]
+        last_space = truncated.rfind(' ')
+        last_newline = truncated.rfind('\n')
+        
+        # Break at the last space or newline before max_chars
+        break_point = max(last_space, last_newline)
+        if break_point > max_chars * 0.7:  # Only break if we don't lose too much
+            return truncated[:break_point].strip()
+        return truncated.strip() + '...'
 
     def get_material_count(self) -> int:
         """获取素材数量"""
@@ -192,8 +213,29 @@ class MaterialRAGEngine:
         return self._embeddings.get(material_id)
 
     def estimate_tokens(self, text: str) -> int:
-        """估算token数量"""
-        return len(text)
+        """
+        KG-016: Estimate token count more accurately
+        Uses approximation: ~4 chars per token for Chinese, ~3.5 for English
+        """
+        if not text:
+            return 0
+        
+        # Simple approximation: count characters and adjust by language
+        chinese_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
+        other_chars = len(text) - chinese_chars
+        
+        # Rough approximation: Chinese ~1 char/token, English ~3.5 chars/token
+        estimated = chinese_chars + (other_chars / 3.5)
+        return max(1, int(estimated))
+
+    def _get_or_generate_embedding(self, text: str) -> np.ndarray:
+        """KG-007: Get embedding from cache or generate new one"""
+        if text in self._embedding_cache:
+            return self._embedding_cache[text]
+        
+        embedding = self.embedding_model.generate_embedding(text)
+        self._embedding_cache[text] = embedding
+        return embedding
 
     def _kg_enhance_results(
         self,
@@ -204,7 +246,7 @@ class MaterialRAGEngine:
         if not self.kg:
             return results
 
-        query_embedding = self.embedding_model.generate_embedding(query)
+        query_embedding = self._get_or_generate_embedding(query)
         query_terms = set(query.lower().split())
 
         enhanced_results = []
@@ -274,7 +316,7 @@ class MaterialRAGEngine:
         if not text1 or not text2:
             return 0.0
 
-        emb1 = self.embedding_model.generate_embedding(text1)
-        emb2 = self.embedding_model.generate_embedding(text2)
+        emb1 = self._get_or_generate_embedding(text1)
+        emb2 = self._get_or_generate_embedding(text2)
 
         return self.embedding_model.compute_similarity(emb1, emb2)

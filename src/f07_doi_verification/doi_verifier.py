@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from enum import Enum
 import asyncio
 
+from f07_doi_verification.crossref_client import CrossRefClient
+
 
 class DOIValidationStatus(Enum):
     VALID = "VALID"
@@ -140,10 +142,11 @@ class DOIVerifier:
 
     DOI_PREFIX_PATTERN = re.compile(r'^10\.\d{4,}/[^\s]+$')
 
-    def __init__(self, timeout_seconds: float = 5.0, fact_registry: Optional[FactRegistry] = None):
+    def __init__(self, timeout_seconds: float = 5.0, fact_registry: Optional[FactRegistry] = None, crossref_client: Optional[CrossRefClient] = None):
         self.timeout_seconds = timeout_seconds
         self._fact_registry = fact_registry or FactRegistry()
-        self._crossref_client = None
+        # Reuse the provided CrossRefClient or create one
+        self._crossref_client = crossref_client or CrossRefClient(timeout=timeout_seconds)
 
     async def verify(self, doi: str) -> DOIResult:
         """验证DOI是否存在"""
@@ -180,7 +183,8 @@ class DOIVerifier:
                 reason="TIMEOUT: DOI verification timed out",
                 status=DOIValidationStatus.NOT_FOUND
             )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
+            # Only catch expected exceptions, not system-exiting ones like KeyboardInterrupt, SystemExit
             return DOIResult(
                 exists=False,
                 doi=doi,
@@ -196,11 +200,8 @@ class DOIVerifier:
 
     async def _fetch_doi_metadata(self, doi: str) -> Optional[Dict[str, Any]]:
         """从CrossRef获取DOI元数据"""
-        from f07_doi_verification.crossref_client import CrossRefClient
-
-        client = self._crossref_client or CrossRefClient()
         metadata = await asyncio.wait_for(
-            client.fetch_doi_metadata(doi),
+            self._crossref_client.fetch_doi_metadata(doi),
             timeout=self.timeout_seconds
         )
         return metadata
@@ -246,6 +247,8 @@ class DOIVerifier:
     def detect_circular_reference(self, citations: List[Citation]) -> bool:
         """检测循环引用 - A引用B，B引用A即为循环
         自引用（A引用A）不算循环
+        
+        使用迭代（显式栈）实现以避免递归栈溢出
         """
         doi_to_refs: Dict[str, set] = {}
 
@@ -257,30 +260,24 @@ class DOIVerifier:
             if fact:
                 doi_to_refs[citation.doi].update(fact.source_refs)
 
-        visited = set()
-        rec_stack = set()
-
-        def has_cycle(doi: str) -> bool:
-            if doi in rec_stack:
-                return True
-            if doi in visited:
-                return False
-
-            visited.add(doi)
-            rec_stack.add(doi)
-
-            for ref in doi_to_refs.get(doi, set()):
-                if ref == doi:
-                    continue  # 自引用不算循环
-                if has_cycle(ref):
+        # 使用显式栈进行迭代检测
+        for start_doi in doi_to_refs:
+            # 使用栈来模拟递归，栈元素为(当前节点, 路径集合)
+            stack = [(start_doi, set())]
+            
+            while stack:
+                current_doi, path = stack.pop()
+                
+                if current_doi in path:
+                    # 发现循环
                     return True
-
-            rec_stack.remove(doi)
-            return False
-
-        for doi in doi_to_refs:
-            if has_cycle(doi):
-                return True
+                
+                if current_doi in doi_to_refs:
+                    new_path = path | {current_doi}
+                    for ref in doi_to_refs[current_doi]:
+                        if ref == current_doi:
+                            continue  # 自引用不算循环
+                        stack.append((ref, new_path))
 
         return False
 

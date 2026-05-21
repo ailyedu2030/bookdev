@@ -2,9 +2,36 @@
 Common API Schemas
 """
 
-from datetime import datetime
-from typing import Any, Generic, TypeVar, Optional, List
+from datetime import datetime, timezone
+from typing import Any, Generic, TypeVar, Optional, List, Literal
 from pydantic import BaseModel, Field
+
+# Default pagination values
+DEFAULT_PAGE = 1
+DEFAULT_PER_PAGE = 20
+MAX_PER_PAGE = 100
+
+# API Version
+API_VERSION = "1.0.0"
+
+# Sort order literals
+SortOrder = Literal["asc", "desc"]
+
+# Error codes
+class ErrorCode:
+    INTERNAL_ERROR = "INTERNAL_ERROR"
+    VALIDATION_ERROR = "VALIDATION_ERROR"
+    NOT_FOUND = "NOT_FOUND"
+    DUPLICATE_ENTRY = "DUPLICATE_ENTRY"
+    RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED"
+    UNAUTHORIZED = "UNAUTHORIZED"
+    FORBIDDEN = "FORBIDDEN"
+
+# Error detail structure
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+    details: Optional[List[dict]] = None
 
 
 T = TypeVar("T")
@@ -17,8 +44,8 @@ class PaginatedResponse(BaseModel, Generic[T]):
     meta: dict = Field(
         default_factory=lambda: {
             "total": 0,
-            "page": 1,
-            "per_page": 20,
+            "page": DEFAULT_PAGE,
+            "per_page": DEFAULT_PER_PAGE,
             "total_pages": 0
         }
     )
@@ -28,11 +55,11 @@ class PaginatedResponse(BaseModel, Generic[T]):
 class ErrorResponse(BaseModel):
     """Standard error response"""
     success: bool = False
-    error: dict = Field(
-        default_factory=lambda: {
-            "code": "INTERNAL_ERROR",
-            "message": "An unexpected error occurred"
-        }
+    error: ErrorDetail = Field(
+        default_factory=lambda: ErrorDetail(
+            code=ErrorCode.INTERNAL_ERROR,
+            message="An unexpected error occurred"
+        )
     )
 
 
@@ -46,9 +73,9 @@ class SuccessResponse(BaseModel):
 class HealthResponse(BaseModel):
     """Health check response"""
     status: str
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     components: Optional[dict] = None
-    version: str = "1.0.0"
+    version: str = API_VERSION
 
 
 class MetricsResponse(BaseModel):
@@ -74,10 +101,10 @@ class LogEntry(BaseModel):
 
 class PaginationParams(BaseModel):
     """Pagination parameters"""
-    page: int = Field(default=1, ge=1)
-    per_page: int = Field(default=20, ge=1, le=100)
+    page: int = Field(default=DEFAULT_PAGE, ge=1)
+    per_page: int = Field(default=DEFAULT_PER_PAGE, ge=1, le=MAX_PER_PAGE)
     sort_by: Optional[str] = None
-    sort_order: str = Field(default="desc", pattern="^(asc|desc)$")
+    sort_order: SortOrder = Field(default="desc")
 
 
 class IDParams(BaseModel):
@@ -97,7 +124,7 @@ class ChapterIDParams(BaseModel):
 
 class ScanRequest(BaseModel):
     """Content scan request"""
-    content: str
+    content: Optional[str] = Field(default="")
     categories: Optional[List[str]] = None
 
 
@@ -105,16 +132,16 @@ class ScanResponse(BaseModel):
     """Content scan response"""
     success: bool = True
     is_safe: bool
-    confidence_score: float
-    categories: List[str]
-    violations: List[dict]
+    confidence_score: float = Field(..., ge=0, le=1)
+    categories: List[str] = Field(default_factory=list)
+    violations: List[dict] = Field(default_factory=list)
     action: str
     details: str
 
 
 class DOIVerifyRequest(BaseModel):
     """DOI verification request"""
-    doi: str
+    doi: str = Field(..., min_length=1, max_length=255)
 
 
 class DOIVerifyResponse(BaseModel):
@@ -128,28 +155,39 @@ class DOIVerifyResponse(BaseModel):
 
 class RegulationVerifyRequest(BaseModel):
     """Regulation verification request"""
-    content: str
-    law_type: Optional[str] = None
+    content: Optional[str] = Field(default="")
+    law_type: Optional[str] = Field(default=None, max_length=50)
 
 
 class RegulationVerifyResponse(BaseModel):
     """Regulation verification response"""
     success: bool = True
     valid: bool
-    matched_laws: List[dict]
-    confidence: float
+    matched_laws: List[dict] = Field(default_factory=list)
+    confidence: float = Field(..., ge=0, le=1)
     details: str
 
 
 class SemanticScanRequest(BaseModel):
     """Semantic scan request"""
-    content: str
+    content: Optional[str] = Field(default="")
     threshold: float = Field(default=0.7, ge=0, le=1)
 
 
 class SemanticScanResponse(BaseModel):
     """Semantic scan response"""
     success: bool = True
-    issues: List[dict]
-    score: float
+    issues: List[dict] = Field(default_factory=list)
+    score: float = Field(..., ge=0, le=1)
     summary: str
+
+
+class ConceptVerifyRequest(BaseModel):
+    """Concept integrity verification request"""
+    concept_id: str
+    definition: str
+
+
+class BatchScanRequest(BaseModel):
+    """Batch scan request"""
+    contents: List[str] = Field(default_factory=list)

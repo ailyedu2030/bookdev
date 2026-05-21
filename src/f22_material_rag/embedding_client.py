@@ -26,9 +26,13 @@ class MiniMaxEmbeddingClient:
 
         Returns:
             嵌入向量 (numpy array)
+
+        Raises:
+            ValueError: 如果文本为空或仅包含空白字符
         """
         if not text or not text.strip():
-            return np.zeros(self.dimension)
+            # KG-004: Raise exception instead of returning zero vector
+            raise ValueError("Text cannot be empty or whitespace only when generating embedding")
 
         embedding = self._compute_embedding(text)
         return embedding
@@ -42,6 +46,9 @@ class MiniMaxEmbeddingClient:
 
         Returns:
             嵌入向量列表
+
+        Raises:
+            ValueError: 如果任何文本为空或仅包含空白字符
         """
         return [self.generate_embedding(text) for text in texts]
 

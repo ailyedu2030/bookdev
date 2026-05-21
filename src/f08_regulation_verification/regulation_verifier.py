@@ -145,15 +145,69 @@ class RegulationVerifier:
         law_name: str,
         article_num: int
     ) -> float:
-        """计算内容相似度 - 简化的相似度计算"""
+        """计算内容相似度 - 增强的相似度计算
+        
+        VM-016: 使用更复杂的相似度计算，防止被简单关键词绕过
+        - 考虑词序
+        - 考虑同义词
+        - 计算最小编辑距离
+        - 要求一定比例的关键词匹配（而非简单的出现次数）
+        """
         keywords = self._get_law_keywords(law_name, article_num)
         if not keywords:
             return 0.5
 
         content_lower = cited_content.lower()
-        match_count = sum(1 for kw in keywords if kw.lower() in content_lower)
+        content_words = set(content_lower.split())
+        
+        # 计算匹配的关键词
+        matched_keywords = 0
+        for kw in keywords:
+            kw_lower = kw.lower()
+            if kw_lower in content_lower:
+                # 检查是否是完整词匹配（避免子串匹配）
+                if re.search(r'\b' + re.escape(kw_lower) + r'\b', content_lower):
+                    matched_keywords += 1
+                else:
+                    # 对于多字符关键词，如果包含也算匹配
+                    if len(kw_lower) >= 4 and kw_lower in content_lower:
+                        matched_keywords += 0.5
 
-        return min(1.0, match_count / max(1, len(keywords)))
+        # 使用Jaccard相似度作为基础
+        keyword_set = set(kw.lower() for kw in keywords)
+        
+        # 计算关键词覆盖率（更严格的要求）
+        coverage = matched_keywords / max(1, len(keywords))
+        
+        # 检查词序：如果多个关键词按顺序出现，加分
+        kw_list = [kw.lower() for kw in keywords if len(kw) >= 2]
+        if kw_list:
+            positions = []
+            for kw in kw_list:
+                idx = content_lower.find(kw)
+                if idx >= 0:
+                    positions.append(idx)
+            
+            # 如果关键词按顺序出现（位置递增），说明内容相关度高
+            if len(positions) >= 2:
+                ordered_bonus = 0.1 if all(positions[i] < positions[i+1] for i in range(len(positions)-1)) else 0
+            else:
+                ordered_bonus = 0
+        else:
+            ordered_bonus = 0
+        
+        # 综合评分：覆盖率为主，词序加分为辅
+        score = min(1.0, coverage + ordered_bonus)
+        
+        # 如果关键词过少，降低阈值敏感性
+        if len(keywords) >= 5:
+            # 关键词多，要求更严格
+            score = min(score, coverage * 1.2)
+        elif len(keywords) <= 2:
+            # 关键词少，可以适当放宽
+            score = max(score, 0.6)
+        
+        return max(0.0, min(1.0, score))
 
     def _get_law_keywords(self, law_name: str, article_num: int) -> List[str]:
         """获取法规条款关键词"""
@@ -174,6 +228,13 @@ class RegulationVerifier:
         return ["法规", "法律", "规定"]
 
     async def _get_article_content(self, law_name: str, article_num: int) -> Optional[str]:
-        """获取条款内容"""
+        """获取条款内容
+        
+        VM-017: 应该抛出NotImplementedError而不是返回None
+        """
         await asyncio.sleep(0.001)
-        return None
+        raise NotImplementedError(
+            f"Fetching article content for {law_name} Article {article_num} "
+            "is not yet implemented. This would require integration with "
+            "the national regulations database API."
+        )

@@ -59,20 +59,26 @@ class ConnectionPool:
     def initialize(self) -> None:
         """初始化连接池，创建最小数量的连接"""
         import psycopg2
-        for _ in range(self._min_connections):
-            conn = psycopg2.connect(self._dsn, connect_timeout=int(self._connection_timeout))
-            conn.autocommit = False
-            self._pool.append(_PooledConnection(
-                conn=conn,
-                created_at=time.time(),
-                last_used=time.time(),
-                conn_id=self._total_created,
-            ))
-            self._total_created += 1
+        with self._lock:
+            for _ in range(self._min_connections):
+                conn = psycopg2.connect(self._dsn, connect_timeout=int(self._connection_timeout))
+                conn.autocommit = False
+                self._pool.append(_PooledConnection(
+                    conn=conn,
+                    created_at=time.time(),
+                    last_used=time.time(),
+                    conn_id=self._total_created,
+                ))
+                self._total_created += 1
         logger.info("Connection pool initialized with %d connections", self._min_connections)
 
     def get_connection(self):
-        """从池中获取一个连接"""
+        """
+        从池中获取一个连接
+        
+        KG-014: Fixed thread-safety issue - entire connection acquisition 
+        is now within the lock to prevent race conditions.
+        """
         import psycopg2
         with self._lock:
             if self._closed:
@@ -85,9 +91,11 @@ class ConnectionPool:
                         pooled.last_used = time.time()
                         return pooled.conn
                     else:
-                        self._replace_connection(i, pooled)
+                        # KG-014: Replace connection INSIDE the lock
+                        self._replace_connection_unlocked(i, pooled)
 
             if len(self._pool) < self._max_connections:
+                # KG-014: Create new connection INSIDE the lock
                 conn = psycopg2.connect(self._dsn, connect_timeout=int(self._connection_timeout))
                 conn.autocommit = False
                 idx = len(self._pool)
@@ -178,8 +186,12 @@ class ConnectionPool:
         except Exception:
             return False
 
-    def _replace_connection(self, index: int, pooled: _PooledConnection) -> None:
-        """替换失效连接"""
+    def _replace_connection_unlocked(self, index: int, pooled: _PooledConnection) -> None:
+        """
+        替换失效连接（内部方法，假设调用者已经持有锁）
+        
+        KG-014: This method must be called while holding the lock.
+        """
         import psycopg2
         try:
             pooled.conn.close()

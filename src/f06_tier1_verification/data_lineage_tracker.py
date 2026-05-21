@@ -2,10 +2,10 @@
 F06: Tier1数值核实引擎 - 数据血缘追踪实现
 """
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Set
+from typing import List, Dict, Optional, Set, Any
 from datetime import datetime, timezone
 from enum import Enum
-import threading
+import asyncio
 import uuid
 
 
@@ -19,7 +19,7 @@ class NodeStatus(Enum):
 @dataclass
 class DataNode:
     data_id: str
-    value: any
+    value: Any
     source: str
     is_raw: bool = True
     formula: Optional[str] = None
@@ -59,7 +59,7 @@ class DataLineageTracker:
         self.max_depth = max_depth
         self.max_derivation_chain = max_derivation_chain
         self._nodes: Dict[str, DataNode] = {}
-        self._lock = threading.Lock()
+        self._lock = asyncio.Lock()
 
         self.VALUE_RANGES = {
             "population": {"min": 0, "max": 15000000000},
@@ -67,9 +67,9 @@ class DataLineageTracker:
             "price": {"min": 0, "max": 1000000000000},
         }
 
-    def register_raw_data(self, data_id: str, value: any, source: str) -> LineageResult:
+    async def register_raw_data(self, data_id: str, value: Any, source: str) -> LineageResult:
         """注册原始数据"""
-        with self._lock:
+        async with self._lock:
             range_result = self._check_value_range(value)
             if range_result:
                 return LineageResult(
@@ -90,7 +90,7 @@ class DataLineageTracker:
             self._nodes[data_id] = node
             return LineageResult(success=True, node=node)
 
-    def register_derived_data(
+    async def register_derived_data(
         self,
         data_id: str,
         formula: Optional[str],
@@ -98,7 +98,7 @@ class DataLineageTracker:
         **kwargs
     ) -> LineageResult:
         """注册派生数据"""
-        with self._lock:
+        async with self._lock:
             if formula is None:
                 return LineageResult(
                     success=False,
@@ -168,6 +168,8 @@ class DataLineageTracker:
         chain = []
         visited = set()
         self._build_propagation_chain(data_id, chain, visited)
+        # Reverse to ensure raw data comes first
+        chain.reverse()
         return chain
 
     def _build_propagation_chain(
@@ -176,7 +178,7 @@ class DataLineageTracker:
         chain: List[DataNode],
         visited: Set[str]
     ):
-        """递归构建传播链 - 深度优先，先收集所有祖先"""
+        """递归构建传播链 - 深度优先，后序遍历确保原始数据在前"""
         if data_id in visited:
             return
 
@@ -186,10 +188,12 @@ class DataLineageTracker:
 
         visited.add(data_id)
 
+        # First process all inputs (children)
         if not node.is_raw:
             for input_id in node.input_data_ids:
                 self._build_propagation_chain(input_id, chain, visited)
 
+        # Then add current node (post-order ensures raw data comes first after reverse)
         chain.append(node)
 
     def get_all_nodes(self) -> List[DataNode]:
@@ -208,7 +212,7 @@ class DataLineageTracker:
 
         return False
 
-    def _check_value_range(self, value: any) -> Optional[str]:
+    def _check_value_range(self, value: Any) -> Optional[str]:
         """检查值是否在合理范围内"""
         if not isinstance(value, (int, float)):
             return None
@@ -220,12 +224,40 @@ class DataLineageTracker:
         return "INVALID_RANGE"
 
     def _calculate_derivation_chain(self, input_data_ids: List[str]) -> int:
-        """计算派生链长度 - 从root到当前节点的链长度"""
+        """计算派生链长度 - 从root到当前节点的链长度
+        
+        派生链长度是指从根节点到当前节点的步数。
+        如果当前节点的输入是原始数据(depth=0)，则链长度为1。
+        如果输入是派生数据(depth=1)，则链长度为2，以此类推。
+        """
         max_chain_length = 0
         for inp_id in input_data_ids:
             inp_node = self._nodes.get(inp_id)
             if inp_node:
                 # 链长度 = 输入节点的深度 + 1
+                # depth=0 表示原始数据，链长度为1
+                # depth=1 表示由原始数据派生，链长度为2
                 chain_length = inp_node.depth + 1
                 max_chain_length = max(max_chain_length, chain_length)
         return max_chain_length
+
+    def get_root_nodes(self) -> List[DataNode]:
+        """获取所有根节点（原始数据）"""
+        return [node for node in self._nodes.values() if node.is_raw]
+
+    def get_derivation_depth(self, data_id: str) -> int:
+        """获取节点的派生深度（从根节点开始的步数）"""
+        node = self._nodes.get(data_id)
+        if not node:
+            return 0
+        
+        if node.is_raw:
+            return 0
+        
+        # 沿着输入链递归计算最大深度
+        max_depth = 0
+        for input_id in node.input_data_ids:
+            input_depth = self.get_derivation_depth(input_id)
+            max_depth = max(max_depth, input_depth)
+        
+        return max_depth + 1

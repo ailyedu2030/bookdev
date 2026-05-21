@@ -369,6 +369,7 @@ class TestDeleteProject:
         other_user = test_db.create_user({
             "username": "otheruser",
             "email": "other@example.com",
+            "password": "testpassword123",
             "role": "author",
         })
         project = create_test_project(test_db, owner_id=other_user.id)
@@ -393,6 +394,7 @@ class TestDeleteProject:
         other_user = test_db.create_user({
             "username": "otherowner",
             "email": "otherowner@example.com",
+            "password": "testpassword123",
             "role": "author",
         })
         project = create_test_project(test_db, owner_id=other_user.id)
@@ -458,6 +460,7 @@ class TestAddProjectMember:
         new_member = test_db.create_user({
             "username": "newmember",
             "email": "newmember@example.com",
+            "password": "testpassword123",
             "role": "author",
         })
 
@@ -512,6 +515,7 @@ class TestAddProjectMember:
         new_member = test_db.create_user({
             "username": "member2",
             "email": "member2@example.com",
+            "password": "testpassword123",
             "role": "author",
         })
 
@@ -540,6 +544,7 @@ class TestAddProjectMember:
         new_member = test_db.create_user({
             "username": "member3",
             "email": "member3@example.com",
+            "password": "testpassword123",
             "role": "author",
         })
 
@@ -635,6 +640,7 @@ class TestListMyProjects:
         other_user = test_db.create_user({
             "username": "other",
             "email": "other@example.com",
+            "password": "testpassword123",
             "role": "author",
         })
         create_test_project(test_db, owner_id=other_user.id, name="Other Project")
@@ -817,6 +823,7 @@ class TestDeleteProjectPermission:
         other_user = test_db.create_user({
             "username": "otherowner",
             "email": "otherowner@example.com",
+            "password": "testpassword123",
             "role": "author",
         })
         project = create_test_project(test_db, owner_id=other_user.id)
@@ -842,6 +849,7 @@ class TestDeleteProjectPermission:
         other_user = test_db.create_user({
             "username": "projectowner",
             "email": "projectowner@example.com",
+            "password": "testpassword123",
             "role": "author",
         })
         project = create_test_project(test_db, owner_id=other_user.id)

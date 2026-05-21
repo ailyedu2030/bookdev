@@ -134,12 +134,13 @@ class ChapterRepository(BaseRepository[Chapter]):
     async def reorder_chapters(
         self, project_id: uuid.UUID, chapter_orders: list[dict[str, Any]]
     ) -> None:
-        """批量重排章节顺序"""
-        for item in chapter_orders:
-            chapter_id = item.get("id")
-            order_num = item.get("order_num")
-            if chapter_id and order_num is not None:
-                await self.update(chapter_id, order_num=order_num)
+        """批量重排章节顺序 - 使用事务包装"""
+        async with self._session.begin():
+            for item in chapter_orders:
+                chapter_id = item.get("id")
+                order_num = item.get("order_num")
+                if chapter_id and order_num is not None:
+                    await self.update(chapter_id, order_num=order_num)
 
 
 class ChapterContentRepository(BaseRepository[ChapterContent]):

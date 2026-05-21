@@ -4,6 +4,9 @@ F26: 血缘追踪系统 - 影响分析器
 """
 from typing import List, Set, Dict, Any
 from dataclasses import dataclass, field
+import logging
+
+logger = logging.getLogger(__name__)
 
 from lineage_tracker import DataLineageTracker
 from lineage_node import LineageNode, ImpactReport
@@ -56,8 +59,10 @@ class ImpactAnalyzer:
                 paths = self._find_critical_paths(node_id, affected_nodes)
                 critical_paths = paths
 
-        except nx.NetworkXError:
-            pass
+        except nx.NetworkXError as e:
+            # INF-008: Log the error instead of silently passing
+            logger.error(f"NetworkX error during impact analysis for {source_id}: {e}")
+            logger.debug("Lineage graph may be disconnected or node not found", exc_info=True)
 
         return ImpactReport(
             source_id=source_id,
@@ -88,8 +93,9 @@ class ImpactAnalyzer:
                         paths.append(path)
                     except nx.NetworkXNoPath:
                         continue
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Error finding critical paths: {e}")
+            logger.debug("Path finding failed, returning empty paths", exc_info=True)
 
         return paths
 
@@ -112,8 +118,10 @@ class ImpactAnalyzer:
             try:
                 ancestors = nx.ancestors(self.tracker.lineage_graph, node_id)
                 affected_nodes = list(ancestors)
-            except nx.NetworkXError:
-                pass
+            except nx.NetworkXError as e:
+                # INF-008: Log the error instead of silently passing
+                logger.error(f"NetworkX error during upstream impact analysis for {data_id}: {e}")
+                logger.debug("Lineage graph may be disconnected or node not found", exc_info=True)
 
         return ImpactReport(
             source_id=data_id,

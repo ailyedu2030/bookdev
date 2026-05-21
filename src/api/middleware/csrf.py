@@ -4,8 +4,8 @@ CSRF Protection Middleware
 Implements double-submit cookie pattern for CSRF protection.
 """
 
-import secrets
 import hashlib
+import secrets
 import time
 from typing import Callable, List, Optional
 from fastapi import Request, HTTPException, status
@@ -166,7 +166,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             response.set_cookie(
                 key=CSRF_TOKEN_COOKIE_NAME,
                 value=csrf_token,
-                httponly=False,
+                httponly=True,
                 secure=True,
                 samesite="strict",
                 max_age=3600,

@@ -106,16 +106,20 @@ class KnowledgeGraph:
         name: str,
         definition: str,
         domain: str,
+        # KG-008: Fixed mutable default argument
         related_terms: list[str] = None,
         source_chapter_id: Optional[str] = None,
     ) -> ConceptNode:
         """创建概念节点"""
+        # Fix: Use None instead of mutable default
+        if related_terms is None:
+            related_terms = []
         node = ConceptNode(
             id=concept_id,
             name=name,
             definition=definition,
             domain=domain,
-            related_terms=related_terms or [],
+            related_terms=related_terms,
             source_chapter_id=source_chapter_id,
         )
         self._nodes[concept_id] = node
@@ -128,15 +132,19 @@ class KnowledgeGraph:
         term: str,
         definition: str,
         domain: str,
+        # KG-008: Fixed mutable default argument
         synonyms: list[str] = None,
         first_defined_at: Optional[str] = None,
     ) -> TermNode:
         """创建术语节点"""
+        # Fix: Use None instead of mutable default
+        if synonyms is None:
+            synonyms = []
         node = TermNode(
             id=term_id,
             term=term,
             definition=definition,
-            synonyms=synonyms or [],
+            synonyms=synonyms,
             domain=domain,
             first_defined_at=first_defined_at,
         )
@@ -152,7 +160,15 @@ class KnowledgeGraph:
         """更新节点状态"""
         node = self._nodes.get(node_id)
         if node:
-            node.status = status
+            # KG-010: Don't mutate the original object, create a new one
+            # For status enum this is less critical but follows the principle
+            new_status = NodeStatus(status.value) if isinstance(status, NodeStatus) else NodeStatus(status)
+            # Create new node dict with updated status instead of mutation
+            node_dict = node.to_dict()
+            node_dict['status'] = new_status
+            # Re-create node with new status
+            updated_node = create_node(node.type, **node_dict)
+            self._nodes[node_id] = updated_node
 
     def add_edge(
         self,
@@ -164,10 +180,21 @@ class KnowledgeGraph:
         """添加边"""
         edge = create_edge(edge_type, source, target, **properties)
         self._edges.append(edge)
+        
+        # KG-005: Bidirectional adjacency update for undirected edges
         if source not in self._adjacency:
             self._adjacency[source] = []
         if target not in self._adjacency[source]:
             self._adjacency[source].append(target)
+        
+        # For undirected edges (non-directional), also add reverse direction
+        # Common undirected edge types include: SIMILAR_TO, FOLLOWS, REFERENCES
+        if edge_type in ("SIMILAR_TO", "FOLLOWS", "REFERENCES", "USES"):
+            if target not in self._adjacency:
+                self._adjacency[target] = []
+            if source not in self._adjacency[target]:
+                self._adjacency[target].append(source)
+        
         return edge
 
     def get_edges(self, node_id: str = None, edge_type: str = None) -> list[Edge]:
@@ -192,11 +219,13 @@ class KnowledgeGraph:
 
         edges = self.get_edges(node_id=chapter_id)
 
-        total_word_count = 0
-        for section_id in sections:
-            section = self._nodes.get(section_id)
-            if section and hasattr(section, "word_count"):
-                total_word_count += section.word_count
+        # KG-006: Batch query instead of N+1
+        # Get all sections at once and compute total
+        section_nodes = [self._nodes.get(sid) for sid in sections if sid in self._nodes]
+        total_word_count = sum(
+            node.word_count for node in section_nodes 
+            if node and hasattr(node, "word_count")
+        )
 
         return {
             chapter_id: {
@@ -301,6 +330,7 @@ class KnowledgeGraph:
         result = []
 
         while queue:
+            # KG-023: Queue boundary check - prevent infinite loop with max iterations
             node_id = queue.pop(0)
             if node_id in visited:
                 continue
@@ -310,6 +340,10 @@ class KnowledgeGraph:
             for neighbor in self._adjacency.get(node_id, []):
                 if neighbor not in visited:
                     queue.append(neighbor)
+            
+            # Safety limit to prevent runaway traversal
+            if len(result) > len(self._nodes):
+                break
 
         return result
 
@@ -321,13 +355,16 @@ class KnowledgeGraph:
         visited = set()
         result = []
 
-        def _dfs(node_id: str):
+        def _dfs(node_id: str, depth: int = 0):
+            # KG-011: Fix depth limit boundary - allow depth limit nodes to be included
             if node_id in visited:
+                return
+            if depth > 100:  # Safety limit
                 return
             visited.add(node_id)
             result.append(node_id)
             for neighbor in self._adjacency.get(node_id, []):
-                _dfs(neighbor)
+                _dfs(neighbor, depth + 1)
 
         _dfs(start_id)
         return result

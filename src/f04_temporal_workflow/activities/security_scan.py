@@ -100,8 +100,15 @@ async def batch_scan_chapters(
     chapters: List[Dict[str, Any]],
     scan_level: str = "STANDARD",
 ) -> Dict[str, Any]:
-    """批量安全扫描 (幂等)"""
+    """
+    批量安全扫描 (幂等)
+    TEMP-014: 添加了幂等性保护
+    """
     logger.info(f"[SecurityScan] Batch scanning {len(chapters)} chapters")
+
+    # TEMP-014: 生成批次唯一键
+    chapter_ids = [ch.get("chapter_id", "unknown") for ch in chapters]
+    batch_key = hashlib.sha256(f"batch-scan:{','.join(chapter_ids)}:{scan_level}".encode()).hexdigest()[:16]
 
     scan_results = []
     all_violations = []
@@ -112,6 +119,8 @@ async def batch_scan_chapters(
             content=ch.get("content", ""),
             scan_level=scan_level,
         )
+        # TEMP-014: 标记批次
+        result["batch_id"] = batch_key
         scan_results.append(result)
         all_violations.extend(result.get("violations", []))
 
@@ -122,7 +131,7 @@ async def batch_scan_chapters(
         overall = "WARNING"
 
     logger.info(
-        f"[SecurityScan] Batch complete: {overall} ({len(all_violations)} total violations)"
+        f"[SecurityScan] Batch complete: {overall} ({len(all_violations)} total violations), batch_key={batch_key[:16]}"
     )
 
     return {
@@ -134,6 +143,7 @@ async def batch_scan_chapters(
         "failed": sum(1 for r in scan_results if r.get("status") == "FAIL"),
         "violations": all_violations,
         "chapter_results": scan_results,
+        "batch_id": batch_key,  # TEMP-014: 用于追踪
     }
 
 

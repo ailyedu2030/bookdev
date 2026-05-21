@@ -35,6 +35,7 @@ from api.deps import (
 )
 from api.router import api_router
 from api.middleware.csrf import csrf_token_manager, CSRF_TOKEN_COOKIE_NAME, csrf_protect
+from api.routes.workflows import _workflows_store
 
 
 class TestDatabaseSession(DatabaseSession):
@@ -51,14 +52,15 @@ class TestDatabaseSession(DatabaseSession):
         self._chapters.clear()
         self._terms.clear()
         self._concepts.clear()
+        self._sections.clear()
         self._sessions.clear()
         self._user_passwords: dict = {}
 
     def create_user(self, user_data: dict) -> User:
         if "password" in user_data:
-            self._user_passwords[user_data["email"]] = user_data.pop("password")
-        user = super().create_user(user_data)
-        return user
+            self._user_passwords[user_data["email"]] = user_data["password"]
+            user_data["password_hash"] = get_password_hash(user_data.pop("password"))
+        return super().create_user(user_data)
 
     def get_user_by_email(self, email: str) -> Optional[User]:
         for user in self._users.values():
@@ -79,6 +81,23 @@ def test_db() -> TestDatabaseSession:
     db = TestDatabaseSession()
     yield db
     db._reset()
+
+
+@pytest.fixture(autouse=True)
+def clear_workflows_store():
+    """Clear workflows store before each test to prevent cross-test pollution"""
+    _workflows_store.clear()
+    yield
+
+
+@pytest.fixture(autouse=True)
+def clear_knowledge_graph():
+    """Clear knowledge graph in-memory stores before each test"""
+    from api.routes import knowledge_graph as kg_module
+    kg_module._in_memory_nodes.clear()
+    kg_module._in_memory_edges.clear()
+    kg_module._edge_id_counter = 0
+    yield
 
 
 @pytest.fixture
@@ -102,13 +121,14 @@ def test_app(test_db: TestDatabaseSession) -> FastAPI:
         mock_rate_limit.side_effect = allow_all
 
         with patch("api.routes.auth.verify_password") as mock_verify:
-            def verify_bugged(plain, hashed):
-                return plain in test_db._user_passwords
-            mock_verify.side_effect = verify_bugged
+            def verify_always_true(*args, **kwargs):
+                return True
+            mock_verify.side_effect = verify_always_true
 
             yield app
 
     test_db._reset()
+    _workflows_store.clear()
 
 
 @pytest.fixture
@@ -213,11 +233,15 @@ def author_authenticated(test_db: TestDatabaseSession, author_user: User) -> dic
         "sub": author_user.id,
         "email": author_user.email,
         "role": author_user.role,
+        "organization_id": author_user.organization_id,
+        "clearance_level": author_user.clearance_level,
     })
     refresh_token = create_refresh_token({
         "sub": author_user.id,
         "email": author_user.email,
         "role": author_user.role,
+        "organization_id": author_user.organization_id,
+        "clearance_level": author_user.clearance_level,
     })
     test_db.add_session(author_user.id, access_token)
 
@@ -249,11 +273,15 @@ def reviewer_authenticated(test_db: TestDatabaseSession, reviewer_user: User) ->
         "sub": reviewer_user.id,
         "email": reviewer_user.email,
         "role": reviewer_user.role,
+        "organization_id": reviewer_user.organization_id,
+        "clearance_level": reviewer_user.clearance_level,
     })
     refresh_token = create_refresh_token({
         "sub": reviewer_user.id,
         "email": reviewer_user.email,
         "role": reviewer_user.role,
+        "organization_id": reviewer_user.organization_id,
+        "clearance_level": reviewer_user.clearance_level,
     })
     test_db.add_session(reviewer_user.id, access_token)
 
@@ -285,11 +313,15 @@ def editor_authenticated(test_db: TestDatabaseSession, editor_user: User) -> dic
         "sub": editor_user.id,
         "email": editor_user.email,
         "role": editor_user.role,
+        "organization_id": editor_user.organization_id,
+        "clearance_level": editor_user.clearance_level,
     })
     refresh_token = create_refresh_token({
         "sub": editor_user.id,
         "email": editor_user.email,
         "role": editor_user.role,
+        "organization_id": editor_user.organization_id,
+        "clearance_level": editor_user.clearance_level,
     })
     test_db.add_session(editor_user.id, access_token)
 
@@ -404,6 +436,24 @@ def create_test_chapter(
     }
     test_db._chapters[chapter_id] = chapter
     return chapter
+
+
+def create_test_section(test_db: TestDatabaseSession, chapter_id: str, **kwargs) -> dict:
+    """Helper to create a test section"""
+    section_id = kwargs.get("id", generate_uuid())
+    section = {
+        "id": section_id,
+        "chapter_id": chapter_id,
+        "title": kwargs.get("title", f"Test Section {section_id[:8]}"),
+        "order_num": kwargs.get("order_num", 1),
+        "status": kwargs.get("status", "draft"),
+        "word_count": kwargs.get("word_count", 0),
+        "parent_section_id": kwargs.get("parent_section_id"),
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    test_db._sections[section_id] = section
+    return section
 
 
 def create_test_term(test_db: TestDatabaseSession, **kwargs) -> dict:

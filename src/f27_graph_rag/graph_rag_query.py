@@ -46,16 +46,26 @@ class KnowledgeGraph:
                 return node
         return None
 
-    def find_path(self, start: str, end: str) -> List[str]:
-        """查找路径（简单BFS）"""
+    def find_path(self, start: str, end: str, max_depth: int = 10) -> List[str]:
+        """
+        查找路径（简单BFS）
+        
+        Fixed: Added max_depth to prevent infinite loops and improve safety
+        """
         if start == end:
             return [start]
 
         visited = {start}
         queue = [(start, [start])]
+        depth_count = {start: 0}
 
         while queue:
             current, path = queue.pop(0)
+            current_depth = depth_count.get(current, 0)
+            
+            # Safety check to prevent infinite traversal
+            if current_depth >= max_depth:
+                continue
 
             for edge in self.edges:
                 if edge.source == current and edge.target not in visited:
@@ -63,6 +73,7 @@ class KnowledgeGraph:
                     if edge.target == end:
                         return new_path
                     visited.add(edge.target)
+                    depth_count[edge.target] = current_depth + 1
                     queue.append((edge.target, new_path))
 
         return []
@@ -154,8 +165,9 @@ class GraphRAGQuery:
         ))
 
         graph_paths = []
+        # Fixed: Limit path finding to prevent excessive computation
         for edge in self.kg.edges[:3]:
-            path = self.kg.find_path(edge.source, edge.target)
+            path = self.kg.find_path(edge.source, edge.target, max_depth=10)
             if path:
                 graph_paths.append(path)
 
@@ -242,17 +254,19 @@ class GraphRAGQuery:
         """
         return self.rag.search(query, top_k)
 
-    def _find_graph_paths(self, start: str, end: str) -> List[List[str]]:
-        """查找图谱路径
+    def _find_graph_paths(self, start: str, end: str, max_depth: int = 10) -> List[List[str]]:
+        """
+        查找图谱路径
 
         Args:
             start: 起始节点
             end: 结束节点
+            max_depth: 最大深度
 
         Returns:
             路径列表
         """
-        path = self.kg.find_path(start, end)
+        path = self.kg.find_path(start, end, max_depth)
         return [path] if path else []
 
     def _generate_answer(

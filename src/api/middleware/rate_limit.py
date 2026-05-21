@@ -21,6 +21,13 @@ class RateLimitConfig:
 
 
 @dataclass
+class RateLimitSettings:
+    """Global rate limit settings"""
+    trust_x_forwarded_for: bool = False
+    trust_x_real_ip: bool = False
+
+
+@dataclass
 class SlidingWindowEntry:
     """Sliding window entry for rate limiting"""
     timestamps: List[float] = field(default_factory=list)
@@ -107,15 +114,23 @@ DEFAULT_RATE_LIMITS: Dict[str, RateLimitConfig] = {
 }
 
 
+rate_limit_settings = RateLimitSettings(
+    trust_x_forwarded_for=False,
+    trust_x_real_ip=False,
+)
+
+
 def get_client_identifier(request: Request) -> str:
     """Get unique identifier for rate limiting"""
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    if rate_limit_settings.trust_x_forwarded_for:
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
 
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip
+    if rate_limit_settings.trust_x_real_ip:
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            return real_ip
 
     if request.client:
         return request.client.host

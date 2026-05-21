@@ -298,6 +298,7 @@ class TestDatabaseSession:
         user_data = {
             "username": "testuser",
             "email": "test@test.com",
+            "password": "testpassword123",
             "role": "viewer",
             "organization_id": "org1",
             "clearance_level": 1,
@@ -317,6 +318,7 @@ class TestDatabaseSession:
         user_data = {
             "username": "testuser",
             "email": "test@test.com",
+            "password": "testpassword123",
             "role": "viewer",
         }
 
@@ -341,6 +343,7 @@ class TestDatabaseSession:
         user_data = {
             "username": "testuser",
             "email": "test@test.com",
+            "password": "testpassword123",
             "role": "viewer",
         }
 
@@ -667,6 +670,7 @@ class TestDatabaseSessionExtended:
         user = db.create_user({
             "username": "testuser",
             "email": "test@test.com",
+            "password": "testpassword123",
             "role": "viewer",
         })
 

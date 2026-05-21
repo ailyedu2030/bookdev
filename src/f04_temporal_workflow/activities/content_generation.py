@@ -8,6 +8,7 @@
 - 多模态内容生成 (文本/图表/公式)
 """
 
+import hashlib
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -45,6 +46,7 @@ async def generate_chapter_content(
             "model": "mock-ai-model-v2",
             "generated_at": "2026-05-19T00:00:00Z",
             "requirements": requirements or {},
+            "content_hash": hashlib.sha256(content.encode()).hexdigest()[:16],  # TEMP-013
         },
     }
 
@@ -94,19 +96,35 @@ async def batch_generate_chapters(
     chapters: List[Dict[str, Any]],
     textbook_subject: str,
 ) -> List[Dict[str, Any]]:
-    """批量生成章节内容 (幂等)"""
+    """
+    批量生成章节内容 (幂等)
+    TEMP-014: 现在使用基于内容哈希的幂等性key
+    """
     logger.info(f"[ContentGen] Batch generating {len(chapters)} chapters")
+
+    # TEMP-014: 为批量操作生成唯一幂等键
+    batch_id = f"batch-{textbook_subject}-{len(chapters)}"
+    chapter_ids = [ch.get("id", "unknown") for ch in chapters]
+    batch_key = hashlib.sha256(f"{batch_id}:{','.join(chapter_ids)}".encode()).hexdigest()[:16]
 
     results = []
     for ch in chapters:
+        # TEMP-013: 使用内容哈希作为幂等键的基础
+        ch_id = ch.get("id", "unknown")
+        ch_title = ch.get("title", "Untitled")
+        content_hash = hashlib.sha256(f"{ch_id}:{ch_title}".encode()).hexdigest()[:16]
+
         result = await generate_chapter_content(
-            chapter_id=ch.get("id", "unknown"),
-            title=ch.get("title", "Untitled"),
+            chapter_id=ch_id,
+            title=ch_title,
             subject=textbook_subject,
             requirements=ch.get("requirements"),
         )
+        # TEMP-014: 添加batch标识以便追踪
+        result["batch_id"] = batch_key
         results.append(result)
 
+    logger.info(f"[ContentGen] Batch complete: {len(results)} chapters, batch_key={batch_key[:16]}")
     return results
 
 
@@ -150,7 +168,7 @@ def _build_chapter_content(
     return "\n".join(content_parts)
 
 
-# ─── Activity 类 (用于工作流集成) ─────────────────────────────────────────
+# ─── Activity 类 (用于工作流集成) ──────────────────────────────────────────
 
 class ContentGeneration:
     """内容生成活动集合"""

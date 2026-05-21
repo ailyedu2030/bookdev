@@ -30,9 +30,13 @@ class ReviewPriority(Enum):
     LOW = 4
 
 
-@dataclass
+@dataclass(frozen=True)
 class ReviewTask:
-    """审核任务"""
+    """
+    审核任务
+    
+    QC-009 Fix: 使用frozen dataclass确保不可变性
+    """
     task_id: str
     content_id: str
     risk_level: str
@@ -48,7 +52,8 @@ class ReviewTask:
 
     def __post_init__(self):
         if isinstance(self.status, str):
-            self.status = ReviewStatus(self.status)
+            # 使用object.__setattr__绕过frozen限制来进行转换
+            object.__setattr__(self, 'status', ReviewStatus(self.status))
 
 
 class ReviewScheduler:
@@ -78,8 +83,7 @@ class ReviewScheduler:
             seed: 随机种子（用于测试）
         """
         self._tasks: Dict[str, ReviewTask] = {}
-        if seed is not None:
-            random.seed(seed)
+        self._random = random.Random(seed)  # QC-007 Fix: 使用实例随机数生成器，支持种子
 
     def requires_review(self, risk_level: str) -> bool:
         """
@@ -104,8 +108,8 @@ class ReviewScheduler:
         if review_ratio <= 0.0:
             return False
 
-        # 概率性复核
-        return random.random() < review_ratio
+        # 概率性复核 - 使用实例随机数生成器
+        return self._random.random() < review_ratio
 
     def schedule_review(
         self,
@@ -202,12 +206,24 @@ class ReviewScheduler:
         if task is None:
             return False
 
-        task.status = ReviewStatus.COMPLETED
-        task.completed_at = datetime.utcnow()
-        task.result = result
-        task.reviewer_id = reviewer_id
-        task.comments = comments
+        # QC-009 Fix: 由于ReviewTask是不可变的frozen dataclass，
+        # 需要创建新的task来替换
+        updated_task = ReviewTask(
+            task_id=task.task_id,
+            content_id=task.content_id,
+            risk_level=task.risk_level,
+            content_hash=task.content_hash,
+            status=ReviewStatus.COMPLETED,
+            priority=task.priority,
+            created_at=task.created_at,
+            due_date=task.due_date,
+            completed_at=datetime.utcnow(),
+            result=result,
+            reviewer_id=reviewer_id,
+            comments=comments
+        )
 
+        self._tasks[task_id] = updated_task
         return True
 
     def cancel_review(self, task_id: str) -> bool:
@@ -224,7 +240,24 @@ class ReviewScheduler:
         if task is None:
             return False
 
-        task.status = ReviewStatus.CANCELLED
+        # QC-009 Fix: 由于ReviewTask是不可变的frozen dataclass，
+        # 需要创建新的task来替换
+        updated_task = ReviewTask(
+            task_id=task.task_id,
+            content_id=task.content_id,
+            risk_level=task.risk_level,
+            content_hash=task.content_hash,
+            status=ReviewStatus.CANCELLED,
+            priority=task.priority,
+            created_at=task.created_at,
+            due_date=task.due_date,
+            completed_at=task.completed_at,
+            result=task.result,
+            reviewer_id=task.reviewer_id,
+            comments=task.comments
+        )
+
+        self._tasks[task_id] = updated_task
         return True
 
     def get_task_count(self) -> int:

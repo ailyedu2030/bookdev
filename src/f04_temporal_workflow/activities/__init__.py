@@ -4,59 +4,38 @@ F04: Temporal Activities
 导出所有Temporal活动
 """
 
-from .content_generation_activity import (
-    ContentGenerationActivity,
-    ContentGenerationInput,
-    ContentGenerationOutput,
+from .content_generation import (
+    generate_chapter_content,
+    generate_chapter_outline,
+    batch_generate_chapters,
+    ContentGeneration,
 )
 
-from .quality_check_activity import (
-    QualityCheckActivity,
-    QualityCheckInput,
-    QualityCheckOutput,
-    QualityIssue,
+from .quality_check import (
+    score_chapter_quality,
+    batch_score_chapters,
+    QualityCheck,
 )
 
-from .security_scan_activity import (
-    SecurityScanActivity,
-    SecurityScanInput,
-    SecurityScanOutput,
-    SecurityIssue,
-)
-
-from .term_check_activity import (
-    TermCheckActivity,
-    TermCheckInput,
-    TermCheckOutput,
-    TermIssue,
-)
-
-from .format_review_activity import (
-    FormatReviewActivity,
-    FormatCheckInput,
-    FormatCheckOutput,
-    FormatIssue,
+from .security_scan import (
+    scan_chapter,
+    batch_scan_chapters,
+    SecurityScan,
 )
 
 
 __all__ = [
-    "ContentGenerationActivity",
-    "ContentGenerationInput",
-    "ContentGenerationOutput",
-    "QualityCheckActivity",
-    "QualityCheckInput",
-    "QualityCheckOutput",
-    "QualityIssue",
-    "SecurityScanActivity",
-    "SecurityScanInput",
-    "SecurityScanOutput",
-    "SecurityIssue",
-    "TermCheckActivity",
-    "TermCheckInput",
-    "TermCheckOutput",
-    "TermIssue",
-    "FormatReviewActivity",
-    "FormatCheckInput",
-    "FormatCheckOutput",
-    "FormatIssue",
+    # Content generation
+    "generate_chapter_content",
+    "generate_chapter_outline",
+    "batch_generate_chapters",
+    "ContentGeneration",
+    # Quality check
+    "score_chapter_quality",
+    "batch_score_chapters",
+    "QualityCheck",
+    # Security scan
+    "scan_chapter",
+    "batch_scan_chapters",
+    "SecurityScan",
 ]

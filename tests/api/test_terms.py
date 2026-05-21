@@ -302,7 +302,7 @@ class TestUpdateTerm:
 
         assert response.status_code == 400
         data = response.json()
-        assert data["error"]["code"] == "TERM_LOCKED"
+        assert data["detail"]["error"]["code"] == "TERM_LOCKED"
 
     def test_update_term_not_found(
         self, test_client, test_db, author_authenticated
@@ -549,7 +549,7 @@ class TestDeleteTerm:
 
         assert response.status_code == 400
         data = response.json()
-        assert data["error"]["code"] == "TERM_LOCKED"
+        assert data["detail"]["error"]["code"] == "TERM_LOCKED"
 
 
 class TestListDomains:

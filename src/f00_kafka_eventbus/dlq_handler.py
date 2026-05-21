@@ -4,6 +4,8 @@ Dead Letter Queue Handler with retry logic and exponential backoff
 
 import asyncio
 import logging
+import os
+import json
 from typing import Callable, Optional, Dict, Any
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -41,7 +43,12 @@ class DLQHandler:
     - Error logging and alerting
     - Configurable retry behavior
     - Statistics tracking
+    - Graceful failure handling (doesn't propagate exceptions)
+    - Fallback logging to prevent message loss (INF-005)
     """
+
+    # Fallback file directory when DLQ send fails
+    DLQ_FALLBACK_DIR = "/var/log/bookdop/dlq_fallback"
 
     def __init__(
         self,
@@ -58,6 +65,7 @@ class DLQHandler:
             "total_retried": 0,
             "total_dlq": 0,
             "total_success": 0,
+            "total_fallback_logged": 0,
         }
 
     def subscribe(self, handler: Callable) -> None:
@@ -130,6 +138,34 @@ class DLQHandler:
 
         return delay
 
+    def _log_to_fallback_file(self, dlq_message: dict) -> str:
+        """
+        Log DLQ message to local fallback file.
+
+        Args:
+            dlq_message: The DLQ message to log
+
+        Returns:
+            Path to the fallback file
+        """
+        try:
+            os.makedirs(self.DLQ_FALLBACK_DIR, exist_ok=True)
+
+            fallback_file = os.path.join(
+                self.DLQ_FALLBACK_DIR,
+                f"dlq_fallback_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
+            )
+
+            with open(fallback_file, 'w') as f:
+                json.dump(dlq_message, f, indent=2, default=str)
+
+            logger.info(f"DLQ message logged to fallback file: {fallback_file}")
+            return fallback_file
+        except Exception as e:
+            logger.error(f"Failed to write DLQ fallback log: {e}")
+            # INF-005: Re-raise so caller knows fallback also failed
+            raise
+
     async def send_to_dlq(
         self,
         event: Dict[str, Any],
@@ -138,6 +174,10 @@ class DLQHandler:
     ) -> None:
         """
         Send failed message to Dead Letter Queue
+
+        INF-005: Added retry mechanism for DLQ sending before fallback logging.
+        Even if DLQ send fails after retries, we log to fallback file and continue
+        instead of raising an exception that could crash the consumer.
 
         Args:
             event: The failed event
@@ -157,28 +197,61 @@ class DLQHandler:
             "traceback": tb.format_exc(),
         }
 
-        try:
-            await self.producer.send(self.dlq_topic, value=dlq_message)
-            logger.info(f"Sent message to DLQ topic {self.dlq_topic}")
-            self._stats["total_dlq"] += 1
+        # INF-005: Retry DLQ sending with exponential backoff
+        max_dlq_retries = 3
+        base_delay = 1.0
 
-            for handler in self._handlers:
-                try:
-                    dlq_event = DLQMessage(
-                        original_event=event,
-                        error=error,
-                        attempts=self.retry_config.max_retries + 1,
-                        last_attempt=datetime.utcnow(),
-                        handler_name=handler_name,
-                        traceback=tb.format_exc(),
+        for attempt in range(max_dlq_retries + 1):
+            try:
+                await self.producer.send(self.dlq_topic, value=dlq_message)
+                logger.info(f"Sent message to DLQ topic {self.dlq_topic}")
+                self._stats["total_dlq"] += 1
+
+                for handler in self._handlers:
+                    try:
+                        dlq_event = DLQMessage(
+                            original_event=event,
+                            error=error,
+                            attempts=self.retry_config.max_retries + 1,
+                            last_attempt=datetime.utcnow(),
+                            handler_name=handler_name,
+                            traceback=tb.format_exc(),
+                        )
+                        await handler(dlq_event)
+                    except Exception as e:
+                        logger.error(f"DLQ handler subscriber failed: {e}")
+                return  # Success - done
+            except Exception as e:
+                last_error = e
+                if attempt < max_dlq_retries:
+                    delay = base_delay * (2 ** attempt)
+                    logger.warning(
+                        f"DLQ send attempt {attempt + 1} failed: {e}. "
+                        f"Retrying in {delay:.2f}s..."
                     )
-                    await handler(dlq_event)
-                except Exception as e:
-                    logger.error(f"DLQ handler failed: {e}")
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(
+                        f"All {max_dlq_retries + 1} DLQ send attempts failed: {e}"
+                    )
+                    # Fall through to fallback logging
 
-        except Exception as e:
-            logger.error(f"Failed to send to DLQ: {e}")
-            raise
+        # INF-005: All retries exhausted, use fallback file logging
+        try:
+            fallback_path = self._log_to_fallback_file(dlq_message)
+            self._stats["total_fallback_logged"] += 1
+            logger.warning(
+                f"DLQ send failed after {max_dlq_retries + 1} attempts, "
+                f"message logged to fallback: {fallback_path}"
+            )
+        except Exception as fallback_error:
+            # Last resort - log the raw message to application log
+            logger.critical(
+                f"CRITICAL: Failed to send to DLQ and fallback logging also failed. "
+                f"DLQ Error: {last_error}, Fallback Error: {fallback_error}. "
+                f"Event data: {json.dumps(event, default=str)[:500]}"
+            )
+        # Do NOT raise - continue processing to prevent consumer loop termination
 
     async def retry_dlq_message(
         self,
@@ -213,4 +286,5 @@ class DLQHandler:
             "total_retried": 0,
             "total_dlq": 0,
             "total_success": 0,
+            "total_fallback_logged": 0,
         }

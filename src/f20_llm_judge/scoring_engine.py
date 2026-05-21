@@ -73,6 +73,11 @@ class ScoringEngine:
             if dim_key not in dimension_scores:
                 raise ValueError(f"Missing score for dimension: {dim_key}")
 
+        # QC-012 Fix: 检查dimension_scores中是否有额外的维度
+        for dim_key in dimension_scores.keys():
+            if dim_key not in self.dimensions:
+                raise ValueError(f"Unknown dimension: {dim_key}. Expected dimensions: {list(self.dimensions.keys())}")
+
         # 验证分数范围
         for dim_key, score in dimension_scores.items():
             if not isinstance(score, (int, float)):
@@ -133,6 +138,11 @@ class ScoringEngine:
         for dim_key in self.dimensions.keys():
             if dim_key not in dimension_scores:
                 errors.append(f"Missing dimension: {dim_key}")
+
+        # QC-012 Fix: 检查是否有额外的未知维度
+        for dim_key in dimension_scores.keys():
+            if dim_key not in self.dimensions:
+                errors.append(f"Unknown dimension: {dim_key}")
 
         # 检查分数范围
         for dim_key, score in dimension_scores.items():

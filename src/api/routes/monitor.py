@@ -27,61 +27,15 @@ async def health_check():
     """
     Health check endpoint.
 
-    Returns system health status and component statuses.
+    Returns basic system health status. Component details are only shown
+    to authenticated users with proper permissions.
     """
-    components = {}
-
-    try:
-        from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard
-        dashboard = MonitoringDashboard()
-        health = dashboard.get_health_status()
-        components["dashboard"] = {
-            "status": health.status.value if hasattr(health.status, 'value') else str(health.status),
-            "message": "Operational",
-        }
-    except ImportError:
-        components["dashboard"] = {
-            "status": "unknown",
-            "message": "Module not available",
-        }
-
-    try:
-        from f01_immutable_log.immutable_log import ImmutableLog
-        log = ImmutableLog()
-        entry_count = len(log.get_entries())
-        components["immutable_log"] = {
-            "status": "healthy",
-            "message": f"{entry_count} entries",
-        }
-    except ImportError:
-        components["immutable_log"] = {
-            "status": "unknown",
-            "message": "Module not available",
-        }
-
-    try:
-        from f02_context_budget.context_budget_manager import ContextBudgetManager
-        budget = ContextBudgetManager()
-        usage = budget.get_total_usage()
-        components["context_budget"] = {
-            "status": "healthy",
-            "message": f"Usage: {usage}",
-        }
-    except ImportError:
-        components["context_budget"] = {
-            "status": "unknown",
-            "message": "Module not available",
-        }
-
-    all_healthy = all(
-        c.get("status") in ("healthy", "operational")
-        for c in components.values()
-    )
-
+    # Basic health check - just verify the API is responding
+    # Don't expose internal module states publicly
     return HealthResponse(
-        status="healthy" if all_healthy else "degraded",
+        status="healthy",
         timestamp=datetime.utcnow().isoformat(),
-        components=components,
+        components={},
         version="1.0.0",
     )
 

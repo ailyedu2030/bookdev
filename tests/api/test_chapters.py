@@ -20,6 +20,7 @@ from tests.api.conftest import (
     create_test_project,
     create_test_chapter,
     create_test_user,
+    create_test_section,
     get_auth_header,
     get_csrf_headers,
 )
@@ -746,7 +747,8 @@ class TestUpdateSectionNoData:
         user = author_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        create_test_chapter(test_db, project_id=project["id"])
+        chapter = create_test_chapter(test_db, project_id=project["id"])
+        create_test_section(test_db, chapter_id=chapter["id"], id="test-section-id")
 
         response = test_client.put(
             "/api/chapters/sections/test-section-id",
@@ -798,7 +800,8 @@ class TestSectionUpdateNotFoundCoverage:
         user = author_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        create_test_chapter(test_db, project_id=project["id"])
+        chapter = create_test_chapter(test_db, project_id=project["id"])
+        create_test_section(test_db, chapter_id=chapter["id"], id="test-section-id")
 
         response = test_client.put(
             "/api/chapters/sections/nonexistent-section-id",
@@ -848,7 +851,8 @@ class TestSectionUpdateExpanded:
         user = author_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        create_test_chapter(test_db, project_id=project["id"])
+        chapter = create_test_chapter(test_db, project_id=project["id"])
+        create_test_section(test_db, chapter_id=chapter["id"], id="test-section-id")
 
         response = test_client.put(
             "/api/chapters/sections/test-section-id",
@@ -871,7 +875,8 @@ class TestSectionUpdateExpanded:
         user = author_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        create_test_chapter(test_db, project_id=project["id"])
+        chapter = create_test_chapter(test_db, project_id=project["id"])
+        create_test_section(test_db, chapter_id=chapter["id"], id="test-section-id")
 
         response = test_client.put(
             "/api/chapters/sections/test-section-id",
@@ -894,7 +899,8 @@ class TestSectionUpdateExpanded:
         user = author_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        create_test_chapter(test_db, project_id=project["id"])
+        chapter = create_test_chapter(test_db, project_id=project["id"])
+        create_test_section(test_db, chapter_id=chapter["id"], id="test-section-id")
 
         response = test_client.put(
             "/api/chapters/sections/test-section-id",
@@ -917,7 +923,8 @@ class TestSectionUpdateExpanded:
         user = author_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        create_test_chapter(test_db, project_id=project["id"])
+        chapter = create_test_chapter(test_db, project_id=project["id"])
+        create_test_section(test_db, chapter_id=chapter["id"], id="test-section-id")
 
         response = test_client.put(
             "/api/chapters/sections/test-section-id",

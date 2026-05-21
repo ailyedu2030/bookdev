@@ -12,7 +12,7 @@ Handles terminology and concept operations:
 
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, status, Query
 
 from api.schemas.term import (
     TermCreate,
@@ -25,8 +25,9 @@ from api.schemas.term import (
     ConceptResponse,
     CitationCreate,
     CitationResponse,
+    LockTermRequest,
 )
-from api.schemas.common import SuccessResponse
+from api.schemas.common import SuccessResponse, ErrorResponse
 from api.deps import (
     get_db,
     get_current_active_user,
@@ -193,9 +194,9 @@ async def update_term(
 )
 async def lock_term(
     term_id: str,
-    reason: Optional[str] = None,
     user: User = Depends(require_permission("terms:lock")),
     db: DatabaseSession = Depends(get_db),
+    body: LockTermRequest = Body(default=LockTermRequest()),
 ):
     """
     Lock a term to prevent modifications.
@@ -214,7 +215,7 @@ async def lock_term(
             },
         )
 
-    locked_term = db.lock_term(term_id, reason)
+    locked_term = db.lock_term(term_id, body.reason)
     return TermResponse(**locked_term)
 
 

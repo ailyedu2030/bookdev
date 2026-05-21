@@ -51,8 +51,21 @@ class WorkflowState:
     approval_history: List[Dict] = field(default_factory=list)
 
 
+# 定义有效的状态转换
+VALID_STATE_TRANSITIONS = {
+    "OUTLINE_REVIEW": ["CONTENT_REVIEW", "REJECTED", "OUTLINE_REVIEW"],
+    "CONTENT_REVIEW": ["FINAL_REVIEW", "REJECTED", "CONTENT_REVIEW"],
+    "FINAL_REVIEW": ["APPROVED", "REJECTED", "FINAL_REVIEW"],
+    "REJECTED": ["OUTLINE_REVIEW"],  # 允许重新提交
+    "APPROVED": [],  # 终态，不可转换
+}
+
+# 审核节点必须按顺序完成
+REVIEW_TASKS = ["task-001", "task-002", "task-003"]  # 定义审核流程中的必需任务
+
 SIGNAL_WHITELIST = ["PauseWorkflow", "GetStatus", "CancelWorkflow"]
 MAX_TIMESTAMP_AGE_MINUTES = 5
+MAX_TIMESTAMP_DRIFT_MINUTES = 2  # 最大时间戳漂移（防止明显伪造）
 
 
 class WorkflowSecurityManager:
@@ -64,7 +77,14 @@ class WorkflowSecurityManager:
         self._workflows: Dict[str, WorkflowState] = {}
         self._used_signatures: set = set()
         self._approval_counts: Dict[str, int] = {}
-        self._hsm_public_key = "mock_public_key_for_testing"
+        # F11-001 FIX: 移除硬编码Mock密钥，改用安全方式获取公钥
+        self._public_key_pem = None
+
+    def set_public_key(self, public_key_pem: str) -> None:
+        """安全地设置公钥"""
+        if not public_key_pem or len(public_key_pem) < 32:
+            raise SecurityException("INVALID_PUBLIC_KEY", "Public key must be at least 32 characters")
+        self._public_key_pem = public_key_pem
 
     def register_workflow(self, workflow_id: str, content: Dict[str, Any]) -> None:
         """注册工作流"""
@@ -72,7 +92,7 @@ class WorkflowSecurityManager:
             workflow_id=workflow_id,
             current_state="OUTLINE_REVIEW",
             content=content,
-            pending_tasks=["task-001"]
+            pending_tasks=["task-001"]  # 初始只有第一个审核任务
         )
         self._approval_counts[workflow_id] = 0
 
@@ -107,7 +127,31 @@ class WorkflowSecurityManager:
         if callback.workflow_id not in self._workflows:
             return VerificationResult(is_valid=False, reason="WORKFLOW_NOT_FOUND")
 
+        # F11-004 FIX: 严格的状态转换验证
+        workflow = self._workflows[callback.workflow_id]
+        current_state = workflow.current_state
+        
+        # 验证任务ID是否有效（必须在pending_tasks中）
+        if callback.task_id not in workflow.pending_tasks:
+            return VerificationResult(is_valid=False, reason="INVALID_TASK")
+
+        # 验证状态转换是否合法
+        if callback.result == "APPROVED":
+            valid_next_states = VALID_STATE_TRANSITIONS.get(current_state, [])
+            if "APPROVED" not in valid_next_states and current_state != "APPROVED":
+                return VerificationResult(is_valid=False, reason="INVALID_STATE_TRANSITION")
+
         signature_payload = self._build_signature_payload(callback)
+        
+        # F11-003 FIX: 无HSM时不能使用SHA256替代签名验证（不安全回退）
+        # 如果没有HSM客户端，必须拒绝签名验证请求
+        if not self.hsm_client:
+            return VerificationResult(
+                is_valid=False, 
+                reason="NO_HSM_AVAILABLE",
+                hsm_verified=False
+            )
+        
         if not self._verify_signature(callback, callback.signature, signature_payload):
             return VerificationResult(is_valid=False, reason="INVALID_SIGNATURE")
 
@@ -116,8 +160,14 @@ class WorkflowSecurityManager:
         if stored_hash != callback.content_hash:
             return VerificationResult(is_valid=False, reason="HASH_MISMATCH")
 
-        if not self._verify_timestamp(callback.timestamp):
+        # F11-005 FIX: 添加时间戳漂移检测
+        if not self._verify_timestamp(callback.timestamp, allow_drift=False):
             return VerificationResult(is_valid=False, reason="TIMESTAMP_TOO_OLD")
+
+        # 检查时间戳是否明显伪造（未来时间或太旧）
+        now = datetime.utcnow()
+        if callback.timestamp > now + timedelta(minutes=MAX_TIMESTAMP_DRIFT_MINUTES):
+            return VerificationResult(is_valid=False, reason="TIMESTAMP_FUTURE_INVALID")
 
         if callback.signature in self._used_signatures:
             return VerificationResult(is_valid=False, reason="REPLAY_DETECTED")
@@ -149,15 +199,9 @@ class WorkflowSecurityManager:
         """验证签名"""
         if self.hsm_client:
             return self.hsm_client.verify(payload, signature)
-
-        expected = self._generate_signature(
-            callback.workflow_id,
-            callback.task_id,
-            callback.content_hash,
-            callback.reviewer_id,
-            callback.timestamp
-        )
-        return hmac.compare_digest(signature, expected)
+        
+        # F11-003 FIX: 不再提供不安全的回退选项 - 如果没有HSM必须拒绝
+        return False
 
     def _generate_signature(
         self,
@@ -171,11 +215,22 @@ class WorkflowSecurityManager:
         payload = f"{workflow_id}|{task_id}|{content_hash}|{reviewer_id}|{timestamp.isoformat()}"
         return hashlib.sha256(payload.encode()).hexdigest()
 
-    def _verify_timestamp(self, timestamp: datetime) -> bool:
+    def _verify_timestamp(self, timestamp: datetime, allow_drift: bool = True) -> bool:
         """验证时间戳"""
         now = datetime.utcnow()
         diff = abs((now - timestamp).total_seconds())
-        return diff <= (MAX_TIMESTAMP_AGE_MINUTES * 60)
+        
+        # 基本时间戳年龄检查
+        if diff > (MAX_TIMESTAMP_AGE_MINUTES * 60):
+            return False
+        
+        # F11-005 FIX: 时间戳漂移检测（可选）
+        if not allow_drift:
+            if diff > (MAX_TIMESTAMP_DRIFT_MINUTES * 60):
+                # 时间戳差异超过允许的漂移，可能是明显伪造
+                return False
+        
+        return True
 
     def calculate_content_hash(self, content: Dict[str, Any]) -> str:
         """计算内容哈希"""
@@ -185,7 +240,37 @@ class WorkflowSecurityManager:
     def _advance_workflow_state(self, workflow_id: str, new_state: str) -> None:
         """推进工作流状态"""
         if workflow_id in self._workflows:
-            self._workflows[workflow_id].current_state = new_state
+            current = self._workflows[workflow_id].current_state
+            valid_next = VALID_STATE_TRANSITIONS.get(current, [])
+            
+            # 严格验证状态转换
+            if new_state in valid_next or current == new_state:
+                self._workflows[workflow_id].current_state = new_state
+                
+                # 如果进入下一个审核阶段，添加相应的pending task
+                self._update_pending_tasks(workflow_id, new_state)
+            else:
+                raise SecurityException(
+                    "INVALID_STATE_TRANSITION",
+                    f"Cannot transition from {current} to {new_state}"
+                )
+
+    def _update_pending_tasks(self, workflow_id: str, new_state: str) -> None:
+        """更新待处理任务列表"""
+        state_to_task = {
+            "OUTLINE_REVIEW": "task-001",
+            "CONTENT_REVIEW": "task-002",
+            "FINAL_REVIEW": "task-003",
+        }
+        
+        if new_state in state_to_task:
+            required_task = state_to_task[new_state]
+            workflow = self._workflows[workflow_id]
+            
+            # 如果pending_tasks中没有当前审核任务但需要进入下一阶段，则添加
+            if required_task not in workflow.pending_tasks:
+                # 只允许添加当前阶段之后的任务，不允许跳过
+                workflow.pending_tasks.append(required_task)
 
     def _record_approval(self, workflow_id: str, callback: ReviewCallback) -> None:
         """记录审批历史"""

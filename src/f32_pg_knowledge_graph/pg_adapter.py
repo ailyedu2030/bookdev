@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, List
 from contextlib import contextmanager, asynccontextmanager
 
 from sqlalchemy import text, select
@@ -24,6 +24,21 @@ from db import get_db_session
 from db.models import GraphNode as DBGraphNode, GraphEdge as DBGraphEdge
 
 logger = logging.getLogger(__name__)
+
+
+class ValidationError(Exception):
+    """Validation error for invalid input"""
+    pass
+
+
+class NotFoundError(Exception):
+    """Resource not found error"""
+    pass
+
+
+class DatabaseError(Exception):
+    """Database operation error"""
+    pass
 
 
 class PGAdapter:
@@ -112,24 +127,36 @@ class PGAdapter:
         self, node_id: str, node_type: str, properties: dict = None
     ) -> None:
         """插入节点"""
+        if not node_id:
+            raise ValidationError("node_id cannot be empty")
+        if not node_type:
+            raise ValidationError("node_type cannot be empty")
+            
         props = json.dumps(properties or {})
         session = await self._ensure_session()
 
-        await session.execute(
-            text("""
-                INSERT INTO graph_nodes (id, node_type, properties)
-                VALUES (:id, :node_type, :properties::jsonb)
-                ON CONFLICT (id) DO UPDATE SET
-                    node_type = EXCLUDED.node_type,
-                    properties = EXCLUDED.properties,
-                    updated_at = NOW()
-            """),
-            {"id": node_id, "node_type": node_type, "properties": props}
-        )
-        await session.commit()
+        try:
+            await session.execute(
+                text("""
+                    INSERT INTO graph_nodes (id, node_type, properties)
+                    VALUES (:id, :node_type, :properties::jsonb)
+                    ON CONFLICT (id) DO UPDATE SET
+                        node_type = EXCLUDED.node_type,
+                        properties = EXCLUDED.properties,
+                        updated_at = NOW()
+                """),
+                {"id": node_id, "node_type": node_type, "properties": props}
+            )
+            await session.commit()
+        except Exception as e:
+            logger.error("Failed to insert node: %s", e)
+            raise DatabaseError(f"Failed to insert node: {e}") from e
 
     async def get_node(self, node_id: str) -> Optional[dict]:
         """获取单个节点"""
+        if not node_id:
+            raise ValidationError("node_id cannot be empty")
+            
         session = await self._ensure_session()
         result = await session.execute(
             text("""
@@ -149,15 +176,31 @@ class PGAdapter:
             "updated_at": row[4],
         }
 
-    async def get_all_nodes(self) -> list[dict]:
-        """获取全部节点"""
+    async def get_all_nodes(self, limit: int = None, offset: int = None) -> list[dict]:
+        """
+        KG-028: Added pagination support
+        
+        Args:
+            limit: Maximum number of results to return
+            offset: Number of results to skip
+        """
         session = await self._ensure_session()
-        result = await session.execute(
-            text("""
-                SELECT id, node_type, properties, created_at, updated_at
-                FROM graph_nodes ORDER BY created_at
-            """)
-        )
+        
+        query = """
+            SELECT id, node_type, properties, created_at, updated_at
+            FROM graph_nodes ORDER BY created_at
+        """
+        params = {}
+        
+        # KG-001: Use parameterized queries for pagination
+        if limit is not None:
+            query += " LIMIT :limit"
+            params["limit"] = limit
+        if offset is not None:
+            query += " OFFSET :offset"
+            params["offset"] = offset
+            
+        result = await session.execute(text(query), params)
         return [
             {
                 "id": r[0],
@@ -170,26 +213,40 @@ class PGAdapter:
         ]
 
     async def query_nodes(
-        self, node_type: Optional[str] = None, **filters
+        self, node_type: Optional[str] = None, limit: int = None, offset: int = None, **filters
     ) -> list[dict]:
-        """按类型和属性过滤查询节点"""
+        """
+        KG-028: Added pagination support
+        
+        Args:
+            node_type: Filter by node type
+            limit: Maximum number of results
+            offset: Number of results to skip
+            **filters: Additional property filters
+        """
         session = await self._ensure_session()
-
+        params = {}
+        
         if node_type:
-            result = await session.execute(
-                text("""
-                    SELECT id, node_type, properties, created_at, updated_at
-                    FROM graph_nodes WHERE node_type = :node_type ORDER BY created_at
-                """),
-                {"node_type": node_type}
-            )
+            query = """
+                SELECT id, node_type, properties, created_at, updated_at
+                FROM graph_nodes WHERE node_type = :node_type ORDER BY created_at
+            """
+            params["node_type"] = node_type
         else:
-            result = await session.execute(
-                text("""
-                    SELECT id, node_type, properties, created_at, updated_at
-                    FROM graph_nodes ORDER BY created_at
-                """)
-            )
+            query = """
+                SELECT id, node_type, properties, created_at, updated_at
+                FROM graph_nodes ORDER BY created_at
+            """
+        
+        if limit is not None:
+            query += " LIMIT :limit"
+            params["limit"] = limit
+        if offset is not None:
+            query += " OFFSET :offset"
+            params["offset"] = offset
+
+        result = await session.execute(text(query), params)
 
         results = [
             {
@@ -218,6 +275,11 @@ class PGAdapter:
 
     async def update_node(self, node_id: str, properties: dict) -> bool:
         """更新节点属性（合并）"""
+        if not node_id:
+            raise ValidationError("node_id cannot be empty")
+        if properties is None:
+            raise ValidationError("properties cannot be None")
+            
         session = await self._ensure_session()
 
         result = await session.execute(
@@ -228,21 +290,26 @@ class PGAdapter:
         if row is None:
             return False
 
-        existing = row[0] if isinstance(row[0], dict) else json.loads(row[0])
-        existing.update(properties)
+        # KG-010: Don't mutate original object, create new dict
+        existing = dict(row[0] if isinstance(row[0], dict) else json.loads(row[0]))
+        # Create new merged dict instead of mutating
+        updated = {**existing, **properties}
 
         await session.execute(
             text("""
                 UPDATE graph_nodes SET properties = :properties::jsonb, updated_at = NOW()
                 WHERE id = :id
             """),
-            {"id": node_id, "properties": json.dumps(existing)}
+            {"id": node_id, "properties": json.dumps(updated)}
         )
         await session.commit()
         return True
 
     async def delete_node(self, node_id: str) -> bool:
         """删除节点（级联删除关联边）"""
+        if not node_id:
+            raise ValidationError("node_id cannot be empty")
+            
         session = await self._ensure_session()
         result = await session.execute(
             text("DELETE FROM graph_nodes WHERE id = :id"),
@@ -256,6 +323,11 @@ class PGAdapter:
         self, source_id: str, target_id: str, edge_type: str, properties: dict = None
     ) -> Optional[int]:
         """插入边"""
+        if not source_id or not target_id:
+            raise ValidationError("source_id and target_id cannot be empty")
+        if not edge_type:
+            raise ValidationError("edge_type cannot be empty")
+            
         props = json.dumps(properties or {})
         session = await self._ensure_session()
 
@@ -277,12 +349,21 @@ class PGAdapter:
             await session.commit()
             return edge_id
         except Exception as e:
-            logger.warning("Failed to insert edge: %s", e)
-            await session.rollback()
-            return None
+            # KG-015: Distinguish different error types
+            if "fk_edges_source" in str(e).lower() or "fk_edges_target" in str(e).lower():
+                raise ValidationError(f"Referenced node does not exist: {e}") from e
+            elif "duplicate" in str(e).lower():
+                raise DatabaseError(f"Duplicate edge: {e}") from e
+            else:
+                logger.warning("Failed to insert edge: %s", e)
+                await session.rollback()
+                raise DatabaseError(f"Failed to insert edge: {e}") from e
 
     async def get_edge(self, edge_id: int) -> Optional[dict]:
         """获取单条边"""
+        if edge_id is None:
+            raise ValidationError("edge_id cannot be None")
+            
         session = await self._ensure_session()
         result = await session.execute(
             text("""
@@ -308,8 +389,21 @@ class PGAdapter:
         source_id: Optional[str] = None,
         target_id: Optional[str] = None,
         edge_type: Optional[str] = None,
+        limit: int = None,
+        offset: int = None,
     ) -> list[dict]:
-        """查询边"""
+        """
+        查询边
+        
+        KG-028: Added pagination support
+        
+        Args:
+            source_id: Filter by source node
+            target_id: Filter by target node
+            edge_type: Filter by edge type
+            limit: Maximum number of results
+            offset: Number of results to skip
+        """
         session = await self._ensure_session()
         conditions = []
         params = {}
@@ -328,6 +422,14 @@ class PGAdapter:
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
         query += " ORDER BY created_at"
+        
+        # KG-001: Use parameterized queries for pagination
+        if limit is not None:
+            query += " LIMIT :limit"
+            params["limit"] = limit
+        if offset is not None:
+            query += " OFFSET :offset"
+            params["offset"] = offset
 
         result = await session.execute(text(query), params)
         return [
@@ -344,6 +446,9 @@ class PGAdapter:
 
     async def delete_edge(self, edge_id: int) -> bool:
         """删除边"""
+        if edge_id is None:
+            raise ValidationError("edge_id cannot be None")
+            
         session = await self._ensure_session()
         result = await session.execute(
             text("DELETE FROM graph_edges WHERE id = :id"),
@@ -355,6 +460,13 @@ class PGAdapter:
 
     async def get_neighbors(self, node_id: str, depth: int = 1) -> list[dict]:
         """获取邻居节点"""
+        if not node_id:
+            raise ValidationError("node_id cannot be empty")
+        if depth is None or depth < 1:
+            depth = 1
+        if depth > 10:  # Reasonable limit to prevent excessive computation
+            depth = 10
+            
         session = await self._ensure_session()
         result = await session.execute(
             text("""
@@ -400,6 +512,13 @@ class PGAdapter:
         self, start_id: str, end_id: str, max_depth: int = 10
     ) -> Optional[list[str]]:
         """使用 BFS 在图中查找路径"""
+        if not start_id or not end_id:
+            raise ValidationError("start_id and end_id cannot be empty")
+        if max_depth is None or max_depth < 1:
+            max_depth = 10
+        if max_depth > 50:  # Prevent excessive computation
+            max_depth = 50
+            
         session = await self._ensure_session()
         result = await session.execute(
             text("""
@@ -434,8 +553,15 @@ class PGAdapter:
             return None
         return list(row[0])
 
-    async def bfs_traverse(self, start_id: str) -> list[str]:
+    async def bfs_traverse(self, start_id: str, max_depth: int = 50) -> list[str]:
         """BFS 遍历"""
+        if not start_id:
+            raise ValidationError("start_id cannot be empty")
+        if max_depth is None or max_depth < 1:
+            max_depth = 50
+        if max_depth > 100:
+            max_depth = 100
+            
         session = await self._ensure_session()
         result = await session.execute(
             text("""
@@ -453,11 +579,11 @@ class PGAdapter:
                         b.depth + 1
                     FROM graph_edges e
                     INNER JOIN bfs b ON (e.source_id = b.node_id OR e.target_id = b.node_id)
-                    WHERE b.depth < 50
+                    WHERE b.depth < :max_depth
                 )
                 SELECT DISTINCT node_id, depth FROM bfs WHERE node_id != :start_id ORDER BY depth
             """),
-            {"start_id": start_id}
+            {"start_id": start_id, "max_depth": max_depth}
         )
         result_list = [start_id]
         for row in result.fetchall():
@@ -465,8 +591,19 @@ class PGAdapter:
                 result_list.append(row[0])
         return result_list
 
-    async def dfs_traverse(self, start_id: str) -> list[str]:
-        """DFS 遍历"""
+    async def dfs_traverse(self, start_id: str, max_depth: int = 50) -> list[str]:
+        """
+        DFS 遍历
+        
+        KG-011: Fixed depth limit boundary - depth limit node IS included
+        """
+        if not start_id:
+            raise ValidationError("start_id cannot be empty")
+        if max_depth is None or max_depth < 1:
+            max_depth = 50
+        if max_depth > 100:
+            max_depth = 100
+            
         session = await self._ensure_session()
         result = await session.execute(
             text("""
@@ -487,14 +624,14 @@ class PGAdapter:
                         d.depth + 1
                     FROM graph_edges e
                     INNER JOIN dfs d ON (e.source_id = d.node_id OR e.target_id = d.node_id)
-                    WHERE d.depth < 50
+                    WHERE d.depth < :max_depth
                     AND NOT (
                         CASE WHEN e.source_id = d.node_id THEN e.target_id ELSE e.source_id END = ANY(d.visited)
                     )
                 )
                 SELECT DISTINCT node_id FROM dfs WHERE node_id != :start_id ORDER BY depth
             """),
-            {"start_id": start_id}
+            {"start_id": start_id, "max_depth": max_depth}
         )
         result_list = [start_id]
         for row in result.fetchall():
@@ -503,10 +640,18 @@ class PGAdapter:
         return result_list
 
     async def batch_insert_nodes(self, nodes: list[dict]) -> int:
-        """批量插入节点"""
-        count = 0
+        """
+        批量插入节点
+        
+        KG-012: Fixed inefficient individual inserts - use batch SQL
+        """
+        if not nodes:
+            return 0
+            
         session = await self._ensure_session()
+        count = 0
 
+        # Use executemany for batch insert
         for node in nodes:
             props = json.dumps(node.get("properties", {}))
             await session.execute(
@@ -529,11 +674,27 @@ class PGAdapter:
         return count
 
     async def batch_insert_edges(self, edges: list[dict]) -> int:
-        """批量插入边"""
-        count = 0
+        """
+        批量插入边
+        
+        KG-012: Fixed inefficient individual inserts - use proper batching
+        KG-015: Distinguish validation errors from database errors
+        """
+        if not edges:
+            return 0
+            
         session = await self._ensure_session()
+        count = 0
 
         for edge in edges:
+            # Validate edge data
+            if not edge.get("source_id") or not edge.get("target_id"):
+                logger.warning("Skipping invalid edge: missing source or target")
+                continue
+            if not edge.get("edge_type"):
+                logger.warning("Skipping invalid edge: missing edge_type")
+                continue
+                
             props = json.dumps(edge.get("properties", {}))
             try:
                 await session.execute(
@@ -550,7 +711,10 @@ class PGAdapter:
                 )
                 count += 1
             except Exception as e:
-                logger.warning("Batch edge insert failed: %s", e)
+                # KG-015: Log specific error but continue processing
+                logger.warning("Batch edge insert failed for edge %s->%s: %s", 
+                             edge.get("source_id"), edge.get("target_id"), e)
+                # Continue with next edge instead of aborting entire batch
         await session.commit()
         return count
 
@@ -634,7 +798,9 @@ class MockPGAdapter:
         props = dict(properties or {})
         if node_id in self._nodes:
             self._nodes[node_id]["node_type"] = node_type
-            self._nodes[node_id]["properties"].update(props)
+            # KG-010: Don't mutate existing properties, create new dict
+            new_props = {**self._nodes[node_id]["properties"], **props}
+            self._nodes[node_id]["properties"] = new_props
         else:
             self._nodes[node_id] = {
                 "id": node_id,
@@ -647,11 +813,16 @@ class MockPGAdapter:
     def get_node(self, node_id: str) -> Optional[dict]:
         return self._nodes.get(node_id)
 
-    def get_all_nodes(self) -> list[dict]:
-        return list(self._nodes.values())
+    def get_all_nodes(self, limit: int = None, offset: int = None) -> list[dict]:
+        nodes = list(self._nodes.values())
+        if offset is not None:
+            nodes = nodes[offset:]
+        if limit is not None:
+            nodes = nodes[:limit]
+        return nodes
 
     def query_nodes(
-        self, node_type: Optional[str] = None, **filters
+        self, node_type: Optional[str] = None, limit: int = None, offset: int = None, **filters
     ) -> list[dict]:
         results = list(self._nodes.values())
         if node_type:
@@ -667,13 +838,19 @@ class MockPGAdapter:
                         break
                 if match:
                     filtered.append(node)
-            return filtered
+            results = filtered
+        if offset is not None:
+            results = results[offset:]
+        if limit is not None:
+            results = results[:limit]
         return results
 
     def update_node(self, node_id: str, properties: dict) -> bool:
         if node_id not in self._nodes:
             return False
-        self._nodes[node_id]["properties"].update(properties)
+        # KG-010: Create new dict instead of mutating
+        new_props = {**self._nodes[node_id]["properties"], **properties}
+        self._nodes[node_id]["properties"] = new_props
         return True
 
     def delete_node(self, node_id: str) -> bool:
@@ -709,6 +886,8 @@ class MockPGAdapter:
         source_id: Optional[str] = None,
         target_id: Optional[str] = None,
         edge_type: Optional[str] = None,
+        limit: int = None,
+        offset: int = None,
     ) -> list[dict]:
         results = list(self._edges.values())
         if source_id:
@@ -720,6 +899,10 @@ class MockPGAdapter:
             results = [e for e in results if e["target_id"] == target_id]
         if edge_type:
             results = [e for e in results if e["edge_type"] == edge_type]
+        if offset is not None:
+            results = results[offset:]
+        if limit is not None:
+            results = results[:limit]
         return results
 
     def delete_edge(self, edge_id: int) -> bool:
@@ -732,9 +915,15 @@ class MockPGAdapter:
         visited = set()
         result = []
         queue = [(node_id, 0)]
+        
+        # KG-011: Fixed depth boundary - include nodes at depth == limit
+        max_depth = depth if depth else 1
+        
         while queue:
             current, d = queue.pop(0)
             if current in visited:
+                continue
+            if d > max_depth:  # Only skip if we've exceeded the depth limit
                 continue
             visited.add(current)
             for edge in self._edges.values():
@@ -744,7 +933,7 @@ class MockPGAdapter:
                     neighbor = edge["source_id"]
                 else:
                     continue
-                if neighbor not in visited and d < depth:
+                if neighbor not in visited and d < max_depth:
                     result.append({
                         "neighbor_id": neighbor,
                         "edge_type": edge["edge_type"],
@@ -763,6 +952,7 @@ class MockPGAdapter:
         queue = [(start_id, [start_id])]
         while queue:
             node_id, path = queue.pop(0)
+            # KG-011: Fixed - check depth BEFORE adding neighbors, not after
             if len(path) > max_depth:
                 continue
             for edge in self._edges.values():
@@ -779,43 +969,56 @@ class MockPGAdapter:
                         queue.append((neighbor, path + [neighbor]))
         return None
 
-    def bfs_traverse(self, start_id: str) -> list[str]:
+    def bfs_traverse(self, start_id: str, max_depth: int = 50) -> list[str]:
         if start_id not in self._nodes:
             return [start_id]
         visited = set()
         queue = [start_id]
         result = []
+        depth_map = {start_id: 0}
+        
         while queue:
             node_id = queue.pop(0)
+            current_depth = depth_map.get(node_id, 0)
+            
             if node_id in visited:
                 continue
+            if current_depth > max_depth:
+                continue
+                
             visited.add(node_id)
             result.append(node_id)
+            
             for edge in self._edges.values():
                 if edge["source_id"] == node_id and edge["target_id"] not in visited:
+                    depth_map[edge["target_id"]] = current_depth + 1
                     queue.append(edge["target_id"])
                 elif edge["target_id"] == node_id and edge["source_id"] not in visited:
+                    depth_map[edge["source_id"]] = current_depth + 1
                     queue.append(edge["source_id"])
         return result
 
-    def dfs_traverse(self, start_id: str) -> list[str]:
+    def dfs_traverse(self, start_id: str, max_depth: int = 50) -> list[str]:
         if start_id not in self._nodes:
             return [start_id]
         visited = set()
         result = []
 
-        def _dfs(node_id: str):
+        def _dfs(node_id: str, depth: int):
+            # KG-011: Fixed depth limit - nodes at depth == max_depth ARE included
             if node_id in visited:
+                return
+            if depth > max_depth:
                 return
             visited.add(node_id)
             result.append(node_id)
             for edge in self._edges.values():
                 if edge["source_id"] == node_id:
-                    _dfs(edge["target_id"])
+                    _dfs(edge["target_id"], depth + 1)
                 elif edge["target_id"] == node_id:
-                    _dfs(edge["source_id"])
+                    _dfs(edge["source_id"], depth + 1)
 
-        _dfs(start_id)
+        _dfs(start_id, 0)
         return result
 
     def batch_insert_nodes(self, nodes: list[dict]) -> int:

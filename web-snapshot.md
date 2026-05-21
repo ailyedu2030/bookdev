@@ -1,0 +1,77 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - heading "📚 AI教材编写系统" [level=1] [ref=e3]
+    - link "仪表盘" [ref=e4] [cursor=pointer]:
+      - /url: "#"
+    - link "项目管理" [ref=e5] [cursor=pointer]:
+      - /url: "#"
+    - link "章节编辑器" [ref=e6] [cursor=pointer]:
+      - /url: "#"
+    - link "安全扫描" [ref=e7] [cursor=pointer]:
+      - /url: "#"
+  - main [ref=e8]:
+    - generic [ref=e9]:
+      - heading "系统仪表盘" [level=2] [ref=e10]
+      - generic [ref=e11]:
+        - generic [ref=e48]:
+          - heading "MiniMax API" [level=3] [ref=e49]
+          - generic [ref=e50]: 已连接
+          - generic [ref=e51]: MiniMax-M2.7
+        - generic [ref=e52]:
+          - heading "项目/章节" [level=3] [ref=e53]
+          - generic [ref=e54]: 0 / 0
+          - generic [ref=e55]: 活跃项目
+        - generic [ref=e56]:
+          - heading "质量门禁" [level=3] [ref=e57]
+          - generic [ref=e58]: WARN
+          - generic [ref=e59]: 1/3 通过
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - heading "最近日志" [level=3] [ref=e16]
+          - generic [ref=e31]:
+            - text: "{"
+            - text: "\"timestamp\": \"2026-05-19 13:46:59\","
+            - text: "\"minimax\": {"
+            - text: "\"connected\": true,"
+            - text: "\"model\": \"MiniMax-M2.7\","
+            - text: "\"base_url\": \"https://api.minimaxi.com/v1\""
+            - text: "},"
+            - text: "\"modules\": {"
+            - text: "\"immutable_log\": 0,"
+            - text: "\"budget\": \"0t/100000t\","
+            - text: "\"knowledge_graph\": 0,"
+            - text: "\"security_filter\": \"active\","
+            - text: "\"risk_classifier\": \"active\""
+            - text: "},"
+            - text: "\"quality_gate\": {"
+            - text: "\"passed\": false,"
+            - text: "\"total\": 3,"
+            - text: "\"summary\": {"
+            - text: "\"total\": 3,"
+            - text: "\"passed\": 1,"
+            - text: "\"failed\": 1,"
+            - text: "\"warnings\": 1,"
+            - text: "\"skipped\": 0"
+            - text: "}"
+            - text: "},"
+            - text: "\"projects\": 0,"
+            - text: "\"chapters\": 0"
+            - text: "}"
+        - generic [ref=e17]:
+          - heading "模块状态" [level=3] [ref=e18]
+          - generic [ref=e32]:
+            - generic [ref=e60]:
+              - generic [ref=e61]: immutable_log
+              - generic [ref=e62]: "0"
+            - generic [ref=e63]:
+              - generic [ref=e64]: budget
+              - generic [ref=e65]: 0t/100000t
+            - generic [ref=e66]:
+              - generic [ref=e67]: knowledge_graph
+              - generic [ref=e68]: "0"
+            - generic [ref=e69]:
+              - generic [ref=e70]: security_filter
+              - generic [ref=e71]: active
+            - generic [ref=e72]:
+              - generic [ref=e73]: risk_classifier
+              - generic [ref=e74]: active

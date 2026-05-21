@@ -71,12 +71,22 @@ class DatasetBuilder:
         return self._samples
 
     def _parse_sample(self, data: Dict[str, Any]) -> GoldenSample:
-        """解析样本数据"""
+        """
+        解析样本数据
+
+        INF-010: Added error handling and default value for 'content' field
+        to prevent KeyError when content is missing.
+        """
+        # Handle missing 'content' field gracefully
+        content = data.get("content", {})
+        if content is None:
+            content = {}
+
         return GoldenSample(
-            sample_id=data["sample_id"],
-            quality_level=data["quality_level"],
-            expected_score=data["expected_score"],
-            content=data["content"],
+            sample_id=data.get("sample_id", ""),
+            quality_level=data.get("quality_level", "unknown"),
+            expected_score=data.get("expected_score", 0.0),
+            content=content,
             quality_metrics=data.get("quality_metrics", {}),
             metadata=data.get("metadata", {}),
             hallucination_markers=data.get("hallucination_markers", []),

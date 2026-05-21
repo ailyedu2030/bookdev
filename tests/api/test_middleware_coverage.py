@@ -219,25 +219,37 @@ class TestRateLimiterUncovered:
 
     def test_get_client_identifier_forwarded_for(self):
         """Test get_client_identifier with X-Forwarded-For header."""
-        mock_request = MagicMock(spec=Request)
-        mock_request.headers = {
-            "X-Forwarded-For": "192.168.1.1",
-        }
-        mock_request.client = MagicMock()
-        mock_request.client.host = "localhost"
+        from api.middleware.rate_limit import rate_limit_settings
+        original = rate_limit_settings.trust_x_forwarded_for
+        rate_limit_settings.trust_x_forwarded_for = True
+        try:
+            mock_request = MagicMock(spec=Request)
+            mock_request.headers = {
+                "X-Forwarded-For": "192.168.1.1",
+            }
+            mock_request.client = MagicMock()
+            mock_request.client.host = "localhost"
 
-        identifier = get_client_identifier(mock_request)
-        assert "192.168.1.1" in identifier
+            identifier = get_client_identifier(mock_request)
+            assert "192.168.1.1" in identifier
+        finally:
+            rate_limit_settings.trust_x_forwarded_for = original
 
     def test_get_client_identifier_real_ip(self):
         """Test get_client_identifier with X-Real-IP header."""
-        mock_request = MagicMock(spec=Request)
-        mock_request.headers = {"X-Real-IP": "10.0.0.1"}
-        mock_request.client = MagicMock()
-        mock_request.client.host = "localhost"
+        from api.middleware.rate_limit import rate_limit_settings
+        original = rate_limit_settings.trust_x_real_ip
+        rate_limit_settings.trust_x_real_ip = True
+        try:
+            mock_request = MagicMock(spec=Request)
+            mock_request.headers = {"X-Real-IP": "10.0.0.1"}
+            mock_request.client = MagicMock()
+            mock_request.client.host = "localhost"
 
-        identifier = get_client_identifier(mock_request)
-        assert "10.0.0.1" in identifier
+            identifier = get_client_identifier(mock_request)
+            assert "10.0.0.1" in identifier
+        finally:
+            rate_limit_settings.trust_x_real_ip = original
 
 
 class TestSecurityHeadersUncovered:

@@ -131,29 +131,45 @@ class TermRepository(BaseRepository[Term]):
         return None
 
     async def find_similar_terms(
-        self, term_id: uuid.UUID, threshold: float = 0.7
+        self, term_id: uuid.UUID, threshold: float = 0.7, limit: int = 100
     ) -> Sequence[Term]:
-        """查找相似术语（基于同义词匹配）"""
+        """查找相似术语 - 使用SQL层面操作避免N+1查询,添加limit限制"""
         term = await self.get_by_id(term_id)
         if not term or not term.synonyms:
             return []
 
-        all_terms = await self.find_all()
-        similar = []
+        term_synonyms = term.synonyms
+        if not term_synonyms:
+            return []
 
-        for t in all_terms:
-            if t.id == term_id:
-                continue
+        # 使用SQL的重叠数组检查 - 遍历每个同义词检查是否有重叠
+        # 使用PostgreSQL的 && 数组重叠运算符
+        conditions = [Term.id != term_id]
 
-            t_synonyms = set(t.synonyms) if t.synonyms else set()
-            term_synonyms = set(term.synonyms)
+        # 构建同义词重叠条件：Term.synonyms && [syn1, syn2, ...]
+        # 使用 func.array intersect 来检测
+        # 同义词列表
+        synonyms_list = list(term_synonyms)
 
-            if t_synonyms & term_synonyms:
-                similar.append(t)
-            elif t.domain == term.domain:
-                similar.append(t)
+        # 使用 OR 条件：有共同同义词 OR 同领域
+        overlap_conditions = []
+        for syn in synonyms_list:
+            # 检查每个同义词是否存在于另一个术语的同义词数组中
+            overlap_conditions.append(Term.synonyms.any(syn))
 
-        return similar
+        if overlap_conditions:
+            conditions.append(or_(*overlap_conditions, Term.domain == term.domain))
+        else:
+            conditions.append(Term.domain == term.domain)
+
+        stmt = (
+            select(Term)
+            .where(and_(*conditions))
+            .limit(limit)
+        )
+
+        result = await self._session.execute(stmt)
+        return result.scalars().all()
 
 
 class ConceptRepository(BaseRepository[Concept]):

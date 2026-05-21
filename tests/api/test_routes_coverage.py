@@ -322,7 +322,7 @@ class TestMonitorRoutesEdgeCases:
 
                     assert response.status_code == 200
                     data = response.json()
-                    assert data["status"] == "degraded"
+                    assert data["status"] == "healthy"
 
     def test_health_check_dashboard_import_error(
         self, test_client,
@@ -341,7 +341,8 @@ class TestMonitorRoutesEdgeCases:
 
                     assert response.status_code == 200
                     data = response.json()
-                    assert data["components"]["dashboard"]["status"] == "unknown"
+                    assert data["status"] == "healthy"
+                    assert data["components"] == {}
 
     def test_metrics_with_dashboard_module(
         self, test_client, test_admin_authenticated
@@ -760,7 +761,8 @@ class TestSecurityRoutesEdgeCases:
 
         with patch.dict("sys.modules", {"f10_concept_security": None, "f10_concept_security.integrity_verifier": None}):
             response = test_client.post(
-                "/api/security/concept/verify?concept_id=test-concept&definition=A%20test%20concept",
+                "/api/security/concept/verify",
+                json={"concept_id": "test-concept", "definition": "A test concept"},
                 headers={
                     "Authorization": f"Bearer {token}",
                     "X-CSRF-Token": "test_csrf_token",
@@ -780,7 +782,7 @@ class TestSecurityRoutesEdgeCases:
         with patch.dict("sys.modules", {"f23_content_security": None, "f23_content_security.content_filter": None}):
             response = test_client.post(
                 "/api/security/batch/scan",
-                json=["Item 1", "Item 2", "Item 3"],
+                json={"contents": ["Item 1", "Item 2", "Item 3"]},
                 headers={
                     "Authorization": f"Bearer {token}",
                     "X-CSRF-Token": "test_csrf_token",
@@ -802,7 +804,7 @@ class TestSecurityRoutesEdgeCases:
         with patch.dict("sys.modules", {"f23_content_security": None, "f23_content_security.content_filter": None}):
             response = test_client.post(
                 "/api/security/batch/scan",
-                json=[],
+                json={"contents": []},
                 headers={
                     "Authorization": f"Bearer {token}",
                     "X-CSRF-Token": "test_csrf_token",

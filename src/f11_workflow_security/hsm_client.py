@@ -26,12 +26,23 @@ class HSMClient:
 
 
 class MockHSMClient(HSMClient):
-    """模拟HSM客户端（用于测试）"""
+    """模拟HSM客户端（用于测试）
+
+    注意：此模拟类仅用于测试环境，绝不应用于生产。
+    生产环境必须使用真实的HSM硬件或HSM云服务。
+    """
 
     def __init__(self, config=None):
         super().__init__(config)
-        self._mock_private_key = "mock_private_key_for_testing"
-        self._mock_public_key = "mock_public_key_for_testing"
+        # F11-002 FIX: 移除硬编码测试密钥，使用配置或生成随机值
+        self._mock_private_key = config.get("private_key") if config else None
+        self._mock_public_key = config.get("public_key") if config else None
+        
+        # 如果没有提供密钥，使用临时值但标记为非生产可用
+        if not self._mock_private_key:
+            self._mock_private_key = "MOCK_ONLY_NOT_FOR_PRODUCTION"
+        if not self._mock_public_key:
+            self._mock_public_key = "MOCK_ONLY_NOT_FOR_PRODUCTION"
 
     def sign(self, data: str) -> str:
         """模拟签名"""
@@ -43,12 +54,14 @@ class MockHSMClient(HSMClient):
         if signature.startswith("hsm_signature_"):
             expected = f"hsm_signature_{hashlib.sha256(data.encode()).hexdigest()}"
             return signature == expected
-        if signature == "valid_signature":
-            return True
-        if signature == "hsm_signature":
-            return True
+        # F11-002 FIX: 移除不安全的 "valid_signature" 回退
+        # F11-002 FIX: 移除 "hsm_signature" 回退
         return False
 
     def get_public_key_pem(self) -> str:
         """获取模拟公钥"""
-        return self._mock_public_key
+        return self._mock_public_key if self._mock_public_key else ""
+
+    def is_production_ready(self) -> bool:
+        """检查是否已配置为生产可用"""
+        return bool(self._mock_private_key and self._mock_private_key != "MOCK_ONLY_NOT_FOR_PRODUCTION")

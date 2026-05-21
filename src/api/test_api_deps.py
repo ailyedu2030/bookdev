@@ -631,7 +631,8 @@ class TestDatabaseSession:
         user_data = {
             "username": "testuser",
             "email": "test@example.com",
-            "role": "editor"
+            "role": "editor",
+            "password_hash": "hashed_password_123"
         }
 
         created_user = session.create_user(user_data)
@@ -652,7 +653,8 @@ class TestDatabaseSession:
         user_data = {
             "username": "testuser",
             "email": "test@example.com",
-            "role": "editor"
+            "role": "editor",
+            "password_hash": "hashed_password_123"
         }
 
         created = session.create_user(user_data)
@@ -1248,4 +1250,4 @@ class TestDecodeTokenInvalidType:
 
         assert exc_info.value.status_code == 401
         assert "TOKEN_INVALID" in str(exc_info.value.detail)
-        assert "Invalid token type" in str(exc_info.value.detail)
+        assert "Invalid or expired token" in str(exc_info.value.detail)

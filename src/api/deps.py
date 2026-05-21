@@ -30,8 +30,13 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", secrets.token_hex(32))
-REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET_KEY", secrets.token_hex(32))
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+REFRESH_SECRET_KEY = os.getenv("JWT_REFRESH_SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY environment variable is required")
+if not REFRESH_SECRET_KEY:
+    raise ValueError("JWT_REFRESH_SECRET_KEY environment variable is required")
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -45,6 +50,7 @@ class User:
     username: str
     email: str
     role: str
+    password_hash: Optional[str] = None
     organization_id: Optional[str] = None
     clearance_level: int = 1
 
@@ -90,12 +96,21 @@ ROLE_PERMISSIONS = {
         "terms:*",
         "knowledge_graph:read",
         "knowledge_graph:create",
+        "knowledge_graph:update",
+        "knowledge_graph:delete",
         "security:scan",
+        "security:doi_verify",
+        "security:semantic_scan",
+        "security:regulation_verify",
+        "security:material_register",
+        "security:material_verify",
+        "security:concept_verify",
         "workflows:read",
     },
     "reviewer": {
         "projects:read",
         "chapters:read",
+        "chapters:submit",
         "chapters:review",
         "terms:read",
         "knowledge_graph:read",
@@ -105,9 +120,20 @@ ROLE_PERMISSIONS = {
         "projects:read",
         "chapters:create",
         "chapters:read",
+        "chapters:submit",
         "chapters:update",
         "terms:read",
+        "terms:create",
+        "terms:update",
+        "terms:lock",
+        "terms:unlock",
+        "terms:delete",
         "knowledge_graph:read",
+        "knowledge_graph:create",
+        "security:scan",
+        "security:verify",
+        "security:register",
+        "workflows:read",
     },
     "viewer": {
         "projects:read",
@@ -171,13 +197,13 @@ def decode_token(token: str, token_type: str = "access") -> TokenData:
             iat=payload.get("iat", 0),
             type=payload.get("type", token_type),
         )
-    except JWTError as e:
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "error": {
                     "code": "TOKEN_INVALID",
-                    "message": f"Invalid token: {str(e)}",
+                    "message": "Invalid or expired token",
                 }
             },
             headers={"WWW-Authenticate": "Bearer"},
@@ -335,6 +361,11 @@ async def get_current_active_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": {"code": "UNAUTHORIZED", "message": "Authentication required"}},
         )
+    if user.role not in ROLE_HIERARCHY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": {"code": "INVALID_USER", "message": "User has invalid role"}},
+        )
     return user
 
 
@@ -360,11 +391,19 @@ class DatabaseSession:
 
     def create_user(self, user_data: dict) -> User:
         user_id = generate_uuid()
+        if "password" in user_data:
+            from api.deps import get_password_hash
+            password_hash = get_password_hash(user_data["password"])
+        elif "password_hash" in user_data:
+            password_hash = user_data["password_hash"]
+        else:
+            raise ValueError("Either 'password' or 'password_hash' must be provided")
         user = User(
             id=user_id,
             username=user_data["username"],
             email=user_data["email"],
             role=user_data.get("role", "viewer"),
+            password_hash=password_hash,
             organization_id=user_data.get("organization_id"),
             clearance_level=user_data.get("clearance_level", 1),
         )
@@ -379,6 +418,15 @@ class DatabaseSession:
 
     def get_user_by_id(self, user_id: str) -> Optional[User]:
         return self._users.get(user_id)
+
+    def update_user(self, user_id: str, update_data: dict) -> Optional[User]:
+        if user_id in self._users:
+            user = self._users[user_id]
+            for key, value in update_data.items():
+                if hasattr(user, key):
+                    setattr(user, key, value)
+            return user
+        return None
 
     def create_project(self, project_data: dict) -> dict:
         project_id = generate_uuid()
@@ -541,11 +589,21 @@ class DatabaseSession:
             return True
         return False
 
-    def add_session(self, user_id: str, token: str) -> None:
-        self._sessions[token] = user_id
+    def add_session(self, user_id: str, token: str, expires_in: int = 1800) -> None:
+        """Add a session with expiration time (default 30 minutes)."""
+        expire_at = time.time() + expires_in
+        self._sessions[token] = {"user_id": user_id, "expire_at": expire_at}
 
     def get_session(self, token: str) -> Optional[str]:
-        return self._sessions.get(token)
+        """Get session user_id if session exists and is not expired."""
+        session = self._sessions.get(token)
+        if not session:
+            return None
+        if time.time() > session.get("expire_at", 0):
+            # Session expired, remove it
+            del self._sessions[token]
+            return None
+        return session.get("user_id")
 
 
 db_session = DatabaseSession()

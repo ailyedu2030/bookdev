@@ -5,7 +5,14 @@ F00: 事件总线工厂
 无Kafka时自动使用Mock总线。
 """
 
+import asyncio
+import logging
+import json
+import os
 from typing import Optional
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 def create_event_bus(config: Optional[dict] = None):
@@ -40,6 +47,9 @@ class RealEventBus:
     基于RealKafkaProducer和RealKafkaConsumer的实现。
     支持发布/订阅、事件溯源和死信队列。
     """
+
+    # Local fallback log path for DLQ failures
+    DLQ_FALLBACK_DIR = "/var/log/bookdop/dlq_fallback"
 
     def __init__(self, config: Optional[dict] = None):
         if config is None:
@@ -101,6 +111,8 @@ class RealEventBus:
         """
         订阅事件
 
+        INF-006: Added validation to ensure handler is callable.
+
         Args:
             event_type: 事件类型
             handler: 事件处理函数
@@ -109,7 +121,19 @@ class RealEventBus:
 
         Returns:
             subscription_id: 订阅ID
+
+        Raises:
+            TypeError: If handler is not callable
+            ValueError: If event_type is empty
         """
+        # INF-006: Validate handler is callable
+        if not callable(handler):
+            raise TypeError(f"handler must be a callable object, got {type(handler).__name__}")
+
+        # INF-006: Validate event_type is not empty
+        if not event_type or not event_type.strip():
+            raise ValueError("event_type cannot be empty")
+
         from f00_kafka_eventbus.real_consumer import RealKafkaConsumer
 
         topic = f"{self._topic_prefix}.{event_type}"
@@ -156,6 +180,98 @@ class RealEventBus:
             key=event.event_id,
         )
 
+    async def _execute_handler_with_retry(
+        self,
+        handler,
+        msg: dict,
+        max_retries: int,
+        retry_delay: float,
+    ) -> bool:
+        """
+        Execute handler with retry logic and exponential backoff.
+
+        Args:
+            handler: Event handler function
+            msg: Message to process
+            max_retries: Maximum number of retry attempts
+            retry_delay: Base delay between retries (seconds)
+
+        Returns:
+            True if handler succeeded, False otherwise
+        """
+        last_error = None
+        exponential_base = 2.0
+        max_delay = 60.0
+
+        for attempt in range(max_retries + 1):
+            try:
+                await handler(msg)
+                if attempt > 0:
+                    logger.info(
+                        f"Retry {attempt} succeeded for handler {handler.__name__}"
+                    )
+                return True
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries:
+                    # Calculate delay with exponential backoff and jitter
+                    import random
+                    delay = min(retry_delay * (exponential_base ** attempt), max_delay)
+                    delay = delay * (0.5 + random.random() * 0.5)  # Add jitter
+                    logger.warning(
+                        f"Handler {handler.__name__} attempt {attempt + 1} failed: {e}. "
+                        f"Retrying in {delay:.2f}s..."
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(
+                        f"Handler {handler.__name__} failed after {max_retries + 1} attempts: {e}"
+                    )
+
+        # All retries exhausted, return False
+        return False
+
+    def _log_to_fallback_file(self, msg: dict, error: Exception, handler_name: str) -> None:
+        """
+        Log failed message to local fallback file when DLQ fails.
+
+        Args:
+            msg: The failed message
+            error: The exception that caused the failure
+            handler_name: Name of the handler that failed
+        """
+        import traceback as tb
+
+        try:
+            # Ensure directory exists
+            os.makedirs(self.DLQ_FALLBACK_DIR, exist_ok=True)
+
+            fallback_file = os.path.join(
+                self.DLQ_FALLBACK_DIR,
+                f"dlq_fallback_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
+            )
+
+            fallback_entry = {
+                "event": msg,
+                "error": {
+                    "type": type(error).__name__,
+                    "message": str(error),
+                },
+                "handler_name": handler_name,
+                "timestamp": datetime.utcnow().isoformat(),
+                "traceback": tb.format_exc(),
+            }
+
+            with open(fallback_file, 'w') as f:
+                json.dump(fallback_entry, f, indent=2, default=str)
+
+            logger.info(f"Message logged to fallback file: {fallback_file}")
+        except Exception as fallback_error:
+            logger.error(
+                f"Failed to write fallback log: {fallback_error}. "
+                f"Original error: {error}"
+            )
+
     async def start_consuming(self) -> None:
         """开始消费消息"""
         from f00_kafka_eventbus.real_consumer import RealKafkaConsumer
@@ -167,25 +283,71 @@ class RealEventBus:
                 bootstrap_servers=self._bootstrap_servers,
                 group_id=self._consumer_group,
                 topics=[topic],
+                enable_auto_commit=False,  # KAFKA-006: Manual commit for reliability
             )
             await consumer.start()
 
             async def create_handler(sub_list):
                 async def handler(msg):
+                    """
+                    Process message with proper retry logic and DLQ handling.
+                    Ensures consumer continues even after handler failures.
+                    """
+                    # KAFKA-015: Implement deduplication based on event_id
+                    event_id = msg.get("event_id")
+                    if event_id and hasattr(self, '_processed_events'):
+                        if event_id in self._processed_events:
+                            logger.debug(f"Duplicate event detected: {event_id}, skipping")
+                            return
+                        self._processed_events.add(event_id)
+                        # Keep set bounded to avoid memory leak
+                        if len(self._processed_events) > 100000:
+                            self._processed_events = set(list(self._processed_events)[-50000:])
+
                     for sub in sub_list:
                         try:
-                            await sub["handler"](msg)
-                        except Exception as e:
-                            if sub["max_retries"] > 0:
-                                pass
-                            else:
+                            # KAFKA-005: Implement actual retry logic with exponential backoff
+                            success = await self._execute_handler_with_retry(
+                                handler=sub["handler"],
+                                msg=msg,
+                                max_retries=sub["max_retries"],
+                                retry_delay=sub["retry_delay"],
+                            )
+
+                            if not success:
+                                # All retries exhausted, send to DLQ
                                 if self._dlq_handler:
-                                    await self._dlq_handler.send_to_dlq(
-                                        msg, e, sub["handler"].__name__
-                                    )
+                                    try:
+                                        await self._dlq_handler.send_to_dlq(
+                                            msg,
+                                            Exception("Handler failed after max retries"),
+                                            sub["handler"].__name__,
+                                        )
+                                    except Exception as dlq_error:
+                                        # KAFKA-014: DLQ failure should not cause message loss
+                                        logger.error(
+                                            f"Failed to send to DLQ: {dlq_error}. "
+                                            f"Logging to fallback file instead."
+                                        )
+                                        self._log_to_fallback_file(
+                                            msg,
+                                            dlq_error,
+                                            sub["handler"].__name__,
+                                        )
+                        except Exception as e:
+                            # KAFKA-012: Ensure we continue to next message even on unexpected errors
+                            logger.error(
+                                f"Unexpected error in handler loop: {e}",
+                                exc_info=True
+                            )
+                            continue
+
                 return handler
 
             self._consumers[topic] = consumer
+            # Initialize deduplication set for this consumer
+            if not hasattr(self, '_processed_events'):
+                self._processed_events = set()
             await consumer.consume_in_background(await create_handler(subs))
 
     async def stop_consuming(self) -> None:

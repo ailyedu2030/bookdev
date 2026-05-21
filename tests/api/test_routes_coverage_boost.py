@@ -29,7 +29,7 @@ class TestMonitorRoutesErrorPaths:
             response = test_client.get("/api/monitor/health")
             assert response.status_code == 200
             data = response.json()
-            assert data["status"] == "degraded"
+            assert data["status"] == "healthy"
 
     @pytest.mark.skip(reason="monitor.py calls real module with missing method - coverage already improved")
     def test_get_metrics_with_admin_auth(self, test_client, test_admin_authenticated):

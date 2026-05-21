@@ -42,23 +42,16 @@ class UserRepository(BaseRepository[User]):
         return result.scalar_one_or_none()
 
     async def get_with_permissions(self, user_id: uuid.UUID) -> Optional[User]:
-        """获取用户及其所有权限"""
-        user = await self.get_with_roles(user_id)
-        if user is None:
-            return None
-
-        all_permissions = []
-        for role in user.roles:
-            stmt = (
-                select(Permission)
-                .join(RolePermission)
-                .where(RolePermission.role_id == role.id)
+        """获取用户及其所有权限 - 使用joinedload避免N+1查询"""
+        stmt = (
+            select(User)
+            .options(
+                selectinload(User.roles).selectinload(Role.permissions)
             )
-            result = await self._session.execute(stmt)
-            permissions = result.scalars().all()
-            all_permissions.extend(permissions)
-
-        return user
+            .where(User.id == user_id)
+        )
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
 
     async def create_user(
         self,

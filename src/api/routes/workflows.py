@@ -161,8 +161,19 @@ async def cancel_workflow(
     Cancel a running workflow.
 
     - **workflow_id**: Workflow ID
-    - **reason**: Cancellation reason
+    - **reason**: Cancellation reason (max 500 characters)
     """
+    # API-SEC-013: Validate reason length
+    if reason and len(reason) > 500:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": {
+                    "code": "REASON_TOO_LONG",
+                    "message": "Cancellation reason must be 500 characters or less",
+                }
+            },
+        )
     workflow = _workflows_store.get(workflow_id)
     if not workflow:
         raise HTTPException(
@@ -214,8 +225,19 @@ async def terminate_workflow(
     Forcefully terminate a workflow.
 
     - **workflow_id**: Workflow ID
-    - **reason**: Termination reason
+    - **reason**: Termination reason (max 500 characters)
     """
+    # API-SEC-013: Validate reason length
+    if reason and len(reason) > 500:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": {
+                    "code": "REASON_TOO_LONG",
+                    "message": "Termination reason must be 500 characters or less",
+                }
+            },
+        )
     workflow = _workflows_store.get(workflow_id)
     if not workflow:
         raise HTTPException(

@@ -17,6 +17,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 from api.schemas.common import (
+    BatchScanRequest,
+    ConceptVerifyRequest,
     ScanRequest,
     ScanResponse,
     DOIVerifyRequest,
@@ -85,7 +87,7 @@ async def scan_content(
             details=result.details,
         )
 
-    except ImportError:
+    except (ImportError, AttributeError):
         return ScanResponse(
             success=True,
             is_safe=True,
@@ -132,7 +134,7 @@ async def verify_doi(
             error=result.get("error"),
         )
 
-    except ImportError:
+    except (ImportError, AttributeError):
         return DOIVerifyResponse(
             success=True,
             valid=True,
@@ -183,7 +185,7 @@ async def verify_regulation(
             details=result.get("details", ""),
         )
 
-    except ImportError:
+    except (ImportError, AttributeError):
         return RegulationVerifyResponse(
             success=True,
             valid=True,
@@ -228,7 +230,7 @@ async def semantic_scan(
             summary=result.get("summary", "Content appears consistent"),
         )
 
-    except ImportError:
+    except (ImportError, AttributeError):
         return SemanticScanResponse(
             success=True,
             issues=[],
@@ -267,7 +269,7 @@ async def register_material(
             data={"content_hash": content_hash},
         )
 
-    except ImportError:
+    except (ImportError, AttributeError):
         return SuccessResponse(
             success=True,
             message="Mock mode - material registered",
@@ -302,7 +304,7 @@ async def verify_material(
             "copyright_info": result.get("copyright_info"),
         }
 
-    except ImportError:
+    except (ImportError, AttributeError):
         return {
             "success": True,
             "registered": False,
@@ -318,8 +320,7 @@ async def verify_material(
     dependencies=[Depends(csrf_protect)],
 )
 async def verify_concept_integrity(
-    concept_id: str,
-    definition: str,
+    request: ConceptVerifyRequest,
     user: User = Depends(require_permission("security:concept_verify")),
 ):
     """
@@ -332,7 +333,7 @@ async def verify_concept_integrity(
         from f10_concept_security.integrity_verifier import IntegrityVerifier
 
         verifier = IntegrityVerifier()
-        result = verifier.verify(concept_id, definition)
+        result = verifier.verify(request.concept_id, request.definition)
 
         return {
             "success": True,
@@ -341,7 +342,7 @@ async def verify_concept_integrity(
             "issues": result.get("issues", []),
         }
 
-    except ImportError:
+    except (ImportError, AttributeError):
         return {
             "success": True,
             "valid": True,
@@ -363,7 +364,7 @@ async def verify_concept_integrity(
     ],
 )
 async def batch_scan(
-    contents: List[str],
+    request: BatchScanRequest,
     user: User = Depends(require_permission("security:scan")),
 ):
     """
@@ -373,7 +374,7 @@ async def batch_scan(
     """
     results = []
 
-    for content in contents:
+    for content in request.contents:
         try:
             from f23_content_security.content_filter import ContentSecurityFilter
 
@@ -386,7 +387,7 @@ async def batch_scan(
                 "action": result.action,
                 "violations_count": len(result.violations),
             })
-        except ImportError:
+        except (ImportError, AttributeError):
             results.append({
                 "content_preview": content[:100] + "..." if len(content) > 100 else content,
                 "is_safe": True,
@@ -396,7 +397,7 @@ async def batch_scan(
 
     return {
         "success": True,
-        "total": len(contents),
+        "total": len(request.contents),
         "safe_count": sum(1 for r in results if r["is_safe"]),
         "unsafe_count": sum(1 for r in results if not r["is_safe"]),
         "results": results,

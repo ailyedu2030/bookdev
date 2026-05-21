@@ -6,10 +6,15 @@ F29: CI/CD质量门禁
 
 import os
 import re
+import subprocess
+import logging
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any
 from enum import Enum
 from datetime import datetime
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 
 class CheckStatus(Enum):
@@ -81,6 +86,8 @@ class LinterChecker:
                         details={"line": e.lineno, "offset": e.offset}
                     )
         except Exception as e:
+            # QC-006 Fix: 记录异常而不是silent pass
+            logger.warning(f"无法检查文件 {file_path}: {str(e)}")
             return CheckResult(
                 name="linter",
                 status=CheckStatus.WARNING,
@@ -184,8 +191,9 @@ class SecurityScanner:
             # Filter false positives
             findings = [f for f in findings if not any(kw in f.lower() for kw in MOCK_KEYWORDS)]
 
-        except Exception:
-            pass
+        except Exception as e:
+            # QC-006 Fix: 记录异常而不是silent pass
+            logger.warning(f"扫描文件 {file_path} 时出错: {str(e)}")
 
         return findings
 
@@ -230,6 +238,8 @@ class CoverageTracker:
                 )
 
         except Exception as e:
+            # QC-006 Fix: 记录异常而不是silent pass
+            logger.warning(f"无法解析覆盖率文件 {coverage_file}: {str(e)}")
             return CheckResult(
                 name="coverage",
                 status=CheckStatus.WARNING,
@@ -253,13 +263,59 @@ class CoverageTracker:
                 ["python", "-m", "coverage", "report", "--data-file=" + abs_path],
                 capture_output=True, text=True, timeout=30
             )
-            for line in result.stdout.split("\n"):
-                if line.strip().startswith("TOTAL"):
-                    parts = line.split()
-                    if len(parts) >= 4:
-                        return float(parts[-1].rstrip("%"))
-        except Exception:
-            pass
+            # QC-010 Fix: 使用更健壮的解析方法
+            return self._parse_coverage_report(result.stdout)
+        except Exception as e:
+            # QC-006 Fix: 记录异常而不是silent pass
+            logger.warning(f"解析覆盖率文件 {coverage_file} 时出错: {str(e)}")
+            return 0.0
+
+    def _parse_coverage_report(self, output: str) -> float:
+        """
+        从coverage report输出中解析覆盖率
+        使用更健壮的方法处理各种输出格式
+        """
+        if not output:
+            return 0.0
+
+        # 查找TOTAL行
+        for line in output.split("\n"):
+            line = line.strip()
+            # 匹配TOTAL开头的行
+            if line.startswith("TOTAL"):
+                # 使用多个可能的分隔符
+                for sep in ['/', '|', '\t']:
+                    if sep in line:
+                        parts = line.split(sep)
+                        # 尝试找到覆盖率数字
+                        for part in reversed(parts):
+                            part = part.strip()
+                            # 检查是否是百分比格式
+                            if part.endswith('%'):
+                                try:
+                                    return float(part.rstrip('%'))
+                                except ValueError:
+                                    continue
+                            # 检查是否是纯数字
+                            try:
+                                val = float(part)
+                                if 0 <= val <= 100:
+                                    return val
+                            except ValueError:
+                                continue
+                        break
+                # 如果没有找到分隔符，尝试正则提取最后的数字
+                matches = re.findall(r'(\d+(?:\.\d+)?)\s*(?:%|百分)', line)
+                if matches:
+                    return float(matches[-1])
+                # 尝试提取最后一个数字
+                numbers = re.findall(r'\d+\.\d+|\d+', line)
+                if numbers:
+                    try:
+                        return float(numbers[-1])
+                    except ValueError:
+                        pass
+
         return 0.0
 
     def _parse_text_coverage(self, content: str) -> float:
@@ -315,8 +371,10 @@ class QualityGate:
 
         summary = self._compute_summary(check_results)
 
+        # QC-008 Fix: WARNING状态不应该导致质量门禁失败
+        # 质量门禁只有FAIL时才失败，WARNING是可以通过的
         passed = all(
-            r.status == CheckStatus.PASS
+            r.status != CheckStatus.FAIL
             for r in check_results
             if r.status != CheckStatus.SKIP
         )

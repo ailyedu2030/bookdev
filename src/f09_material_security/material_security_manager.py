@@ -4,6 +4,7 @@ F09: 素材安全管理 - 素材安全管理器
 import asyncio
 import hashlib
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
 from enum import Enum
@@ -76,16 +77,27 @@ class MaterialSecurityManager:
         "min_scan_score": 0.9
     }
 
+    # F09-001 FIX: 使用正则模式而不是简单字符串，并添加编码变体检测
     SENSITIVE_PATTERNS = [
-        "恶意",
-        "可疑链接",
-        "http://",
-        "https://",
-        "钓鱼",
-        "诈骗",
-        "病毒",
-        "木马"
+        r"恶意", r"可疑链接", r"钓鱼", r"诈骗", r"病毒", r"木马",
+        r"黑客", r"攻击", r"漏洞", r"后门", r"间谍", r"监控",
+        r"窃取", r"非法", r"赌博", r"色情", r"暴力",
     ]
+
+    # URL检测正则
+    URL_PATTERN = re.compile(
+        r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[^\s]*',
+        re.IGNORECASE
+    )
+
+    # 可能的编码绕过变体（预编译）
+    ENCODING_VARIANTS = {
+        # 零宽度字符
+        '\u200b': '',  # Zero Width Space
+        '\u200c': '',  # Zero Width Non-Joiner
+        '\u200d': '',  # Zero Width Joiner
+        '\ufeff': '',  # BOM
+    }
 
     RETRIEVAL_WEIGHTS = {
         "WHITELIST": 1.0,
@@ -98,6 +110,39 @@ class MaterialSecurityManager:
         self.source_registry = source_registry or MaterialSourceRegistry()
         self._registered_materials: Dict[str, Material] = {}
         self._material_weights: Dict[str, float] = {}
+
+    def _normalize_content(self, content: str) -> str:
+        """F09-001 FIX: 规范化内容以防止编码绕过
+        
+        1. Unicode NFKC规范化
+        2. 移除零宽度字符
+        3. 全角转半角
+        """
+        # 移除零宽度字符
+        for zwc, replacement in self.ENCODING_VARIANTS.items():
+            content = content.replace(zwc, replacement)
+        
+        # Unicode NFKC规范化
+        content = unicodedata.normalize('NFKC', content)
+        
+        # 全角转半角
+        content = self._fullwidth_to_halfwidth(content)
+        
+        return content
+
+    def _fullwidth_to_halfwidth(self, text: str) -> str:
+        """全角转半角"""
+        result = []
+        for char in text:
+            # 全角空格 (U+3000) -> 半角空格
+            if char == '\u3000':
+                result.append(' ')
+            # 全角数字、字母、符号 -> 半角
+            elif '\uff01' <= char <= '\uff5e':
+                result.append(chr(ord(char) - 0xfee0))
+            else:
+                result.append(char)
+        return ''.join(result)
 
     async def register_material(self, material: Material) -> RegistrationResult:
         """注册素材（需审核）"""
@@ -158,19 +203,34 @@ class MaterialSecurityManager:
         )
 
     async def security_scan(self, content: str) -> SecurityScanResult:
-        """安全扫描"""
+        """安全扫描
+        
+        F09-001 FIX: 使用正则和Unicode规范化防止编码绕过
+        """
         sensitive_count = 0
         malicious_count = 0
         details = []
 
-        for pattern in self.SENSITIVE_PATTERNS:
-            if pattern.lower() in content.lower():
-                sensitive_count += 1
-                details.append(f"Found sensitive pattern: {pattern}")
+        # 规范化内容
+        normalized = self._normalize_content(content.lower())
 
-        if "http://" in content or "https://" in content:
+        # 使用正则模式检测
+        for pattern in self.SENSITIVE_PATTERNS:
+            try:
+                regex = re.compile(pattern, re.IGNORECASE)
+                matches = regex.findall(normalized)
+                if matches:
+                    sensitive_count += len(matches)
+                    details.append(f"Found sensitive pattern: {pattern}")
+            except re.error:
+                # 跳过无效的正则
+                continue
+
+        # F09-001 FIX: 使用正则检测URL，而不是简单字符串匹配
+        url_matches = self.URL_PATTERN.findall(content)
+        if url_matches:
             malicious_count += 1
-            details.append("Found URL in content")
+            details.append(f"Found {len(url_matches)} URL(s) in content")
 
         if sensitive_count > 0 or malicious_count > 0:
             scan_status = ScanStatus.WARNING if malicious_count == 0 else ScanStatus.BLOCKED

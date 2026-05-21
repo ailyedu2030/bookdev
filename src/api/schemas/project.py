@@ -2,23 +2,64 @@
 Project Schemas
 """
 
-from datetime import datetime
-from typing import Optional, List
+from datetime import datetime, timezone
+from typing import Optional, List, Literal
 from pydantic import BaseModel, Field
+
+
+# Project status literals - externalized enum
+class ProjectStatus:
+    DRAFT = "draft"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+
+    ALL = (DRAFT, ACTIVE, COMPLETED, ARCHIVED)
+
+    @classmethod
+    def pattern(cls) -> str:
+        """Returns regex pattern for all statuses"""
+        return "^(" + "|".join(cls.ALL) + ")$"
+
+
+# Project member role literals
+class ProjectMemberRole:
+    OWNER = "owner"
+    EDITOR = "editor"
+    REVIEWER = "reviewer"
+    AUTHOR = "author"
+    VIEWER = "viewer"
+
+    ALL = (OWNER, EDITOR, REVIEWER, AUTHOR, VIEWER)
+
+    @classmethod
+    def pattern(cls) -> str:
+        """Returns regex pattern for all roles"""
+        return "^(" + "|".join(cls.ALL) + ")$"
+
+
+# Default values
+DEFAULT_TOTAL_CHAPTERS = 0
+DEFAULT_PROGRESS = 0
+
+# Field length constraints
+NAME_MIN_LENGTH = 1
+NAME_MAX_LENGTH = 200
+DESCRIPTION_MAX_LENGTH = 2000
 
 
 class ProjectCreate(BaseModel):
     """Project creation schema"""
-    name: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = Field(default=None, max_length=2000)
-    total_chapters: Optional[int] = Field(default=0, ge=0)
+    name: str = Field(..., min_length=NAME_MIN_LENGTH, max_length=NAME_MAX_LENGTH)
+    description: Optional[str] = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
+    total_chapters: Optional[int] = Field(default=DEFAULT_TOTAL_CHAPTERS, ge=0)
 
 
 class ProjectUpdate(BaseModel):
     """Project update schema"""
-    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    description: Optional[str] = Field(default=None, max_length=2000)
-    status: Optional[str] = Field(default=None, pattern="^(draft|active|completed|archived)$")
+    name: Optional[str] = Field(default=None, min_length=NAME_MIN_LENGTH, max_length=NAME_MAX_LENGTH)
+    description: Optional[str] = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
+    status: Optional[str] = Field(default=None, pattern=ProjectStatus.pattern())
 
 
 class ProjectResponse(BaseModel):
@@ -28,8 +69,8 @@ class ProjectResponse(BaseModel):
     description: Optional[str] = None
     status: str
     owner_id: Optional[str] = None
-    total_chapters: int = 0
-    current_progress: int = 0
+    total_chapters: int = DEFAULT_TOTAL_CHAPTERS
+    current_progress: int = DEFAULT_PROGRESS
     created_at: str
     updated_at: Optional[str] = None
 
@@ -37,10 +78,7 @@ class ProjectResponse(BaseModel):
 class ProjectMemberAdd(BaseModel):
     """Project member addition schema"""
     user_id: str
-    role: str = Field(
-        ...,
-        pattern="^(owner|editor|reviewer|author|viewer)$"
-    )
+    role: str = Field(..., pattern=ProjectMemberRole.pattern())
 
 
 class ProjectMemberResponse(BaseModel):
@@ -68,10 +106,10 @@ class ProjectListResponse(BaseModel):
 
 class ProjectStats(BaseModel):
     """Project statistics"""
-    total_chapters: int
-    completed_chapters: int
-    in_progress_chapters: int
-    draft_chapters: int
-    total_words: int
-    reviewed_chapters: int
-    approved_chapters: int
+    total_chapters: int = Field(default=0, ge=0)
+    completed_chapters: int = Field(default=0, ge=0)
+    in_progress_chapters: int = Field(default=0, ge=0)
+    draft_chapters: int = Field(default=0, ge=0)
+    total_words: int = Field(default=0, ge=0)
+    reviewed_chapters: int = Field(default=0, ge=0)
+    approved_chapters: int = Field(default=0, ge=0)

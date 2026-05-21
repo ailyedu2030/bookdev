@@ -11,8 +11,9 @@ Handles knowledge graph operations:
 """
 
 from datetime import datetime
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from pydantic import BaseModel, Field
 from pydantic import BaseModel
 
 from api.schemas.common import SuccessResponse
@@ -60,10 +61,10 @@ class EdgeResponse(BaseModel):
 
 
 class GraphQueryRequest(BaseModel):
-    query: str
+    query: str = Field(..., max_length=500)
     node_types: Optional[List[str]] = None
-    max_depth: Optional[int] = 3
-    limit: Optional[int] = 100
+    max_depth: Optional[int] = Field(default=3, ge=1, le=10)
+    limit: Optional[int] = Field(default=100, ge=1, le=1000)
 
 
 class GraphQueryResponse(BaseModel):

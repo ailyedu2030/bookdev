@@ -8,6 +8,10 @@ from api.schemas.auth import (
     Token,
     TokenPayload,
     RefreshTokenRequest,
+    UserRole,
+    TokenType,
+    ACCESS_TOKEN_EXPIRE_SECONDS,
+    REFRESH_TOKEN_EXPIRE_SECONDS,
 )
 from api.schemas.project import (
     ProjectCreate,
@@ -15,6 +19,8 @@ from api.schemas.project import (
     ProjectResponse,
     ProjectMemberAdd,
     ProjectMemberResponse,
+    ProjectStatus,
+    ProjectMemberRole,
 )
 from api.schemas.chapter import (
     ChapterCreate,
@@ -25,15 +31,19 @@ from api.schemas.chapter import (
     SectionResponse,
     ReviewSubmit,
     ReviewResponse,
+    ChapterStatus,
 )
 from api.schemas.term import (
     TermCreate,
     TermUpdate,
     TermResponse,
+    DEFAULT_SEARCH_LIMIT,
+    MAX_SEARCH_LIMIT,
 )
 from api.schemas.common import (
     PaginatedResponse,
     ErrorResponse,
+    ErrorDetail,
     SuccessResponse,
     HealthResponse,
     MetricsResponse,
@@ -50,6 +60,12 @@ from api.schemas.common import (
     RegulationVerifyResponse,
     SemanticScanRequest,
     SemanticScanResponse,
+    ErrorCode,
+    DEFAULT_PAGE,
+    DEFAULT_PER_PAGE,
+    MAX_PER_PAGE,
+    API_VERSION,
+    SortOrder,
 )
 
 __all__ = [
@@ -59,12 +75,18 @@ __all__ = [
     "Token",
     "TokenPayload",
     "RefreshTokenRequest",
+    "UserRole",
+    "TokenType",
+    "ACCESS_TOKEN_EXPIRE_SECONDS",
+    "REFRESH_TOKEN_EXPIRE_SECONDS",
     # Project
     "ProjectCreate",
     "ProjectUpdate",
     "ProjectResponse",
     "ProjectMemberAdd",
     "ProjectMemberResponse",
+    "ProjectStatus",
+    "ProjectMemberRole",
     # Chapter
     "ChapterCreate",
     "ChapterUpdate",
@@ -74,13 +96,17 @@ __all__ = [
     "SectionResponse",
     "ReviewSubmit",
     "ReviewResponse",
+    "ChapterStatus",
     # Term
     "TermCreate",
     "TermUpdate",
     "TermResponse",
+    "DEFAULT_SEARCH_LIMIT",
+    "MAX_SEARCH_LIMIT",
     # Common
     "PaginatedResponse",
     "ErrorResponse",
+    "ErrorDetail",
     "SuccessResponse",
     "HealthResponse",
     "MetricsResponse",
@@ -97,4 +123,10 @@ __all__ = [
     "RegulationVerifyResponse",
     "SemanticScanRequest",
     "SemanticScanResponse",
+    "ErrorCode",
+    "DEFAULT_PAGE",
+    "DEFAULT_PER_PAGE",
+    "MAX_PER_PAGE",
+    "API_VERSION",
+    "SortOrder",
 ]

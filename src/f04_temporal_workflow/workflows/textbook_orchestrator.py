@@ -12,6 +12,7 @@ Phase 6: 输出汇总报告
 
 import asyncio
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 from .mock_client import (
@@ -21,6 +22,8 @@ from .mock_client import (
     RetryPolicy,
     SignalType,
     TemporalWorkflow,
+    TemporalQuery,
+    ChildWorkflowFailedError,
     get_mock_client,
 )
 from .textbook_chapter import TextbookChapterWorkflow
@@ -29,6 +32,11 @@ from ..activities.quality_check import batch_score_chapters
 from ..activities.security_scan import batch_scan_chapters
 
 logger = logging.getLogger(__name__)
+
+
+# TEMP-023: 配置常量
+DEFAULT_OUTLINE_REVIEW_TIMEOUT = int(os.environ.get("OUTLINE_REVIEW_TIMEOUT", "86400"))
+DEFAULT_FINAL_REVIEW_TIMEOUT = int(os.environ.get("FINAL_REVIEW_TIMEOUT", "86400"))
 
 
 class TextbookOrchestratorState:
@@ -74,6 +82,10 @@ class TextbookOrchestratorWorkflow:
         self._chapter_results: List[Dict[str, Any]] = []
         self._batch_scan_result: Optional[Dict[str, Any]] = None
         self._batch_quality_result: Optional[List[Dict[str, Any]]] = None
+        # TEMP-019: 状态持久化
+        self._workflow_state: Dict[str, Any] = {}
+        # TEMP-016: 心跳
+        self._heartbeat_count = 0
 
     def _transition(self, new_state: str):
         """状态转换"""
@@ -84,6 +96,8 @@ class TextbookOrchestratorWorkflow:
             )
         logger.info(f"[Orchestrator] State: {self._state} → {new_state}")
         self._state = new_state
+        # TEMP-019: 保存状态
+        self._workflow_state["current_state"] = new_state
 
     async def execute(
         self,
@@ -143,6 +157,17 @@ class TextbookOrchestratorWorkflow:
             f"[Orchestrator:{textbook_id}] Starting textbook workflow: {title} "
             f"({len(chapters_config)} chapters)"
         )
+
+        # TEMP-019: 从持久化存储恢复状态
+        saved_state = await client.load_state(workflow_id)
+        if saved_state and "_workflow_state" in saved_state:
+            self._workflow_state = saved_state["_workflow_state"]
+            self._state = self._workflow_state.get("current_state", TextbookOrchestratorState.INIT)
+            logger.info(f"[Orchestrator:{textbook_id}] Restored state from persistence: {self._state}")
+
+        # TEMP-016: 启动心跳
+        asyncio.create_task(self._send_heartbeat_loop(workflow_id, textbook_id))
+
         self._transition(TextbookOrchestratorState.OUTLINE_GENERATING)
 
         # ── Phase 1: 生成全书提纲 ────────────────────────────────────
@@ -160,9 +185,13 @@ class TextbookOrchestratorWorkflow:
             options=ActivityOptions(
                 task_queue="textbook-writing-queue",
                 start_to_close_timeout_seconds=120,
-                retry_policy=RetryPolicy(max_attempts=2),
+                retry_policy=RetryPolicy(max_attempts=4),  # TEMP-002: 2->4
             ),
         )
+
+        # TEMP-019: 保存进度
+        self._workflow_state["outline"] = outline_result
+        await client.save_state(workflow_id, self._workflow_state)
 
         # ── Phase 2: HUMAN_TASK 大纲审核 ─────────────────────────────
         if outline_review_required:
@@ -176,11 +205,21 @@ class TextbookOrchestratorWorkflow:
                     SignalType.HUMAN_REVIEW_REVISE.value,
                     SignalType.HUMAN_REVIEW_REJECT.value,
                 ],
-                timeout_seconds=86400,  # 24 hours for outline review
+                timeout_seconds=DEFAULT_OUTLINE_REVIEW_TIMEOUT,  # TEMP-023: 从配置读取
             )
 
-            signal_type = signal["signal"]
-            if signal_type == SignalType.HUMAN_REVIEW_REJECT.value:
+            # TEMP-009: 超时恢复机制
+            if signal.get("signal") == "TIMEOUT":
+                logger.warning(f"[Orchestrator:{textbook_id}] Outline review timed out")
+                self._workflow_state["outline_needs_review"] = True
+                # 继续执行但标记需要后续关注
+                self._transition(TextbookOrchestratorState.CHAPTERS_WRITING)
+
+            # TEMP-024: 信号验证
+            signal_type = signal.get("signal")
+            if not signal_type or signal_type == "unknown":
+                logger.warning(f"[Orchestrator:{textbook_id}] Invalid signal received, proceeding anyway")
+            elif signal_type == SignalType.HUMAN_REVIEW_REJECT.value:
                 self._transition(TextbookOrchestratorState.FAILED)
                 logger.warning(f"[Orchestrator:{textbook_id}] Outline rejected by human review")
                 return {
@@ -231,13 +270,29 @@ class TextbookOrchestratorWorkflow:
                         f"[Orchestrator:{textbook_id}] Chapter "
                         f"'{ch_config.get('chapter_id')}' failed: {result}"
                     )
+                    # TEMP-008: 补偿逻辑 - 记录失败并继续
                     chapter_results.append({
                         "chapter_id": ch_config.get("chapter_id", "unknown"),
                         "status": "FAILED",
                         "error": str(result),
+                        # 补偿：标记需要人工处理
+                        "compensation_needed": True,
+                    })
+                    # 可能需要清理已部分完成的工作
+                elif isinstance(result, ChildWorkflowFailedError):
+                    logger.error(f"[Orchestrator:{textbook_id}] Child workflow failed: {result}")
+                    chapter_results.append({
+                        "chapter_id": result.child_id,
+                        "status": "FAILED",
+                        "error": result.original_error,
+                        "compensation_needed": True,
                     })
                 else:
                     chapter_results.append(result)
+
+            # TEMP-019: 每批完成后保存状态
+            self._workflow_state["chapter_results"] = chapter_results
+            await client.save_state(workflow_id, self._workflow_state)
 
             logger.info(f"[Orchestrator:{textbook_id}] Batch complete: {len(batch)} chapters processed")
 
@@ -280,9 +335,13 @@ class TextbookOrchestratorWorkflow:
             options=ActivityOptions(
                 task_queue="textbook-writing-queue",
                 start_to_close_timeout_seconds=600,
-                retry_policy=RetryPolicy(max_attempts=2),
+                retry_policy=RetryPolicy(max_attempts=4),  # TEMP-002: 2->4
             ),
         )
+
+        # TEMP-019: 保存进度
+        self._workflow_state["batch_scan_result"] = self._batch_scan_result
+        await client.save_state(workflow_id, self._workflow_state)
 
         # ── Phase 5: 全量质量评分 ────────────────────────────────────
         self._transition(TextbookOrchestratorState.QUALITY_SCORING)
@@ -302,9 +361,13 @@ class TextbookOrchestratorWorkflow:
             options=ActivityOptions(
                 task_queue="textbook-writing-queue",
                 start_to_close_timeout_seconds=600,
-                retry_policy=RetryPolicy(max_attempts=2),
+                retry_policy=RetryPolicy(max_attempts=4),  # TEMP-002: 2->4
             ),
         )
+
+        # TEMP-019: 保存进度
+        self._workflow_state["batch_quality_result"] = self._batch_quality_result
+        await client.save_state(workflow_id, self._workflow_state)
 
         # ── Phase 6: 风险分级 & 最终审核 ─────────────────────────────
         risk_assessment = self._assess_risk(completed_chapters, self._batch_quality_result)
@@ -320,11 +383,20 @@ class TextbookOrchestratorWorkflow:
                     SignalType.HUMAN_REVIEW_REVISE.value,
                     SignalType.HUMAN_REVIEW_REJECT.value,
                 ],
-                timeout_seconds=86400,  # 24 hours
+                timeout_seconds=DEFAULT_FINAL_REVIEW_TIMEOUT,  # TEMP-023: 从配置读取
             )
 
-            signal_type = signal["signal"]
-            if signal_type == SignalType.HUMAN_REVIEW_REJECT.value:
+            # TEMP-009: 超时恢复机制
+            if signal.get("signal") == "TIMEOUT":
+                logger.warning(f"[Orchestrator:{textbook_id}] Final review timed out")
+                self._workflow_state["final_review_needed"] = True
+                # 可以选择继续或暂停
+
+            # TEMP-024: 信号验证
+            signal_type = signal.get("signal")
+            if not signal_type or signal_type == "unknown":
+                logger.warning(f"[Orchestrator:{textbook_id}] Invalid signal received, proceeding anyway")
+            elif signal_type == SignalType.HUMAN_REVIEW_REJECT.value:
                 self._transition(TextbookOrchestratorState.FAILED)
                 return {
                     "textbook_id": textbook_id,
@@ -349,8 +421,34 @@ class TextbookOrchestratorWorkflow:
             risk_assessment=risk_assessment,
         )
 
+        # TEMP-019: 清理状态
+        self._workflow_state.clear()
+        await client.save_state(workflow_id, {})
+
         logger.info(f"[Orchestrator:{textbook_id}] COMPLETED: {summary['summary']['overall_grade']}")
         return summary
+
+    # TEMP-016: 心跳循环
+    async def _send_heartbeat_loop(self, workflow_id: str, textbook_id: str) -> None:
+        """定期发送心跳"""
+        client = self._temporal_client or get_mock_client()
+        while True:
+            await asyncio.sleep(30)
+            try:
+                self._heartbeat_count += 1
+                await client.send_heartbeat(
+                    f"workflow-{workflow_id}",
+                    {
+                        "textbook_id": textbook_id,
+                        "heartbeat_count": self._heartbeat_count,
+                        "workflow_id": workflow_id,
+                        "state": self._state,
+                    }
+                )
+                logger.debug(f"[Orchestrator:{textbook_id}] Heartbeat #{self._heartbeat_count}")
+            except Exception as e:
+                logger.warning(f"[Orchestrator:{textbook_id}] Heartbeat failed: {e}")
+                break
 
     def _assess_risk(
         self,
@@ -457,3 +555,38 @@ class TextbookOrchestratorWorkflow:
                 f"{len(completed)}/{len(chapters)} chapters (Grade: {overall_grade})"
             ),
         }
+
+    # TEMP-022: 查询处理器
+    @TemporalQuery.defn(name="get_orchestrator_status")
+    async def get_orchestrator_status(self) -> Dict[str, Any]:
+        """查询编排器状态"""
+        return {
+            "textbook_id": self._workflow_state.get("textbook_id", "unknown"),
+            "state": self._state,
+            "total_chapters": len(self._chapter_results),
+            "completed_chapters": len([c for c in self._chapter_results if c.get("status") in ("COMPLETED", "NEEDS_REVIEW")]),
+            "failed_chapters": len([c for c in self._chapter_results if c.get("status") == "FAILED"]),
+            "heartbeat_count": self._heartbeat_count,
+        }
+
+    @TemporalQuery.defn(name="get_workflow_progress")
+    async def get_workflow_progress(self) -> Dict[str, Any]:
+        """查询工作流进度"""
+        progress = {
+            "outline_generated": "outline" in self._workflow_state,
+            "chapters_completed": len([c for c in self._chapter_results if c.get("status") in ("COMPLETED", "NEEDS_REVIEW")]),
+            "total_chapters": len(self._chapter_results),
+            "batch_scan_done": self._batch_scan_result is not None,
+            "quality_scoring_done": self._batch_quality_result is not None,
+        }
+        total_steps = 7
+        completed_steps = sum(1 for v in progress.values() if v)
+        progress["percent_complete"] = round(completed_steps / total_steps * 100, 1)
+        return progress
+
+    @TemporalQuery.defn(name="get_risk_assessment")
+    async def get_risk_assessment(self) -> Optional[Dict[str, Any]]:
+        """查询风险评估"""
+        if self._batch_quality_result:
+            return self._assess_risk(self._chapter_results, self._batch_quality_result)
+        return None

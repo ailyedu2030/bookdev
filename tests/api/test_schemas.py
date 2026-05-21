@@ -330,13 +330,13 @@ class TestCommonSchemas:
             error={"code": "NOT_FOUND", "message": "Resource not found"}
         )
         assert response.success is False
-        assert response.error["code"] == "NOT_FOUND"
+        assert response.error.code == "NOT_FOUND"
 
     def test_error_response_defaults(self):
         """Test ErrorResponse default values"""
         response = ErrorResponse()
         assert response.success is False
-        assert response.error["code"] == "INTERNAL_ERROR"
+        assert response.error.code == "INTERNAL_ERROR"
 
     def test_success_response_valid(self):
         """Test valid SuccessResponse schema"""

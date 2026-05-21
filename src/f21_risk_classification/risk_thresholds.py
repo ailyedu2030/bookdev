@@ -41,14 +41,17 @@ def get_risk_level_for_score(score: float) -> str:
     Returns:
         风险等级字符串
     """
-    if 0.0 <= score <= 0.3:
-        return "CRITICAL"
-    elif 0.31 <= score <= 0.6:
-        return "HIGH"
-    elif 0.61 <= score <= 0.8:
-        return "MEDIUM"
-    elif 0.81 <= score <= 1.0:
-        return "LOW"
+    # QC-002 Fix: 使用RISK_LEVELS动态计算边界，避免硬编码和不一致
+    # 按优先级顺序检查（从高风险到低风险）
+    for level in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
+        if level in RISK_LEVELS:
+            score_range = RISK_LEVELS[level]["score_range"]
+            min_score, max_score = score_range
+            if min_score <= score <= max_score:
+                return level
+
+    # 边界情况处理（由于RISK_LEVELS边界定义有间隙，0.301会在此被处理）
+    # 如果分数不在任何范围内，默认为CRITICAL
     return "CRITICAL"
 
 

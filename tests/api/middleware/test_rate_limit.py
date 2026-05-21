@@ -15,6 +15,7 @@ from api.middleware.rate_limit import (
     RateLimitMiddleware,
     rate_limit,
     get_client_identifier,
+    rate_limit_settings,
     DEFAULT_RATE_LIMITS,
 )
 
@@ -126,14 +127,16 @@ class TestGetClientIdentifier:
         mock_request = MagicMock()
         mock_request.headers = {"X-Forwarded-For": "192.168.1.1, 10.0.0.1"}
         mock_request.client = None
-        assert get_client_identifier(mock_request) == "192.168.1.1"
+        with patch.object(rate_limit_settings, 'trust_x_forwarded_for', True):
+            assert get_client_identifier(mock_request) == "192.168.1.1"
 
     def test_x_real_ip_header(self):
         """Test extraction from X-Real-IP header"""
         mock_request = MagicMock()
         mock_request.headers = {"X-Real-IP": "192.168.1.2"}
         mock_request.client = None
-        assert get_client_identifier(mock_request) == "192.168.1.2"
+        with patch.object(rate_limit_settings, 'trust_x_real_ip', True):
+            assert get_client_identifier(mock_request) == "192.168.1.2"
 
     def test_client_host_fallback(self):
         """Test fallback to client host"""

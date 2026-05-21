@@ -77,8 +77,15 @@ async def score_chapter_quality(
 async def batch_score_chapters(
     chapters: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """批量质量评分 (幂等)"""
+    """
+    批量质量评分 (幂等)
+    TEMP-014: 添加了幂等性保护
+    """
     logger.info(f"[QualityCheck] Batch scoring {len(chapters)} chapters")
+
+    # TEMP-014: 生成批次唯一键
+    chapter_ids = [ch.get("chapter_id", "unknown") for ch in chapters]
+    batch_key = hashlib.sha256(f"batch-score:{','.join(chapter_ids)}".encode()).hexdigest()[:16]
 
     results = []
     for ch in chapters:
@@ -87,13 +94,15 @@ async def batch_score_chapters(
             content=ch.get("content", ""),
             criteria=ch.get("criteria"),
         )
+        # TEMP-014: 标记批次
+        score["batch_id"] = batch_key
         results.append(score)
 
     # 计算整体统计
     if results:
         avg_score = sum(r["overall_score"] for r in results) / len(results)
         logger.info(
-            f"[QualityCheck] Batch complete: {len(results)} chapters, avg score: {avg_score:.1f}"
+            f"[QualityCheck] Batch complete: {len(results)} chapters, avg score: {avg_score:.1f}, batch_key={batch_key[:16]}"
         )
 
     return results

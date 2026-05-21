@@ -2,29 +2,52 @@
 Chapter Schemas
 """
 
-from datetime import datetime
-from typing import Optional, List
+from datetime import datetime, timezone
+from typing import Optional, List, Literal
 from pydantic import BaseModel, Field
+
+
+# Chapter/section status literals - externalized enum
+class ChapterStatus:
+    DRAFT = "draft"
+    GENERATING = "generating"
+    REVIEWING = "reviewing"
+    APPROVED = "approved"
+    PUBLISHED = "published"
+    REJECTED = "rejected"
+
+    ALL = (DRAFT, GENERATING, REVIEWING, APPROVED, PUBLISHED, REJECTED)
+
+    @classmethod
+    def pattern(cls) -> str:
+        """Returns regex pattern for all statuses"""
+        return "^(" + "|".join(cls.ALL) + ")$"
+
+
+# Default values
+DEFAULT_WORD_COUNT = 0
+
+# Field length constraints
+TITLE_MIN_LENGTH = 1
+TITLE_MAX_LENGTH = 200
+CONTENT_HASH_LENGTH = 64  # SHA-256 hash
 
 
 class ChapterCreate(BaseModel):
     """Chapter creation schema"""
     project_id: str
-    title: str = Field(..., min_length=1, max_length=200)
+    title: str = Field(..., min_length=TITLE_MIN_LENGTH, max_length=TITLE_MAX_LENGTH)
     order_num: int = Field(..., ge=0)
     parent_chapter_id: Optional[str] = None
 
 
 class ChapterUpdate(BaseModel):
     """Chapter update schema"""
-    title: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    title: Optional[str] = Field(default=None, min_length=TITLE_MIN_LENGTH, max_length=TITLE_MAX_LENGTH)
     order_num: Optional[int] = Field(default=None, ge=0)
-    status: Optional[str] = Field(
-        default=None,
-        pattern="^(draft|generating|reviewing|approved|published|rejected)$"
-    )
+    status: Optional[str] = Field(default=None, pattern=ChapterStatus.pattern())
     content: Optional[str] = None
-    content_hash: Optional[str] = None
+    content_hash: Optional[str] = Field(default=None, max_length=CONTENT_HASH_LENGTH)
 
 
 class ChapterResponse(BaseModel):
@@ -34,7 +57,7 @@ class ChapterResponse(BaseModel):
     title: str
     order_num: int
     status: str
-    word_count: int = 0
+    word_count: int = DEFAULT_WORD_COUNT
     version: str
     content_hash: Optional[str] = None
     parent_chapter_id: Optional[str] = None
@@ -56,19 +79,16 @@ class ChapterContentResponse(BaseModel):
 class SectionCreate(BaseModel):
     """Section creation schema"""
     chapter_id: str
-    title: str = Field(..., min_length=1, max_length=200)
+    title: str = Field(..., min_length=TITLE_MIN_LENGTH, max_length=TITLE_MAX_LENGTH)
     order_num: int = Field(..., ge=0)
     parent_section_id: Optional[str] = None
 
 
 class SectionUpdate(BaseModel):
     """Section update schema"""
-    title: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    title: Optional[str] = Field(default=None, min_length=TITLE_MIN_LENGTH, max_length=TITLE_MAX_LENGTH)
     order_num: Optional[int] = Field(default=None, ge=0)
-    status: Optional[str] = Field(
-        default=None,
-        pattern="^(draft|generating|reviewing|approved|published|rejected)$"
-    )
+    status: Optional[str] = Field(default=None, pattern=ChapterStatus.pattern())
     content: Optional[str] = None
 
 
@@ -79,7 +99,7 @@ class SectionResponse(BaseModel):
     title: str
     order_num: int
     status: str
-    word_count: int = 0
+    word_count: int = DEFAULT_WORD_COUNT
     parent_section_id: Optional[str] = None
     created_at: str
     updated_at: Optional[str] = None
@@ -88,19 +108,19 @@ class SectionResponse(BaseModel):
 class ReviewSubmit(BaseModel):
     """Review submission schema"""
     chapter_id: str
-    comments: Optional[str] = None
+    comments: Optional[str] = Field(default=None, max_length=2000)
 
 
 class ReviewApprove(BaseModel):
     """Review approval schema"""
     chapter_id: str
-    comments: Optional[str] = None
+    comments: Optional[str] = Field(default=None, max_length=2000)
 
 
 class ReviewReject(BaseModel):
     """Review rejection schema"""
     chapter_id: str
-    comments: str = Field(..., min_length=1)
+    comments: str = Field(..., min_length=1, max_length=2000)
 
 
 class ReviewResponse(BaseModel):
@@ -116,7 +136,7 @@ class ReviewResponse(BaseModel):
 class ChapterGenerateRequest(BaseModel):
     """Chapter AI generation request"""
     chapter_id: str
-    prompt: Optional[str] = None
+    prompt: Optional[str] = Field(default=None, max_length=5000)
     force_regenerate: bool = False
 
 
@@ -126,7 +146,7 @@ class ChapterGenerateResponse(BaseModel):
     chapter_id: str
     status: str
     content: Optional[str] = None
-    word_count: int = 0
+    word_count: int = DEFAULT_WORD_COUNT
     generation_id: Optional[str] = None
 
 

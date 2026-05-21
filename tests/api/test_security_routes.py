@@ -574,7 +574,7 @@ class TestImportErrorFallback:
         }):
             response = test_client.post(
                 "/api/security/concept/verify",
-                params={"concept_id": "test-concept", "definition": "Test definition"},
+                json={"concept_id": "test-concept", "definition": "Test definition"},
                 headers={
                     "Authorization": f"Bearer {token}",
                     "X-CSRF-Token": "test_csrf_token",
@@ -600,7 +600,7 @@ class TestImportErrorFallback:
         }):
             response = test_client.post(
                 "/api/security/batch/scan",
-                json=["Content 1", "Content 2"],
+                json={"contents": ["Content 1", "Content 2"]},
                 headers={
                     "Authorization": f"Bearer {token}",
                     "X-CSRF-Token": "test_csrf_token",

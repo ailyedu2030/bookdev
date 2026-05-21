@@ -74,15 +74,27 @@ class WhitelistManager:
         """获取白名单法规列表"""
         return list(self.WHITELISTED_LAWS.keys()) + list(self._custom_laws.keys())
 
-    def add_law(self, name: str, total_articles: int, issuing_body: str, effective_date: str = None) -> bool:
-        """添加法规到白名单"""
+    def add_law(self, name: str, total_articles: int, issuing_body: str, effective_date: Optional[str] = None) -> bool:
+        """添加法规到白名单
+        
+        VM-015: effective_date必须有明确值，不能默认为当前时间
+        如果调用者没有提供effective_date，应该要求提供或拒绝添加
+        """
         if name in self.WHITELISTED_LAWS:
             return False
-
+        
+        if effective_date is None:
+            raise ValueError(
+                "effective_date is required when adding a custom law. "
+                "This prevents ambiguous behavior where newly added laws "
+                "appear to have been effective since 'now', which may not "
+                "match the actual law effective date."
+            )
+        
         self._custom_laws[name] = LawInfo(
             name=name,
             issuing_body=issuing_body,
-            effective_date=effective_date or datetime.now().strftime("%Y-%m-%d"),
+            effective_date=effective_date,
             total_articles=total_articles,
             source="Custom"
         )

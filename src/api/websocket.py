@@ -64,7 +64,31 @@ manager = ConnectionManager()
 
 
 async def websocket_endpoint(websocket: WebSocket, channel: str = "global"):
-    """WebSocket endpoint handler."""
+    """WebSocket endpoint handler with JWT authentication."""
+    # API-SEC-007: Validate channel parameter
+    if not channel or not isinstance(channel, str):
+        await websocket.close(code=4000, reason="Invalid channel")
+        return
+    if len(channel) > 50 or not channel.replace("_", "").replace("-", "").isalnum():
+        await websocket.close(code=4000, reason="Invalid channel format")
+        return
+
+    # API-SEC-002: Verify JWT token from query param
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=4001, reason="Authentication required")
+        return
+
+    try:
+        from api.deps import decode_token
+        token_data = decode_token(token, "access")
+        # Optionally store user info in websocket state
+        websocket.state.user_id = token_data.sub
+        websocket.state.user_role = token_data.role
+    except Exception:
+        await websocket.close(code=4002, reason="Invalid or expired token")
+        return
+
     await manager.connect(websocket, channel)
     try:
         while True:

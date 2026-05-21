@@ -9,12 +9,20 @@ from unittest.mock import AsyncMock
 class CrossRefClient:
     """CrossRef API客户端"""
 
-    def __init__(self, base_url: str = "https://api.crossref.org"):
-        self.base_url = base_url
+    DEFAULT_TIMEOUT = 10.0  # seconds
 
-    async def fetch_doi_metadata(self, doi: str) -> Optional[Dict[str, Any]]:
+    def __init__(self, base_url: str = "https://api.crossref.org", timeout: Optional[float] = None):
+        self.base_url = base_url
+        self.timeout = timeout if timeout is not None else self.DEFAULT_TIMEOUT
+
+    async def fetch_doi_metadata(self, doi: str, timeout: Optional[float] = None) -> Optional[Dict[str, Any]]:
         """获取DOI元数据"""
-        await asyncio.sleep(0.01)  # Simulate network delay
+        effective_timeout = timeout if timeout is not None else self.timeout
+        
+        try:
+            await asyncio.wait_for(asyncio.sleep(0.01), timeout=effective_timeout)  # Simulate network delay
+        except asyncio.TimeoutError:
+            raise asyncio.TimeoutError(f"Request timed out after {effective_timeout} seconds")
 
         mock_dois = {
             "10.1234/example.123": {
@@ -35,7 +43,7 @@ class CrossRefClient:
 
         return mock_dois.get(doi)
 
-    async def verify_doi_exists(self, doi: str) -> bool:
+    async def verify_doi_exists(self, doi: str, timeout: Optional[float] = None) -> bool:
         """验证DOI是否存在"""
-        metadata = await self.fetch_doi_metadata(doi)
+        metadata = await self.fetch_doi_metadata(doi, timeout)
         return metadata is not None

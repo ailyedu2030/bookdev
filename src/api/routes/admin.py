@@ -24,6 +24,7 @@ from api.deps import (
     require_permission,
     generate_uuid,
     get_password_hash,
+    ROLE_HIERARCHY,
 )
 from api.middleware.csrf import csrf_protect
 
@@ -201,6 +202,19 @@ async def update_user(
             },
         )
 
+    sensitive_fields = {"organization_id", "clearance_level"}
+    if any(field in update_dict for field in sensitive_fields):
+        if user.role != "system_admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error": {
+                        "code": "PERMISSION_DENIED",
+                        "message": "Only system_admin can modify organization_id or clearance_level",
+                    }
+                },
+            )
+
     if "organization_id" in update_dict:
         target_user.organization_id = update_dict["organization_id"]
     if "clearance_level" in update_dict:
@@ -297,6 +311,32 @@ async def update_user_role(
                 "error": {
                     "code": "CANNOT_MODIFY_OWN_ROLE",
                     "message": "Cannot modify your own role",
+                }
+            },
+        )
+
+    requester_level = ROLE_HIERARCHY.get(user.role, 0)
+    target_level = ROLE_HIERARCHY.get(target_user.role, 0)
+    new_level = ROLE_HIERARCHY.get(role_update.role, 0)
+
+    if target_level >= requester_level:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": {
+                    "code": "CANNOT_MODIFY_EQUAL_OR_HIGHER_ROLE",
+                    "message": "Cannot modify users with equal or higher clearance level",
+                }
+            },
+        )
+
+    if new_level > requester_level:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": {
+                    "code": "CANNOT_ASSIGN_HIGHER_ROLE",
+                    "message": "Cannot assign a role higher than your own",
                 }
             },
         )

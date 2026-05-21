@@ -34,6 +34,7 @@ from api.middleware.rate_limit import (
     SlidingWindowEntry,
     rate_limit,
     get_client_identifier,
+    rate_limit_settings,
 )
 from api.middleware.security_headers import (
     SecurityHeadersConfig,
@@ -361,9 +362,13 @@ class TestGetClientIdentifier:
         mock_request.headers = {"X-Forwarded-For": "192.168.1.1, 10.0.0.1"}
         mock_request.client = MagicMock(host="127.0.0.1")
 
-        result = get_client_identifier(mock_request)
-
-        assert result == "192.168.1.1"
+        original = rate_limit_settings.trust_x_forwarded_for
+        rate_limit_settings.trust_x_forwarded_for = True
+        try:
+            result = get_client_identifier(mock_request)
+            assert result == "192.168.1.1"
+        finally:
+            rate_limit_settings.trust_x_forwarded_for = original
 
     def test_get_client_identifier_x_real_ip(self):
         """Test getting client ID from X-Real-IP header"""
@@ -371,9 +376,13 @@ class TestGetClientIdentifier:
         mock_request.headers = {"X-Real-IP": "192.168.1.100"}
         mock_request.client = MagicMock(host="127.0.0.1")
 
-        result = get_client_identifier(mock_request)
-
-        assert result == "192.168.1.100"
+        original = rate_limit_settings.trust_x_real_ip
+        rate_limit_settings.trust_x_real_ip = True
+        try:
+            result = get_client_identifier(mock_request)
+            assert result == "192.168.1.100"
+        finally:
+            rate_limit_settings.trust_x_real_ip = original
 
     def test_get_client_identifier_client_host(self):
         """Test getting client ID from client host"""

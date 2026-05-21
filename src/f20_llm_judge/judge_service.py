@@ -6,6 +6,7 @@ F20: LLM-as-Judge评分系统 - LLM评判服务
 
 import json
 import re
+import math
 from typing import Dict, Any, List, Optional, AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -193,14 +194,8 @@ class JudgeService:
         Raises:
             JudgeServiceError: 解析失败时
         """
-        # 尝试提取JSON
-        json_match = re.search(r'\{[^{}]*"scores"[^{}]*"overall_score"[^{}]*\}', response, re.DOTALL)
-
-        if json_match:
-            json_str = json_match.group(0)
-        else:
-            # 尝试直接解析整个响应
-            json_str = response.strip()
+        # 尝试提取JSON - 使用更健壮的方法
+        json_str = self._extract_json(response)
 
         try:
             data = json.loads(json_str)
@@ -226,6 +221,53 @@ class JudgeService:
             status=JudgeStatus.COMPLETED
         )
 
+    def _extract_json(self, response: str) -> str:
+        """
+        从响应中提取JSON，使用更健壮的方法处理嵌套JSON
+
+        Args:
+            response: LLM原始响应
+
+        Returns:
+            提取的JSON字符串
+        """
+        # 方法1: 尝试直接解析（最简单的情况）
+        response = response.strip()
+        if response.startswith('{') and response.endswith('}'):
+            try:
+                json.loads(response)
+                return response
+            except json.JSONDecodeError:
+                pass
+
+        # 方法2: 使用括号匹配提取最外层JSON
+        start_idx = response.find('{')
+        if start_idx != -1:
+            # 找到第一个 {
+            depth = 0
+            for i in range(start_idx, len(response)):
+                if response[i] == '{':
+                    depth += 1
+                elif response[i] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        return response[start_idx:i+1]
+
+        # 方法3: 尝试用正则找JSON（处理多行嵌套情况）
+        # 匹配以 { 开头，scores 字段存在的内容
+        json_pattern = r'\{(?:[^{}]|"(?:[^"\\]|\\.)*")*\}'
+        for match in re.finditer(json_pattern, response, re.DOTALL):
+            candidate = match.group(0)
+            if '"scores"' in candidate and '"overall_score"' in candidate:
+                try:
+                    json.loads(candidate)
+                    return candidate
+                except json.JSONDecodeError:
+                    continue
+
+        # 如果都失败，返回原响应让调用者处理
+        return response
+
 
 def calculate_correlation(
     llm_scores: List[float],
@@ -241,13 +283,14 @@ def calculate_correlation(
         human_scores: 人工评分列表
 
     Returns:
-        相关系数 (-1 到 1)
+        相关系数 (-1 到 1)，单样本时返回NaN
     """
     if len(llm_scores) != len(human_scores):
         raise ValueError("Score lists must have the same length")
 
+    # QC-004 Fix: 单样本时返回NaN，数学上相关系数是未定义的
     if len(llm_scores) < 2:
-        return 1.0  # 无法计算相关性时假定完全相关
+        return math.nan
 
     n = len(llm_scores)
 
@@ -255,18 +298,21 @@ def calculate_correlation(
     llm_mean = sum(llm_scores) / n
     human_mean = sum(human_scores) / n
 
-    # 计算协方差和标准差
+    # 计算协方差（sum of deviations products）
     covariance = sum(
         (llm_scores[i] - llm_mean) * (human_scores[i] - human_mean)
         for i in range(n)
     )
 
+    # 计算标准差
     llm_std = (sum((x - llm_mean) ** 2 for x in llm_scores) / n) ** 0.5
     human_std = (sum((x - human_mean) ** 2 for x in human_scores) / n) ** 0.5
 
     if llm_std == 0 or human_std == 0:
         return 0.0
 
-    correlation = covariance / (n * llm_std * human_std)
+    # QC-001 Fix: 协方差已经是sum/n，不需要再除n
+    # 皮尔逊相关系数 = covariance / (std_llm * std_human)
+    correlation = covariance / (llm_std * human_std)
 
     return correlation

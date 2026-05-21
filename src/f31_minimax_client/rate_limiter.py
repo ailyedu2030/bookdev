@@ -10,7 +10,12 @@ from threading import Lock
 
 
 class RateLimiter:
-    """滑动窗口速率限制器"""
+    """
+    滑动窗口速率限制器
+
+    INF-013: Separated 'check' and 'record' operations to prevent
+   虚假计数 when check passes but no actual request is sent.
+    """
 
     def __init__(self, max_rpm: int = 60):
         """
@@ -25,23 +30,59 @@ class RateLimiter:
         self._window_seconds = 60.0
         self._window_start = time.monotonic()
 
+    def _clean_old_timestamps(self) -> None:
+        """Clean expired timestamps from the window"""
+        now = time.monotonic()
+        cutoff = now - self._window_seconds
+        self._request_timestamps = [
+            ts for ts in self._request_timestamps if ts > cutoff
+        ]
+
     def can_proceed(self) -> bool:
         """
-        检查是否可以发送请求
+        Check if a request can proceed WITHOUT recording.
+
+        This is a pure check operation - use request_recorded() to
+        actually record a request after it succeeds.
 
         Returns:
-            True如果可以继续发送，否则False
+            True if request can proceed, False otherwise
         """
         with self._lock:
-            now = time.monotonic()
-            # 清理过期的时间戳
-            cutoff = now - self._window_seconds
-            self._request_timestamps = [
-                ts for ts in self._request_timestamps if ts > cutoff
-            ]
+            self._clean_old_timestamps()
+            return len(self._request_timestamps) < self.max_rpm
 
+    def request_recorded(self) -> bool:
+        """
+        Record that a request was actually made.
+
+        Call this AFTER a request is confirmed to have been sent,
+        not before can_proceed() check.
+
+        Returns:
+            True if recorded successfully, False if limit would be exceeded
+        """
+        with self._lock:
+            self._clean_old_timestamps()
             if len(self._request_timestamps) < self.max_rpm:
-                self._request_timestamps.append(now)
+                self._request_timestamps.append(time.monotonic())
+                return True
+            return False
+
+    def check_and_record(self) -> bool:
+        """
+        Combined check + record for convenience.
+
+        Use this when you immediately make a request after checking.
+        For more complex flows, use can_proceed() + request_recorded() separately.
+
+        Returns:
+            True if check passed and request was recorded
+        """
+        with self._lock:
+            self._clean_old_timestamps()
+            if len(self._request_timestamps) < self.max_rpm:
+                self._request_timestamps.append(time.monotonic())
                 return True
             return False
 
@@ -53,11 +94,7 @@ class RateLimiter:
             剩余可用请求数
         """
         with self._lock:
-            now = time.monotonic()
-            cutoff = now - self._window_seconds
-            self._request_timestamps = [
-                ts for ts in self._request_timestamps if ts > cutoff
-            ]
+            self._clean_old_timestamps()
             return max(0, self.max_rpm - len(self._request_timestamps))
 
     async def wait_for_available(self, timeout: float = 60.0) -> bool:
@@ -73,10 +110,11 @@ class RateLimiter:
         deadline = time.monotonic() + timeout
 
         while time.monotonic() < deadline:
-            if self.can_proceed():
+            if self.check_and_record():
                 return True
             # 计算需要等待的时间
             with self._lock:
+                self._clean_old_timestamps()
                 if self._request_timestamps:
                     oldest = min(self._request_timestamps)
                     wait = oldest + self._window_seconds - time.monotonic()

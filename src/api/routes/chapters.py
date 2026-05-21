@@ -348,7 +348,7 @@ async def simulate_content_generation(
 async def submit_for_review(
     chapter_id: str,
     review_data: ReviewSubmit,
-    user: User = Depends(require_permission("chapters:review")),
+    user: User = Depends(require_permission("chapters:submit")),
     db: DatabaseSession = Depends(get_db),
 ):
     """

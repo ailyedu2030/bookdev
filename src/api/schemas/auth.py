@@ -2,9 +2,34 @@
 Authentication Schemas
 """
 
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Optional, Literal
 from pydantic import BaseModel, Field, EmailStr
+
+
+# User role literals - externalized enum values
+class UserRole:
+    SYSTEM_ADMIN = "system_admin"
+    CONTENT_ADMIN = "content_admin"
+    EDITOR = "editor"
+    REVIEWER = "reviewer"
+    AUTHOR = "author"
+    VIEWER = "viewer"
+
+    ALL = (SYSTEM_ADMIN, CONTENT_ADMIN, EDITOR, REVIEWER, AUTHOR, VIEWER)
+
+    @classmethod
+    def pattern(cls) -> str:
+        """Returns regex pattern for all roles"""
+        return "^(" + "|".join(cls.ALL) + ")$"
+
+
+# Token type literals
+TokenType = Literal["bearer", "refresh", "access"]
+
+# Token expiration defaults
+ACCESS_TOKEN_EXPIRE_SECONDS = 1800  # 30 minutes
+REFRESH_TOKEN_EXPIRE_SECONDS = 604800  # 7 days
 
 
 class UserCreate(BaseModel):
@@ -12,14 +37,14 @@ class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=100)
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
-    role: Optional[str] = Field(default="viewer")
+    role: Optional[str] = Field(default=UserRole.VIEWER)
     organization_id: Optional[str] = None
 
 
 class UserLogin(BaseModel):
     """User login schema"""
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=1)
 
 
 class UserResponse(BaseModel):
@@ -29,7 +54,7 @@ class UserResponse(BaseModel):
     email: str
     role: str
     organization_id: Optional[str] = None
-    clearance_level: int = 1
+    clearance_level: int = Field(default=1, ge=1, le=5)
     created_at: str
     updated_at: Optional[str] = None
 
@@ -44,15 +69,15 @@ class UserUpdate(BaseModel):
 
 class UserRoleUpdate(BaseModel):
     """User role update schema"""
-    role: str = Field(..., pattern="^(system_admin|content_admin|editor|reviewer|author|viewer)$")
+    role: str = Field(..., pattern=UserRole.pattern())
 
 
 class Token(BaseModel):
     """Token response schema"""
     access_token: str
     refresh_token: str
-    token_type: str = "bearer"
-    expires_in: int = 1800
+    token_type: TokenType = "bearer"
+    expires_in: int = Field(default=ACCESS_TOKEN_EXPIRE_SECONDS, ge=1)
 
 
 class TokenPayload(BaseModel):
@@ -62,17 +87,17 @@ class TokenPayload(BaseModel):
     role: str
     exp: int
     iat: int
-    type: str = "access"
+    type: TokenType = "access"
 
 
 class RefreshTokenRequest(BaseModel):
     """Refresh token request"""
-    refresh_token: str
+    refresh_token: str = Field(..., min_length=1)
 
 
 class PasswordChange(BaseModel):
     """Password change schema"""
-    old_password: str
+    old_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8, max_length=128)
 
 
@@ -83,7 +108,7 @@ class PasswordResetRequest(BaseModel):
 
 class PasswordResetConfirm(BaseModel):
     """Password reset confirm schema"""
-    token: str
+    token: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8, max_length=128)
 
 

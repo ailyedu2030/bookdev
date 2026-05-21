@@ -25,6 +25,7 @@ class MockEventBus:
     - 死信队列 (DLQ)
     - 至少一次语义 (重试)
     - 线程安全
+    - Proper shutdown with resource cleanup (INF-007)
     """
 
     def __init__(self):
@@ -176,6 +177,28 @@ class MockEventBus:
                 pass  # 重放时处理器异常不中断
 
     def shutdown(self):
-        """关闭事件总线"""
+        """
+        关闭事件总线并清理资源
+
+        INF-007: Properly cleanup resources instead of just setting flag.
+        """
         with self._lock:
+            if self._shutdown:
+                return
+
             self._shutdown = True
+
+            # Clear subscribers
+            self._subscribers.clear()
+
+            # Clear DLQ handlers
+            self._dlq_handlers.clear()
+
+            # Clear event log (allow GC of event objects)
+            self._event_log.clear()
+
+            # Reset counter
+            self._sub_id_counter = 0
+
+        # Note: We don't clear _processed_events as it's not always present
+        # and the lock ensures thread-safe access
