@@ -200,7 +200,7 @@ def decode_token(token: str, token_type: str = "access") -> TokenData:
             iat=payload.get("iat", 0),
             type=payload.get("type", token_type),
         )
-    except JWTError:
+    except JWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
@@ -210,7 +210,7 @@ def decode_token(token: str, token_type: str = "access") -> TokenData:
                 }
             },
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 def generate_uuid() -> str:
@@ -248,12 +248,12 @@ async def get_current_user(
 
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": {"code": "TOKEN_INVALID", "message": "Invalid authentication token"}},
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 class RBACChecker:
