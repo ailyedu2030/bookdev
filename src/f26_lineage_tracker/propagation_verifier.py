@@ -14,11 +14,7 @@ class PropagationVerifier:
         self.tracker = tracker
         self._cache: dict = {}
 
-    def verify_propagation_depth(
-        self,
-        data_id: str,
-        max_depth: int = 5
-    ) -> bool:
+    def verify_propagation_depth(self, data_id: str, max_depth: int = 5) -> bool:
         """验证传播深度（防F06漏洞）
 
         传播深度限制是为了防止数据无限传播，导致:
@@ -54,7 +50,7 @@ class PropagationVerifier:
             for desc_id in descendants:
                 if desc_id in self.tracker._node_index:
                     node = self.tracker._node_index[desc_id]
-                    if hasattr(node, 'depth'):
+                    if hasattr(node, "depth"):
                         depths.append(node.depth)
 
             if depths:
@@ -87,7 +83,7 @@ class PropagationVerifier:
             for desc_id in descendants:
                 if desc_id in self.tracker._node_index:
                     node = self.tracker._node_index[desc_id]
-                    if hasattr(node, 'depth'):
+                    if hasattr(node, "depth"):
                         max_depth = max(max_depth, node.depth)
 
             return max_depth
@@ -95,11 +91,7 @@ class PropagationVerifier:
         except Exception:
             return 0
 
-    def verify_depth_limit_exceeded(
-        self,
-        data_id: str,
-        max_depth: int = 5
-    ) -> int | None:
+    def verify_depth_limit_exceeded(self, data_id: str, max_depth: int = 5) -> int | None:
         """验证深度是否超限，返回实际深度或None"""
         node_id = f"node_{data_id}"
 
@@ -116,7 +108,7 @@ class PropagationVerifier:
             for desc_id in descendants:
                 if desc_id in self.tracker._node_index:
                     node = self.tracker._node_index[desc_id]
-                    if hasattr(node, 'depth'):
+                    if hasattr(node, "depth"):
                         depths.append(node.depth)
 
             if not depths:

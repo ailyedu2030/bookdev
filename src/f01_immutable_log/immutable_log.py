@@ -13,6 +13,7 @@ from datetime import datetime
 
 class ImmutableLogError(Exception):
     """不可变日志系统异常"""
+
     pass
 
 
@@ -30,6 +31,7 @@ class LogEntry:
     - payload: 原始数据
     - previous_hash: 前驱条目的version_tag
     """
+
     version_tag: str
     content_hash: str
     timestamp: datetime
@@ -73,11 +75,11 @@ class ImmutableLog:
             LogEntry: 新创建的日志条目
         """
         content_json = json.dumps(payload, sort_keys=True, ensure_ascii=False)
-        content_bytes = content_json.encode('utf-8')
+        content_bytes = content_json.encode("utf-8")
         content_hash = hashlib.sha256(content_bytes).hexdigest()
 
         version_input = content_hash + (self._chain_hash or "")
-        version_tag = hashlib.sha256(version_input.encode('utf-8')).hexdigest()
+        version_tag = hashlib.sha256(version_input.encode("utf-8")).hexdigest()
 
         entry = LogEntry(
             version_tag=version_tag,
@@ -85,7 +87,7 @@ class ImmutableLog:
             timestamp=datetime.utcnow(),
             operation_type=operation_type,
             payload=payload,
-            previous_hash=self._chain_hash
+            previous_hash=self._chain_hash,
         )
 
         self._entries.append(entry)
@@ -108,11 +110,7 @@ class ImmutableLog:
 _global_chain_hash: str | None = None
 
 
-def create_log_entry(
-    operation_type: str,
-    payload: dict,
-    previous_hash: str | None = None
-) -> LogEntry:
+def create_log_entry(operation_type: str, payload: dict, previous_hash: str | None = None) -> LogEntry:
     """
     创建单个日志条目的便捷函数
 
@@ -129,14 +127,14 @@ def create_log_entry(
     global _global_chain_hash
 
     content_json = json.dumps(payload, sort_keys=True, ensure_ascii=False)
-    content_bytes = content_json.encode('utf-8')
+    content_bytes = content_json.encode("utf-8")
     content_hash = hashlib.sha256(content_bytes).hexdigest()
 
     # 如果没有提供previous_hash，使用全局链状态
     prev_hash = previous_hash if previous_hash is not None else _global_chain_hash
 
     version_input = content_hash + (prev_hash or "")
-    version_tag = hashlib.sha256(version_input.encode('utf-8')).hexdigest()
+    version_tag = hashlib.sha256(version_input.encode("utf-8")).hexdigest()
 
     # 更新全局链状态
     _global_chain_hash = version_tag
@@ -147,7 +145,7 @@ def create_log_entry(
         timestamp=datetime.utcnow(),
         operation_type=operation_type,
         payload=payload,
-        previous_hash=prev_hash
+        previous_hash=prev_hash,
     )
 
 

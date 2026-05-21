@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock
 @dataclass
 class MockNode:
     """Mock node for testing"""
+
     id: str
     node_type: str
     properties: dict = None
@@ -20,6 +21,7 @@ class MockNode:
 @dataclass
 class MockEdge:
     """Mock edge for testing"""
+
     id: str
     source_id: str
     target_id: str
@@ -46,6 +48,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         asyncio.run(adapter.connect())
 
         mock_backend.connect.assert_called_once()
@@ -58,6 +61,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         asyncio.run(adapter.disconnect())
 
         mock_backend.disconnect.assert_called_once()
@@ -70,6 +74,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         asyncio.run(adapter.create_tables())
 
         mock_backend.create_tables.assert_called_once()
@@ -83,6 +88,7 @@ class TestPGGraphAdapterDelegation:
         mock_node = MockNode(id="n-001", node_type="chapter", properties={"title": "Test"})
 
         import asyncio
+
         asyncio.run(adapter.insert_node(mock_node))
 
         mock_backend.insert_node.assert_called_once_with(mock_node)
@@ -96,6 +102,7 @@ class TestPGGraphAdapterDelegation:
         mock_edge = MockEdge(id="e-001", source_id="n-001", target_id="n-002", edge_type="CONTAINS")
 
         import asyncio
+
         asyncio.run(adapter.insert_edge(mock_edge))
 
         mock_backend.insert_edge.assert_called_once_with(mock_edge)
@@ -109,6 +116,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         result = asyncio.run(adapter.query_nodes(node_type="chapter"))
 
         mock_backend.query_nodes.assert_called_once_with(node_type="chapter")
@@ -123,6 +131,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         result = asyncio.run(adapter.query_edges(edge_type="CONTAINS"))
 
         mock_backend.query_edges.assert_called_once_with(edge_type="CONTAINS")
@@ -137,6 +146,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         result = asyncio.run(adapter.execute_cypher("MATCH (n) RETURN n"))
 
         mock_backend.execute_cypher.assert_called_once_with("MATCH (n) RETURN n")
@@ -151,6 +161,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         result = asyncio.run(adapter.find_path("n-001", "n-003"))
 
         mock_backend.find_path.assert_called_once_with("n-001", "n-003", edge_types=None, depth=None)
@@ -165,6 +176,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         asyncio.run(adapter.find_path("n-001", "n-002", depth=2))
 
         mock_backend.find_path.assert_called_once_with("n-001", "n-002", edge_types=None, depth=2)
@@ -178,6 +190,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         result = asyncio.run(adapter.get_neighbors("n-001"))
 
         mock_backend.get_neighbors.assert_called_once_with("n-001", depth=1)
@@ -192,6 +205,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
+
         result = asyncio.run(adapter.get_neighbors("n-001", depth=2))
 
         mock_backend.get_neighbors.assert_called_once_with("n-001", depth=2)
@@ -207,6 +221,7 @@ class TestPGGraphAdapterDelegation:
         edges = [MockEdge(id="e-001", source_id="n-001", target_id="n-002", edge_type="CONTAINS")]
 
         import asyncio
+
         asyncio.run(adapter.batch_import(nodes, edges))
 
         mock_backend.batch_import.assert_called_once_with(nodes, edges)

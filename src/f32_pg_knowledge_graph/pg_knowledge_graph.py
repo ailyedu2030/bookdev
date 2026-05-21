@@ -114,8 +114,12 @@ class PGKnowledgeGraph:
         """创建章节点"""
         self._ensure_initialized()
         node = ChapterNode(
-            id=chapter_id, title=title, order=order,
-            status=status, word_count=word_count, version=version,
+            id=chapter_id,
+            title=title,
+            order=order,
+            status=status,
+            word_count=word_count,
+            version=version,
         )
         self._adapter.insert_node(chapter_id, "Chapter", self._node_to_props(node))
         return node
@@ -132,8 +136,11 @@ class PGKnowledgeGraph:
         """创建节节点"""
         self._ensure_initialized()
         node = SectionNode(
-            id=section_id, title=title, order=order,
-            status=status, word_count=word_count,
+            id=section_id,
+            title=title,
+            order=order,
+            status=status,
+            word_count=word_count,
             parent_chapter_id=parent_chapter_id,
         )
         self._adapter.insert_node(section_id, "Section", self._node_to_props(node))
@@ -151,8 +158,11 @@ class PGKnowledgeGraph:
         """创建小节节点"""
         self._ensure_initialized()
         node = SubsectionNode(
-            id=subsection_id, title=title, order=order,
-            status=status, content=content,
+            id=subsection_id,
+            title=title,
+            order=order,
+            status=status,
+            content=content,
             parent_section_id=parent_section_id,
         )
         self._adapter.insert_node(subsection_id, "Subsection", self._node_to_props(node))
@@ -174,8 +184,11 @@ class PGKnowledgeGraph:
             related_terms = []
         self._ensure_initialized()
         node = ConceptNode(
-            id=concept_id, name=name, definition=definition,
-            domain=domain, related_terms=related_terms,
+            id=concept_id,
+            name=name,
+            definition=definition,
+            domain=domain,
+            related_terms=related_terms,
             source_chapter_id=source_chapter_id,
         )
         self._adapter.insert_node(concept_id, "Concept", self._node_to_props(node))
@@ -197,8 +210,11 @@ class PGKnowledgeGraph:
             synonyms = []
         self._ensure_initialized()
         node = TermNode(
-            id=term_id, term=term, definition=definition,
-            synonyms=synonyms, domain=domain,
+            id=term_id,
+            term=term,
+            definition=definition,
+            synonyms=synonyms,
+            domain=domain,
             first_defined_at=first_defined_at,
         )
         self._adapter.insert_node(term_id, "Term", self._node_to_props(node))
@@ -270,10 +286,7 @@ class PGKnowledgeGraph:
 
         # KG-006: Batch query sections instead of filtering in Python
         sections = self._adapter.query_nodes("Section")
-        section_ids = [
-            s["id"] for s in sections
-            if s.get("properties", {}).get("parent_chapter_id") == chapter_id
-        ]
+        section_ids = [s["id"] for s in sections if s.get("properties", {}).get("parent_chapter_id") == chapter_id]
 
         edges = self._adapter.get_edges(source_id=chapter_id)
         edge_dicts = [
@@ -319,8 +332,7 @@ class PGKnowledgeGraph:
         # KG-006: Batch query instead of N+1
         subsections = self._adapter.query_nodes("Subsection")
         subsection_ids = [
-            s["id"] for s in subsections
-            if s.get("properties", {}).get("parent_section_id") == section_id
+            s["id"] for s in subsections if s.get("properties", {}).get("parent_section_id") == section_id
         ]
 
         edges = self._adapter.get_edges(source_id=section_id)
@@ -359,18 +371,16 @@ class PGKnowledgeGraph:
             props = edge.get("properties", {})
             score = props.get("similarity_score", 0)
             if score >= threshold:
-                other_id = (
-                    edge["target_id"]
-                    if edge["source_id"] == concept_id
-                    else edge["source_id"]
-                )
+                other_id = edge["target_id"] if edge["source_id"] == concept_id else edge["source_id"]
                 other = self._adapter.get_node(other_id)
                 if other:
-                    similar.append({
-                        "concept_id": other_id,
-                        "name": other.get("properties", {}).get("name", ""),
-                        "similarity_score": score,
-                    })
+                    similar.append(
+                        {
+                            "concept_id": other_id,
+                            "name": other.get("properties", {}).get("name", ""),
+                            "similarity_score": score,
+                        }
+                    )
         similar.sort(key=lambda x: x["similarity_score"], reverse=True)
         return similar
 
@@ -479,25 +489,26 @@ class PGKnowledgeGraph:
         for node_data in data.get("nodes", []):
             node_type = node_data.get("type", "")
             node_id = node_data.get("id", "")
-            properties = {
-                k: v for k, v in node_data.items()
-                if k not in ("id", "type")
-            }
-            nodes_to_insert.append({
-                "id": node_id,
-                "node_type": node_type,
-                "properties": properties,
-            })
+            properties = {k: v for k, v in node_data.items() if k not in ("id", "type")}
+            nodes_to_insert.append(
+                {
+                    "id": node_id,
+                    "node_type": node_type,
+                    "properties": properties,
+                }
+            )
         self._adapter.batch_insert_nodes(nodes_to_insert)
 
         edges_to_insert = []
         for edge_data in data.get("edges", []):
-            edges_to_insert.append({
-                "source_id": edge_data.get("source", ""),
-                "target_id": edge_data.get("target", ""),
-                "edge_type": edge_data.get("edge_type", ""),
-                "properties": edge_data.get("properties", {}),
-            })
+            edges_to_insert.append(
+                {
+                    "source_id": edge_data.get("source", ""),
+                    "target_id": edge_data.get("target", ""),
+                    "edge_type": edge_data.get("edge_type", ""),
+                    "properties": edge_data.get("properties", {}),
+                }
+            )
         self._adapter.batch_insert_edges(edges_to_insert)
 
     # ── 节点删除 ────────────────────────────────────────

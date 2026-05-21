@@ -20,10 +20,7 @@ class TestMaterialSecurity:
 
         manager = MaterialSecurityManager()
 
-        material = Material(
-            content="测试内容",
-            source=None
-        )
+        material = Material(content="测试内容", source=None)
 
         with pytest.raises(MaterialValidationError):
             await manager.register_material(material)
@@ -35,13 +32,7 @@ class TestMaterialSecurity:
 
         manager = MaterialSecurityManager()
 
-        material = Material(
-            content="权威机构发布的内容",
-            source=SourceInfo(
-                name="国家统计局",
-                trust_level="WHITELIST"
-            )
-        )
+        material = Material(content="权威机构发布的内容", source=SourceInfo(name="国家统计局", trust_level="WHITELIST"))
 
         score = manager.calculate_trust_score(material)
         assert score >= 0.9
@@ -53,13 +44,7 @@ class TestMaterialSecurity:
 
         manager = MaterialSecurityManager()
 
-        material = Material(
-            content="未核实的内容",
-            source=SourceInfo(
-                name="未知来源",
-                trust_level="UNKNOWN"
-            )
-        )
+        material = Material(content="未核实的内容", source=SourceInfo(name="未知来源", trust_level="UNKNOWN"))
 
         result = await manager.register_material(material)
         assert result.status == "REJECTED"
@@ -72,13 +57,7 @@ class TestMaterialSecurity:
 
         manager = MaterialSecurityManager()
 
-        material = Material(
-            content="官方政策内容",
-            source=SourceInfo(
-                name="教育部",
-                trust_level="WHITELIST"
-            )
-        )
+        material = Material(content="官方政策内容", source=SourceInfo(name="教育部", trust_level="WHITELIST"))
 
         result = await manager.register_material(material)
         assert result.status == "APPROVED"
@@ -90,9 +69,7 @@ class TestMaterialSecurity:
 
         manager = MaterialSecurityManager()
 
-        result = await manager.security_scan(
-            "包含恶意内容"
-        )
+        result = await manager.security_scan("包含恶意内容")
 
         assert result.sensitive_word_count > 0
         assert result.scan_status in [ScanStatus.WARNING, ScanStatus.BLOCKED]
@@ -118,10 +95,7 @@ class TestSourceRegistry:
 
         registry = MaterialSourceRegistry()
 
-        source = SourceInfo(
-            name="新来源",
-            trust_level="VERIFIED"
-        )
+        source = SourceInfo(name="新来源", trust_level="VERIFIED")
 
         result = await registry.register_source(source)
         assert result.registered is True
@@ -278,9 +252,7 @@ class TestSecurityTests:
 
         manager = MaterialSecurityManager()
 
-        result = await manager.security_scan(
-            "恶意内容包含可疑链接 http://malicious.com"
-        )
+        result = await manager.security_scan("恶意内容包含可疑链接 http://malicious.com")
 
         assert result.scan_status == ScanStatus.BLOCKED
 
@@ -304,10 +276,7 @@ class TestSecurityTests:
 
         manager = MaterialSecurityManager()
 
-        material = Material(
-            content="政府发布内容",
-            source=SourceInfo(name="国务院", trust_level="WHITELIST")
-        )
+        material = Material(content="政府发布内容", source=SourceInfo(name="国务院", trust_level="WHITELIST"))
 
         score = manager.calculate_trust_score(material)
         assert score == 1.0
@@ -319,10 +288,7 @@ class TestSecurityTests:
 
         manager = MaterialSecurityManager()
 
-        material = Material(
-            content="可疑内容",
-            source=SourceInfo(name="可疑网站", trust_level="UNTRUSTED")
-        )
+        material = Material(content="可疑内容", source=SourceInfo(name="可疑网站", trust_level="UNTRUSTED"))
 
         score = manager.calculate_trust_score(material)
         assert score < 0.3
@@ -338,10 +304,7 @@ class TestIntegrationTests:
 
         manager = MaterialSecurityManager()
 
-        material = Material(
-            content="权威机构发布的内容",
-            source=SourceInfo(name="国家统计局", trust_level="WHITELIST")
-        )
+        material = Material(content="权威机构发布的内容", source=SourceInfo(name="国家统计局", trust_level="WHITELIST"))
 
         result = await manager.register_material(material)
         assert result.status == "APPROVED"
@@ -371,9 +334,7 @@ class TestMaterialSecurityUncoveredBranches:
         manager = MaterialSecurityManager()
 
         material = Material(
-            material_id="duplicate-id",
-            content="Test content",
-            source=SourceInfo(name="Test", trust_level="VERIFIED")
+            material_id="duplicate-id", content="Test content", source=SourceInfo(name="Test", trust_level="VERIFIED")
         )
 
         await manager.register_material(material)
@@ -391,7 +352,7 @@ class TestMaterialSecurityUncoveredBranches:
 
         material = Material(
             content="Visit https://malicious-site.com for more info",
-            source=SourceInfo(name="Test", trust_level="VERIFIED")
+            source=SourceInfo(name="Test", trust_level="VERIFIED"),
         )
 
         result = await manager.register_material(material)
@@ -418,7 +379,7 @@ class TestMaterialSecurityUncoveredBranches:
         Material(
             material_id="cached-material",
             content="Test content",
-            source=SourceInfo(name="Test", trust_level="VERIFIED")
+            source=SourceInfo(name="Test", trust_level="VERIFIED"),
         )
 
         manager._material_weights["cached-material"] = 0.5
@@ -449,10 +410,7 @@ class TestMaterialSecurityUncoveredBranches:
 
         manager = TestableManager()
 
-        material = Material(
-            content="无敏感词的未知来源内容",
-            source=SourceInfo(name="未知机构", trust_level="UNKNOWN")
-        )
+        material = Material(content="无敏感词的未知来源内容", source=SourceInfo(name="未知机构", trust_level="UNKNOWN"))
 
         result = await manager.register_material(material)
         assert result.status == "PENDING"

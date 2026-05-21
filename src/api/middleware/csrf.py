@@ -36,9 +36,7 @@ class CSRFTokenManager:
     def _sign_token(self, token: str, timestamp: int) -> str:
         """Create HMAC signature for token"""
         message = f"{token}.{timestamp}"
-        return hashlib.sha256(
-            f"{self.secret_key}:{message}".encode()
-        ).hexdigest()[:16]
+        return hashlib.sha256(f"{self.secret_key}:{message}".encode()).hexdigest()[:16]
 
     def validate_token(self, token: str) -> bool:
         """Validate a CSRF token"""
@@ -67,9 +65,7 @@ class CSRFTokenManager:
 
     def extract_token_from_header(self, request: Request) -> str | None:
         """Extract CSRF token from request header"""
-        return request.headers.get(CSRF_TOKEN_HEADER_NAME) or request.headers.get(
-            CSRF_TOKEN_REQUEST_HEADER_NAME
-        )
+        return request.headers.get(CSRF_TOKEN_HEADER_NAME) or request.headers.get(CSRF_TOKEN_REQUEST_HEADER_NAME)
 
     def extract_token_from_cookie(self, request: Request) -> str | None:
         """Extract CSRF token from cookies"""

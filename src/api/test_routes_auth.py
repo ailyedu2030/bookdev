@@ -91,9 +91,9 @@ class TestLogin:
         mock_db.get_user_by_email.return_value = mock_user
         mock_db.add_session = MagicMock()
 
-        with patch('api.routes.auth.verify_password', return_value=True):
-            with patch('api.routes.auth.create_access_token') as mock_access:
-                with patch('api.routes.auth.create_refresh_token') as mock_refresh:
+        with patch("api.routes.auth.verify_password", return_value=True):
+            with patch("api.routes.auth.create_access_token") as mock_access:
+                with patch("api.routes.auth.create_refresh_token") as mock_refresh:
                     mock_access.return_value = "access-token-123"
                     mock_refresh.return_value = "refresh-token-123"
 
@@ -128,7 +128,7 @@ class TestLogin:
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.get_user_by_email.return_value = MagicMock(id="user-123")
 
-        with patch('api.routes.auth.verify_password', return_value=False):
+        with patch("api.routes.auth.verify_password", return_value=False):
             credentials = UserLogin(email="test@example.com", password="wrongpassword")
 
             with pytest.raises(HTTPException) as exc_info:
@@ -153,13 +153,13 @@ class TestRefreshToken:
         )
         mock_db.get_user_by_id.return_value = mock_user
 
-        with patch('api.routes.auth.decode_token') as mock_decode:
+        with patch("api.routes.auth.decode_token") as mock_decode:
             mock_token_data = MagicMock()
             mock_token_data.sub = "user-123"
             mock_decode.return_value = mock_token_data
 
-            with patch('api.routes.auth.create_access_token', return_value="new-access-token"):
-                with patch('api.routes.auth.create_refresh_token', return_value="new-refresh-token"):
+            with patch("api.routes.auth.create_access_token", return_value="new-access-token"):
+                with patch("api.routes.auth.create_refresh_token", return_value="new-refresh-token"):
                     request = RefreshTokenRequest(refresh_token="valid-refresh-token")
                     result = run_async(refresh_token(request, mock_db))
 
@@ -174,7 +174,7 @@ class TestRefreshToken:
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.get_user_by_id.return_value = None
 
-        with patch('api.routes.auth.decode_token') as mock_decode:
+        with patch("api.routes.auth.decode_token") as mock_decode:
             mock_token_data = MagicMock()
             mock_token_data.sub = "deleted-user"
             mock_decode.return_value = mock_token_data
@@ -256,8 +256,8 @@ class TestChangePassword:
 
         mock_db = MagicMock(spec=DatabaseSession)
 
-        with patch('api.routes.auth.get_password_hash', return_value="stored-hash"):
-            with patch('api.routes.auth.verify_password', return_value=True):
+        with patch("api.routes.auth.get_password_hash", return_value="stored-hash"):
+            with patch("api.routes.auth.verify_password", return_value=True):
                 password_data = PasswordChange(old_password="oldpass", new_password="newpass123")
                 result = run_async(change_password(password_data, mock_user, mock_db))
 
@@ -277,8 +277,8 @@ class TestChangePassword:
 
         mock_db = MagicMock(spec=DatabaseSession)
 
-        with patch('api.routes.auth.get_password_hash', return_value="stored-hash"):
-            with patch('api.routes.auth.verify_password', return_value=False):
+        with patch("api.routes.auth.get_password_hash", return_value="stored-hash"):
+            with patch("api.routes.auth.verify_password", return_value=False):
                 password_data = PasswordChange(old_password="wrongold", new_password="newpass123")
 
                 with pytest.raises(HTTPException) as exc_info:

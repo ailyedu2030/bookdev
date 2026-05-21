@@ -26,6 +26,7 @@ class TestKnowledgeGraphRepository:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -92,11 +93,7 @@ class TestKnowledgeGraphRepository:
     async def test_create_edge_source_not_found(self, repo, mock_session):
         """Test create_edge returns None when source not found."""
         with patch.object(repo, "get_node", return_value=None):
-            result = await repo.create_edge(
-                source_id="nonexistent",
-                target_id="target1",
-                edge_type="relates_to"
-            )
+            result = await repo.create_edge(source_id="nonexistent", target_id="target1", edge_type="relates_to")
 
         assert result is None
         mock_session.add.assert_not_called()
@@ -207,6 +204,7 @@ class TestKnowledgeGraphRepositoryQueryNodes:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -238,6 +236,7 @@ class TestKnowledgeGraphRepositoryGetNeighbors:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -275,6 +274,7 @@ class TestKnowledgeGraphRepositoryFindPath:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -321,6 +321,7 @@ class TestKnowledgeGraphRepositoryBfsTraverse:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -352,6 +353,7 @@ class TestKnowledgeGraphRepositoryDfsTraverse:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -382,6 +384,7 @@ class TestKnowledgeGraphRepositoryGetIncomingOutgoing:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -429,6 +432,7 @@ class TestKnowledgeGraphRepositoryGetAllNodes:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -475,6 +479,7 @@ class TestKnowledgeGraphRepositoryDeleteNode:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -503,6 +508,7 @@ class TestKnowledgeGraphRepositoryGetEdges:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -550,6 +556,7 @@ class TestKnowledgeGraphRepositoryCreateNode:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -557,11 +564,7 @@ class TestKnowledgeGraphRepositoryCreateNode:
         """Test create_node creates node with properties."""
         with patch("db.repositories.knowledge_graph_repository.GraphNode") as mock_node_class:
             mock_node_class.return_value = MagicMock()
-            await repo.create_node(
-                node_id="node1",
-                node_type="concept",
-                properties={"key": "value"}
-            )
+            await repo.create_node(node_id="node1", node_type="concept", properties={"key": "value"})
 
         mock_session.add.assert_called_once()
         mock_session.flush.assert_called_once()
@@ -572,10 +575,7 @@ class TestKnowledgeGraphRepositoryCreateNode:
         """Test create_node creates node with default empty properties."""
         with patch("db.repositories.knowledge_graph_repository.GraphNode") as mock_node_class:
             mock_node_class.return_value = MagicMock()
-            await repo.create_node(
-                node_id="node2",
-                node_type="term"
-            )
+            await repo.create_node(node_id="node2", node_type="term")
 
         mock_session.add.assert_called_once()
         mock_session.flush.assert_called_once()
@@ -598,6 +598,7 @@ class TestKnowledgeGraphRepositoryCreateEdge:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -614,10 +615,7 @@ class TestKnowledgeGraphRepositoryCreateEdge:
         with patch("db.repositories.knowledge_graph_repository.GraphEdge") as mock_edge_class:
             mock_edge_class.return_value = MagicMock()
             await repo.create_edge(
-                source_id="source1",
-                target_id="target1",
-                edge_type="relates_to",
-                properties={"weight": 1.0}
+                source_id="source1", target_id="target1", edge_type="relates_to", properties={"weight": 1.0}
             )
 
         mock_session.add.assert_called_once()
@@ -632,11 +630,7 @@ class TestKnowledgeGraphRepositoryCreateEdge:
         mock_result.scalar_one_or_none.side_effect = [mock_source, None]
         mock_session.execute = AsyncMock(return_value=mock_result)
 
-        result = await repo.create_edge(
-            source_id="source1",
-            target_id="nonexistent",
-            edge_type="relates_to"
-        )
+        result = await repo.create_edge(source_id="source1", target_id="nonexistent", edge_type="relates_to")
 
         assert result is None
         mock_session.add.assert_not_called()
@@ -657,6 +651,7 @@ class TestKnowledgeGraphRepositoryDeleteNode:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -689,6 +684,7 @@ class TestKnowledgeGraphRepositoryDeleteEdge:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -721,6 +717,7 @@ class TestKnowledgeGraphRepositoryUpdateNode:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -749,6 +746,7 @@ class TestKnowledgeGraphRepositoryGetNeighborsDepth:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -785,6 +783,7 @@ class TestKnowledgeGraphRepositoryBatchInsert:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -833,6 +832,7 @@ class TestKnowledgeGraphRepositoryDfsRecursive:
     def repo(self, mock_session):
         """Create a KnowledgeGraphRepository with mock session."""
         from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+
         return KnowledgeGraphRepository(mock_session)
 
     @pytest.mark.asyncio
@@ -863,5 +863,3 @@ class TestKnowledgeGraphRepositoryDfsRecursive:
         assert "start" in result
         assert "node2" in result
         assert "node3" in result
-
-

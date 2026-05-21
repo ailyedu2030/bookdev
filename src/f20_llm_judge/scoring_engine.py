@@ -8,32 +8,18 @@ from dataclasses import dataclass
 from typing import Any
 
 JUDGE_DIMENSIONS: dict[str, dict[str, Any]] = {
-    "terminology_consistency": {
-        "weight": 0.25,
-        "description": "术语使用与术语表的一致性"
-    },
-    "knowledge_accuracy": {
-        "weight": 0.30,
-        "description": "知识陈述的准确性"
-    },
-    "citation_validity": {
-        "weight": 0.20,
-        "description": "引用的有效性和完整性"
-    },
-    "logical_coherence": {
-        "weight": 0.15,
-        "description": "论证逻辑的连贯性"
-    },
-    "format_compliance": {
-        "weight": 0.10,
-        "description": "格式规范的遵循程度"
-    }
+    "terminology_consistency": {"weight": 0.25, "description": "术语使用与术语表的一致性"},
+    "knowledge_accuracy": {"weight": 0.30, "description": "知识陈述的准确性"},
+    "citation_validity": {"weight": 0.20, "description": "引用的有效性和完整性"},
+    "logical_coherence": {"weight": 0.15, "description": "论证逻辑的连贯性"},
+    "format_compliance": {"weight": 0.10, "description": "格式规范的遵循程度"},
 }
 
 
 @dataclass
 class DimensionScore:
     """单维度评分"""
+
     dimension: str
     score: float
     weight: float
@@ -51,10 +37,7 @@ class ScoringEngine:
         """
         self.dimensions = dimensions or JUDGE_DIMENSIONS
 
-    def calculate_weighted_score(
-        self,
-        dimension_scores: dict[str, float]
-    ) -> float:
+    def calculate_weighted_score(self, dimension_scores: dict[str, float]) -> float:
         """
         计算加权总分
 
@@ -82,9 +65,7 @@ class ScoringEngine:
             if not isinstance(score, int | float):
                 raise ValueError(f"Score for {dim_key} must be numeric")
             if score < 0.0 or score > 1.0:
-                raise ValueError(
-                    f"Score for {dim_key} must be between 0.0 and 1.0, got {score}"
-                )
+                raise ValueError(f"Score for {dim_key} must be between 0.0 and 1.0, got {score}")
 
         # 计算加权分数
         total_score = 0.0
@@ -95,10 +76,7 @@ class ScoringEngine:
 
         return round(total_score, 4)
 
-    def get_dimension_scores_with_weights(
-        self,
-        dimension_scores: dict[str, float]
-    ) -> list[DimensionScore]:
+    def get_dimension_scores_with_weights(self, dimension_scores: dict[str, float]) -> list[DimensionScore]:
         """
         获取带权重的维度分数详情
 
@@ -111,17 +89,12 @@ class ScoringEngine:
         result = []
         for dim_key, dim_config in self.dimensions.items():
             if dim_key in dimension_scores:
-                result.append(DimensionScore(
-                    dimension=dim_key,
-                    score=dimension_scores[dim_key],
-                    weight=dim_config["weight"]
-                ))
+                result.append(
+                    DimensionScore(dimension=dim_key, score=dimension_scores[dim_key], weight=dim_config["weight"])
+                )
         return result
 
-    def validate_dimension_scores(
-        self,
-        dimension_scores: dict[str, float]
-    ) -> tuple[bool, list[str]]:
+    def validate_dimension_scores(self, dimension_scores: dict[str, float]) -> tuple[bool, list[str]]:
         """
         验证维度分数
 
@@ -146,9 +119,7 @@ class ScoringEngine:
         # 检查分数范围
         for dim_key, score in dimension_scores.items():
             if score < 0.0 or score > 1.0:
-                errors.append(
-                    f"Score for {dim_key} out of range: {score}"
-                )
+                errors.append(f"Score for {dim_key} out of range: {score}")
 
         return len(errors) == 0, errors
 

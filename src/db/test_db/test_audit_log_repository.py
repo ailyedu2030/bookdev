@@ -142,10 +142,7 @@ class TestAuditLogRepository:
 
         repo = AuditLogRepository(mock_session)
         result = await repo.search_logs(
-            event_type="login",
-            user_id=uuid.uuid4(),
-            action="authenticate",
-            result="success"
+            event_type="login", user_id=uuid.uuid4(), action="authenticate", result="success"
         )
 
         assert len(result) == 1
@@ -188,11 +185,7 @@ class TestAuditLogRepository:
         mock_log = MagicMock()
         repo = AuditLogRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_log) as mock_create:
-            await repo.create_log(
-                event_type="login",
-                action="authenticate",
-                result="success"
-            )
+            await repo.create_log(event_type="login", action="authenticate", result="success")
 
         mock_create.assert_called_once()
 

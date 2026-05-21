@@ -34,13 +34,27 @@ class TestListProjects:
 
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.list_projects.return_value = [
-            {"id": "p1", "name": "Project 1", "status": "active", "description": "", "total_chapters": 5, "owner_id": "user-123", "created_at": "2024-01-01T00:00:00"},
-            {"id": "p2", "name": "Project 2", "status": "draft", "description": "", "total_chapters": 3, "owner_id": "user-123", "created_at": "2024-01-02T00:00:00"},
+            {
+                "id": "p1",
+                "name": "Project 1",
+                "status": "active",
+                "description": "",
+                "total_chapters": 5,
+                "owner_id": "user-123",
+                "created_at": "2024-01-01T00:00:00",
+            },
+            {
+                "id": "p2",
+                "name": "Project 2",
+                "status": "draft",
+                "description": "",
+                "total_chapters": 3,
+                "owner_id": "user-123",
+                "created_at": "2024-01-02T00:00:00",
+            },
         ]
 
-        result = run_async(list_projects(
-            page=1, per_page=20, status_filter=None, user=mock_user, db=mock_db
-        ))
+        result = run_async(list_projects(page=1, per_page=20, status_filter=None, user=mock_user, db=mock_db))
 
         assert result.success is True
         assert len(result.data) == 2
@@ -59,14 +73,36 @@ class TestListProjects:
 
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.list_projects.return_value = [
-            {"id": "p1", "name": "Project 1", "status": "active", "description": "", "total_chapters": 5, "owner_id": "user-123", "created_at": "2024-01-01T00:00:00"},
-            {"id": "p2", "name": "Project 2", "status": "active", "description": "", "total_chapters": 3, "owner_id": "user-123", "created_at": "2024-01-02T00:00:00"},
-            {"id": "p3", "name": "Project 3", "status": "draft", "description": "", "total_chapters": 2, "owner_id": "user-123", "created_at": "2024-01-03T00:00:00"},
+            {
+                "id": "p1",
+                "name": "Project 1",
+                "status": "active",
+                "description": "",
+                "total_chapters": 5,
+                "owner_id": "user-123",
+                "created_at": "2024-01-01T00:00:00",
+            },
+            {
+                "id": "p2",
+                "name": "Project 2",
+                "status": "active",
+                "description": "",
+                "total_chapters": 3,
+                "owner_id": "user-123",
+                "created_at": "2024-01-02T00:00:00",
+            },
+            {
+                "id": "p3",
+                "name": "Project 3",
+                "status": "draft",
+                "description": "",
+                "total_chapters": 2,
+                "owner_id": "user-123",
+                "created_at": "2024-01-03T00:00:00",
+            },
         ]
 
-        result = run_async(list_projects(
-            page=1, per_page=20, status_filter="active", user=mock_user, db=mock_db
-        ))
+        result = run_async(list_projects(page=1, per_page=20, status_filter="active", user=mock_user, db=mock_db))
 
         assert result.success is True
         assert len(result.data) == 2
@@ -105,7 +141,7 @@ class TestCreateProject:
             total_chapters=10,
         )
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             result = run_async(create_project(project_data, mock_user, mock_db))
 
             assert result.name == "New Project"
@@ -137,7 +173,7 @@ class TestGetProject:
             "created_at": "2024-01-01T00:00:00",
         }
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             result = run_async(get_project("project-123", mock_user, mock_db))
 
             assert result.id == "project-123"
@@ -157,7 +193,7 @@ class TestGetProject:
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.get_project.return_value = None
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(get_project("nonexistent", mock_user, mock_db))
 
@@ -181,12 +217,28 @@ class TestUpdateProject:
         )
 
         mock_db = MagicMock(spec=DatabaseSession)
-        mock_db.get_project.return_value = {"id": "project-123", "name": "Old Name", "status": "draft", "description": "", "total_chapters": 5, "owner_id": "user-123", "created_at": "2024-01-01T00:00:00"}
-        mock_db.update_project.return_value = {"id": "project-123", "name": "New Name", "status": "active", "description": "", "total_chapters": 5, "owner_id": "user-123", "created_at": "2024-01-01T00:00:00"}
+        mock_db.get_project.return_value = {
+            "id": "project-123",
+            "name": "Old Name",
+            "status": "draft",
+            "description": "",
+            "total_chapters": 5,
+            "owner_id": "user-123",
+            "created_at": "2024-01-01T00:00:00",
+        }
+        mock_db.update_project.return_value = {
+            "id": "project-123",
+            "name": "New Name",
+            "status": "active",
+            "description": "",
+            "total_chapters": 5,
+            "owner_id": "user-123",
+            "created_at": "2024-01-01T00:00:00",
+        }
 
         update_data = ProjectUpdate(name="New Name")
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             result = run_async(update_project("project-123", update_data, mock_user, mock_db))
 
             assert result.name == "New Name"
@@ -208,7 +260,7 @@ class TestUpdateProject:
 
         update_data = ProjectUpdate(name="New Name")
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(update_project("nonexistent", update_data, mock_user, mock_db))
 
@@ -233,7 +285,7 @@ class TestDeleteProject:
         mock_db.get_project.return_value = {"id": "project-123", "owner_id": "user-123"}
         mock_db.delete_project.return_value = True
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             result = run_async(delete_project("project-123", mock_user, mock_db))
 
             assert result.success is True
@@ -252,7 +304,7 @@ class TestDeleteProject:
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.get_project.return_value = {"id": "project-123", "owner_id": "other-user"}
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(delete_project("project-123", mock_user, mock_db))
 
@@ -284,7 +336,7 @@ class TestAddProjectMember:
 
         member_data = ProjectMemberAdd(user_id="member-456", role="editor")
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             result = run_async(add_project_member("project-123", member_data, mock_user, mock_db))
 
             assert result.project_id == "project-123"
@@ -313,7 +365,7 @@ class TestGetProjectStats:
             {"status": "generating", "word_count": 0},
         ]
 
-        with patch('api.routes.projects.require_permission', return_value=lambda u: u):
+        with patch("api.routes.projects.require_permission", return_value=lambda u: u):
             result = run_async(get_project_stats("project-123", mock_user, mock_db))
 
             assert result.total_chapters == 3
@@ -337,8 +389,24 @@ class TestListMyProjects:
 
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.list_projects.return_value = [
-            {"id": "p1", "name": "My Project 1", "status": "draft", "description": "", "total_chapters": 5, "owner_id": "user-123", "created_at": "2024-01-01T00:00:00"},
-            {"id": "p2", "name": "My Project 2", "status": "active", "description": "", "total_chapters": 3, "owner_id": "user-123", "created_at": "2024-01-02T00:00:00"},
+            {
+                "id": "p1",
+                "name": "My Project 1",
+                "status": "draft",
+                "description": "",
+                "total_chapters": 5,
+                "owner_id": "user-123",
+                "created_at": "2024-01-01T00:00:00",
+            },
+            {
+                "id": "p2",
+                "name": "My Project 2",
+                "status": "active",
+                "description": "",
+                "total_chapters": 3,
+                "owner_id": "user-123",
+                "created_at": "2024-01-02T00:00:00",
+            },
         ]
 
         result = run_async(list_my_projects(page=1, per_page=20, user=mock_user, db=mock_db))

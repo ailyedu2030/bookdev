@@ -17,26 +17,10 @@ from datetime import datetime, timedelta
 import pytest
 
 RISK_LEVELS = {
-    "CRITICAL": {
-        "score_range": [0, 0.3],
-        "review_ratio": 1.0,
-        "auto_approve": False
-    },
-    "HIGH": {
-        "score_range": [0.3, 0.6],
-        "review_ratio": 0.5,
-        "auto_approve": False
-    },
-    "MEDIUM": {
-        "score_range": [0.6, 0.8],
-        "review_ratio": 0.1,
-        "auto_approve": True
-    },
-    "LOW": {
-        "score_range": [0.8, 1.0],
-        "review_ratio": 0.0,
-        "auto_approve": True
-    }
+    "CRITICAL": {"score_range": [0, 0.3], "review_ratio": 1.0, "auto_approve": False},
+    "HIGH": {"score_range": [0.3, 0.6], "review_ratio": 0.5, "auto_approve": False},
+    "MEDIUM": {"score_range": [0.6, 0.8], "review_ratio": 0.1, "auto_approve": True},
+    "LOW": {"score_range": [0.8, 1.0], "review_ratio": 0.0, "auto_approve": True},
 }
 
 
@@ -327,16 +311,8 @@ class TestRiskClassifier:
         from f21_risk_classification.risk_classifier import RiskClassifier
 
         custom_levels = {
-            "HIGH_RISK": {
-                "score_range": [0.0, 0.5],
-                "review_ratio": 1.0,
-                "auto_approve": False
-            },
-            "LOW_RISK": {
-                "score_range": [0.51, 1.0],
-                "review_ratio": 0.0,
-                "auto_approve": True
-            }
+            "HIGH_RISK": {"score_range": [0.0, 0.5], "review_ratio": 1.0, "auto_approve": False},
+            "LOW_RISK": {"score_range": [0.51, 1.0], "review_ratio": 0.0, "auto_approve": True},
         }
 
         classifier = RiskClassifier(risk_levels=custom_levels)
@@ -403,11 +379,7 @@ class TestReviewScheduler:
 
         scheduler = ReviewScheduler()
 
-        review_task = scheduler.schedule_review(
-            content_id="content-001",
-            risk_level="HIGH",
-            content_hash="abc123"
-        )
+        review_task = scheduler.schedule_review(content_id="content-001", risk_level="HIGH", content_hash="abc123")
 
         assert review_task is not None
         assert review_task.content_id == "content-001"
@@ -450,10 +422,7 @@ class TestReviewScheduler:
         task = scheduler.schedule_review("content-001", "HIGH", "hash1")
 
         completed = scheduler.complete_review(
-            task_id=task.task_id,
-            result="APPROVED",
-            reviewer_id="reviewer-001",
-            comments="内容合格"
+            task_id=task.task_id, result="APPROVED", reviewer_id="reviewer-001", comments="内容合格"
         )
 
         assert completed is True
@@ -467,10 +436,7 @@ class TestReviewScheduler:
         scheduler = ReviewScheduler()
 
         result = scheduler.complete_review(
-            task_id="nonexistent-id",
-            result="APPROVED",
-            reviewer_id="reviewer-001",
-            comments=""
+            task_id="nonexistent-id", result="APPROVED", reviewer_id="reviewer-001", comments=""
         )
 
         assert result is False
@@ -539,9 +505,7 @@ class TestRiskClassificationIntegration:
             # 如果需要审核，调度审核任务
             if scheduler.requires_review(risk_level):
                 task = scheduler.schedule_review(
-                    content_id=f"content-{score}",
-                    risk_level=risk_level,
-                    content_hash=f"hash-{score}"
+                    content_id=f"content-{score}", risk_level=risk_level, content_hash=f"hash-{score}"
                 )
                 assert task is not None
 
@@ -593,7 +557,7 @@ class TestReviewSchedulerUncovered:
             priority=1,
             status="pending",  # lowercase string to match enum value
             created_at=datetime.utcnow(),
-            due_date=datetime.utcnow() + timedelta(hours=72)
+            due_date=datetime.utcnow() + timedelta(hours=72),
         )
         assert task.status == ReviewStatus.PENDING
 

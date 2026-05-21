@@ -233,12 +233,19 @@ async def test_e2e_t008_checkpoint_created_on_milestone():
     config = PipelineConfig(testing=True)
     # 仅启用 OUTLINE_GENERATION 的 checkpoint
     for sc in config.stages:
-        sc.checkpoint_after = (sc.stage_name == "OUTLINE_GENERATION")
+        sc.checkpoint_after = sc.stage_name == "OUTLINE_GENERATION"
 
     pipeline = TextbookPipeline(config)
-    await pipeline.run({"pipeline_id": "ckpt-test", "title": "断点测试", "subject": "低空经济", "chapters": [
-        {"chapter_id": "ch01", "title": "测试章", "order": 1, "learning_objectives": ["x"]},
-    ]})
+    await pipeline.run(
+        {
+            "pipeline_id": "ckpt-test",
+            "title": "断点测试",
+            "subject": "低空经济",
+            "chapters": [
+                {"chapter_id": "ch01", "title": "测试章", "order": 1, "learning_objectives": ["x"]},
+            ],
+        }
+    )
 
     # 验证 checkpoint 已写入不可变日志
     snapshot = await pipeline.log.load_snapshot("checkpoint_OUTLINE_GENERATION")
@@ -264,8 +271,22 @@ async def test_e2e_t009_resume_from_checkpoint(min_config):
         "checkpoints": [],
         "metadata": {},
         "stage_results": [
-            {"stage": PipelineStage.INITIALIZATION.value, "status": "COMPLETED", "modules_executed": ["F00", "F01", "F24", "F28"], "modules_failed": [], "output": {}, "errors": []},
-            {"stage": PipelineStage.OUTLINE_GENERATION.value, "status": "COMPLETED", "modules_executed": ["F04", "F05", "F22", "F25", "F27"], "modules_failed": [], "output": {}, "errors": []},
+            {
+                "stage": PipelineStage.INITIALIZATION.value,
+                "status": "COMPLETED",
+                "modules_executed": ["F00", "F01", "F24", "F28"],
+                "modules_failed": [],
+                "output": {},
+                "errors": [],
+            },
+            {
+                "stage": PipelineStage.OUTLINE_GENERATION.value,
+                "status": "COMPLETED",
+                "modules_executed": ["F04", "F05", "F22", "F25", "F27"],
+                "modules_failed": [],
+                "output": {},
+                "errors": [],
+            },
         ],
     }
 
@@ -304,9 +325,14 @@ async def test_e2e_t010_abort_mid_pipeline():
 
     pipeline._handlers["F04"] = abort_after_first
 
-    config = {"pipeline_id": "abort-test", "title": "中止", "subject": "低空经济", "chapters": [
-        {"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]},
-    ]}
+    config = {
+        "pipeline_id": "abort-test",
+        "title": "中止",
+        "subject": "低空经济",
+        "chapters": [
+            {"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]},
+        ],
+    }
 
     result = await pipeline.run(config)
     # Abort flag is checked between stages; F04 runs once in OUTLINE_GENERATION
@@ -361,12 +387,14 @@ async def test_e2e_t013_parallel_stage_execution():
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
 
     start = time.monotonic()
-    result = await pipeline.run({
-        "pipeline_id": "parallel-test",
-        "title": "并行测试",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    result = await pipeline.run(
+        {
+            "pipeline_id": "parallel-test",
+            "title": "并行测试",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
     elapsed = time.monotonic() - start
 
     assert result.status == "COMPLETED"
@@ -377,12 +405,14 @@ async def test_e2e_t013_parallel_stage_execution():
 async def test_e2e_t014_module_count_correct():
     """E2E-T014: 所有30个模块的相关阶段正确覆盖。"""
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
-    result = await pipeline.run({
-        "pipeline_id": "module-count-test",
-        "title": "模块计数",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    result = await pipeline.run(
+        {
+            "pipeline_id": "module-count-test",
+            "title": "模块计数",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
 
     # 所有8个阶段都被执行
     for stage in PipelineStage:
@@ -398,12 +428,14 @@ async def test_e2e_t014_module_count_correct():
 async def test_e2e_t015_pipeline_result_to_dict():
     """E2E-T015: PipelineResult.to_dict 生成正确结构。"""
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
-    result = await pipeline.run({
-        "pipeline_id": "dict-test",
-        "title": "dict测试",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    result = await pipeline.run(
+        {
+            "pipeline_id": "dict-test",
+            "title": "dict测试",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
 
     d = result.to_dict()
     assert d["status"] == "COMPLETED"
@@ -431,12 +463,14 @@ async def test_e2e_t016_invalid_checkpoint_raises():
 @pytest.mark.asyncio
 async def test_e2e_t017_event_bus_publishes_stage_events(pipeline):
     """E2E-T017: 事件总线发布所有阶段事件。"""
-    await pipeline.run({
-        "pipeline_id": "eventbus-test",
-        "title": "事件总线测试",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    await pipeline.run(
+        {
+            "pipeline_id": "eventbus-test",
+            "title": "事件总线测试",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
 
     events = pipeline.event_bus.consumed_events()
 
@@ -466,12 +500,14 @@ async def test_e2e_t018_event_bus_publishes_specific_topic(pipeline):
 @pytest.mark.asyncio
 async def test_e2e_t019_monitoring_records_stage_latency(pipeline):
     """E2E-T019: 监控仪表盘记录每个阶段的延迟。"""
-    await pipeline.run({
-        "pipeline_id": "monitor-test",
-        "title": "监控测试",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    await pipeline.run(
+        {
+            "pipeline_id": "monitor-test",
+            "title": "监控测试",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
 
     metrics = await pipeline.monitoring.get_metrics()
     latency_metrics = [m for m in metrics if m["name"] == "stage_latency"]
@@ -485,12 +521,14 @@ async def test_e2e_t019_monitoring_records_stage_latency(pipeline):
 @pytest.mark.asyncio
 async def test_e2e_t020_monitoring_records_module_metrics(pipeline):
     """E2E-T020: 监控仪表盘记录模块延迟指标。"""
-    await pipeline.run({
-        "pipeline_id": "module-metrics-test",
-        "title": "模块指标",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    await pipeline.run(
+        {
+            "pipeline_id": "module-metrics-test",
+            "title": "模块指标",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
 
     metrics = await pipeline.monitoring.get_metrics()
     module_metrics = [m for m in metrics if "module_" in m["name"]]
@@ -503,15 +541,17 @@ async def test_e2e_t020_monitoring_records_module_metrics(pipeline):
 @pytest.mark.asyncio
 async def test_e2e_t021_knowledge_graph_nodes_created(pipeline):
     """E2E-T021: 知识图谱为每章创建节点。"""
-    await pipeline.run({
-        "pipeline_id": "kg-test",
-        "title": "知识图谱测试",
-        "subject": "低空经济",
-        "chapters": [
-            {"chapter_id": "ch01", "title": "第1章", "order": 1, "learning_objectives": ["目标1"]},
-            {"chapter_id": "ch02", "title": "第2章", "order": 2, "learning_objectives": ["目标2"]},
-        ],
-    })
+    await pipeline.run(
+        {
+            "pipeline_id": "kg-test",
+            "title": "知识图谱测试",
+            "subject": "低空经济",
+            "chapters": [
+                {"chapter_id": "ch01", "title": "第1章", "order": 1, "learning_objectives": ["目标1"]},
+                {"chapter_id": "ch02", "title": "第2章", "order": 2, "learning_objectives": ["目标2"]},
+            ],
+        }
+    )
 
     assert await pipeline.kg.node_count() == 2
     # edge count may be >1 since KG is built in multiple stages
@@ -525,12 +565,14 @@ async def test_e2e_t021_knowledge_graph_nodes_created(pipeline):
 @pytest.mark.asyncio
 async def test_e2e_t022_immutable_log_entries(pipeline):
     """E2E-T022: 不可变日志记录所有阶段事件。"""
-    await pipeline.run({
-        "pipeline_id": "log-test",
-        "title": "日志测试",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    await pipeline.run(
+        {
+            "pipeline_id": "log-test",
+            "title": "日志测试",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
 
     count = await pipeline.log.entry_count()
     assert count >= 8  # 8 stages
@@ -697,12 +739,14 @@ async def test_stage_result_serialization():
 async def test_pipeline_summary_grade():
     """验证流水线输出包含正确的分级信息。"""
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
-    result = await pipeline.run({
-        "pipeline_id": "grade-test",
-        "title": "分级测试",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    result = await pipeline.run(
+        {
+            "pipeline_id": "grade-test",
+            "title": "分级测试",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
 
     summary = result.output["summary"]
     assert summary["average_quality_score"] > 0
@@ -724,12 +768,14 @@ async def test_stage_transitions_are_sequential():
 
     pipeline._execute_stage = tracking_execute
 
-    await pipeline.run({
-        "pipeline_id": "order-test",
-        "title": "顺序测试",
-        "subject": "低空经济",
-        "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
-    })
+    await pipeline.run(
+        {
+            "pipeline_id": "order-test",
+            "title": "顺序测试",
+            "subject": "低空经济",
+            "chapters": [{"chapter_id": "ch01", "title": "测试", "order": 1, "learning_objectives": ["x"]}],
+        }
+    )
 
     assert execution_order == list(PipelineStage)
 
@@ -918,12 +964,9 @@ def test_pipeline_build_output_with_temporal_output():
 
         pipeline.state.stage_results[PipelineStage.OUTLINE_GENERATION].output = {
             "chapters": [{"id": "ch1", "title": "Test"}],
-            "total": 1
+            "total": 1,
         }
-        pipeline.state.stage_results[PipelineStage.CHAPTER_WRITING].output = {
-            "chapters": [],
-            "total": 0
-        }
+        pipeline.state.stage_results[PipelineStage.CHAPTER_WRITING].output = {"chapters": [], "total": 0}
 
         output = pipeline._build_output({"title": "Test Book"})
         assert "chapters" in output
@@ -1057,6 +1100,7 @@ async def test_mock_content_addressing_store():
 def test_pipeline_get_stage_config_returns_invalid_stage():
     """covers textbook_pipeline.py line 992: _get_stage_config returns None for invalid stage"""
     from src.pipeline.pipeline_stages import PipelineStage
+
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
 
     PipelineStage.FINAL_GATE
@@ -1082,8 +1126,7 @@ async def test_h_context_budget_raises_budget_exceeded():
 
     with pytest.raises(BudgetExceededError):
         await pipeline._h_context_budget(
-            PipelineStage.CONTEXT_SETUP,
-            {"chapters": [{"chapter_id": "ch1", "title": "Test", "order": 1}]}
+            PipelineStage.CONTEXT_SETUP, {"chapters": [{"chapter_id": "ch1", "title": "Test", "order": 1}]}
         )
 
 
@@ -1107,11 +1150,7 @@ async def test_execute_modules_parallel_raises_exception():
     pipeline._module_handlers["FAILING_MODULE"] = failing_handler
 
     with pytest.raises(StageExecutionError) as exc_info:
-        await pipeline._execute_modules_parallel(
-            ["FAILING_MODULE"],
-            PipelineStage.CHAPTER_WRITING,
-            {"title": "Test"}
-        )
+        await pipeline._execute_modules_parallel(["FAILING_MODULE"], PipelineStage.CHAPTER_WRITING, {"title": "Test"})
 
     assert "FAILING_MODULE" in str(exc_info.value)
 
@@ -1151,7 +1190,6 @@ async def test_resume_handles_security_violation():
     """covers textbook_pipeline.py line 576: resume handles SecurityViolationError"""
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
 
-
     async def raise_security_error(textbook_config, resume_from=None):
         raise SecurityViolationError("Security violation during resume")
 
@@ -1175,7 +1213,6 @@ async def test_resume_handles_security_violation():
 async def test_resume_handles_abort():
     """covers textbook_pipeline.py line 578: resume handles PipelineAbortedError"""
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
-
 
     async def raise_abort_error(textbook_config, resume_from=None):
         raise PipelineAbortedError("Pipeline aborted during resume")
@@ -1257,7 +1294,14 @@ async def test_resume_handles_generic_exception():
         "checkpoints": [],
         "metadata": {},
         "stage_results": [
-            {"stage": PipelineStage.INITIALIZATION.value, "status": "COMPLETED", "modules_executed": [], "modules_failed": [], "output": {}, "errors": []},
+            {
+                "stage": PipelineStage.INITIALIZATION.value,
+                "status": "COMPLETED",
+                "modules_executed": [],
+                "modules_failed": [],
+                "output": {},
+                "errors": [],
+            },
         ],
     }
 

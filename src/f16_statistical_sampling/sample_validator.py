@@ -29,28 +29,16 @@ class SampleValidator:
     def __init__(self, minimum_sample_size: int = 3):
         self.minimum_sample_size = minimum_sample_size
 
-    def validate_representativeness(
-        self,
-        population: list[float],
-        sample: list[float]
-    ) -> ValidationResult:
+    def validate_representativeness(self, population: list[float], sample: list[float]) -> ValidationResult:
         """验证样本代表性"""
         if not population or not sample:
-            return ValidationResult(
-                is_valid=False,
-                score=0.0,
-                message="Empty population or sample"
-            )
+            return ValidationResult(is_valid=False, score=0.0, message="Empty population or sample")
 
         pop_mean = sum(population) / len(population)
         sample_mean = sum(sample) / len(sample)
 
         if pop_mean == 0:
-            return ValidationResult(
-                is_valid=False,
-                score=0.0,
-                message="Population mean is zero"
-            )
+            return ValidationResult(is_valid=False, score=0.0, message="Population mean is zero")
 
         relative_diff = abs(sample_mean - pop_mean) / abs(pop_mean)
 
@@ -59,22 +47,16 @@ class SampleValidator:
         is_valid = score >= 0.8
 
         return ValidationResult(
-            is_valid=is_valid,
-            score=score,
-            message=f"Sample mean: {sample_mean:.4f}, Population mean: {pop_mean:.4f}"
+            is_valid=is_valid, score=score, message=f"Sample mean: {sample_mean:.4f}, Population mean: {pop_mean:.4f}"
         )
 
-    def validate_minimum_size(
-        self,
-        population: list,
-        sample: list
-    ) -> ValidationResult:
+    def validate_minimum_size(self, population: list, sample: list) -> ValidationResult:
         """验证最小样本量"""
         if len(sample) < self.minimum_sample_size:
             return ValidationResult(
                 is_valid=False,
                 score=0.0,
-                message=f"Sample size {len(sample)} is too small. Minimum is {self.minimum_sample_size}"
+                message=f"Sample size {len(sample)} is too small. Minimum is {self.minimum_sample_size}",
             )
 
         recommended_size = self._calculate_recommended_size(len(population))
@@ -82,29 +64,17 @@ class SampleValidator:
         if len(sample) < recommended_size:
             score = len(sample) / recommended_size
             return ValidationResult(
-                is_valid=True,
-                score=score,
-                message=f"Sample size {len(sample)} is below recommended {recommended_size}"
+                is_valid=True, score=score, message=f"Sample size {len(sample)} is below recommended {recommended_size}"
             )
 
-        return ValidationResult(
-            is_valid=True,
-            score=1.0,
-            message=f"Sample size {len(sample)} is adequate"
-        )
+        return ValidationResult(is_valid=True, score=1.0, message=f"Sample size {len(sample)} is adequate")
 
     def validate_stratification_balance(
-        self,
-        population_strata: dict[str, list],
-        sample_strata: dict[str, list]
+        self, population_strata: dict[str, list], sample_strata: dict[str, list]
     ) -> ValidationResult:
         """验证分层平衡"""
         if set(population_strata.keys()) != set(sample_strata.keys()):
-            return ValidationResult(
-                is_valid=False,
-                score=0.0,
-                message="Strata mismatch between population and sample"
-            )
+            return ValidationResult(is_valid=False, score=0.0, message="Strata mismatch between population and sample")
 
         scores: list[float] = []
 
@@ -122,33 +92,20 @@ class SampleValidator:
             scores.append(max(0, stratum_score))
 
         if not scores:
-            return ValidationResult(
-                is_valid=False,
-                score=0.0,
-                message="No valid strata to compare"
-            )
+            return ValidationResult(is_valid=False, score=0.0, message="No valid strata to compare")
 
         avg_score = sum(scores) / len(scores)
         is_valid = avg_score >= 0.8
 
         return ValidationResult(
-            is_valid=is_valid,
-            score=avg_score,
-            message=f"Stratification balance score: {avg_score:.4f}"
+            is_valid=is_valid, score=avg_score, message=f"Stratification balance score: {avg_score:.4f}"
         )
 
-    def detect_bias(
-        self,
-        population: list,
-        sample: list
-    ) -> BiasDetectionResult:
+    def detect_bias(self, population: list, sample: list) -> BiasDetectionResult:
         """检测抽样偏差"""
         if not population or not sample:
             return BiasDetectionResult(
-                is_biased=True,
-                bias_score=1.0,
-                bias_type="empty",
-                details="Empty population or sample"
+                is_biased=True, bias_score=1.0, bias_type="empty", details="Empty population or sample"
             )
 
         pop_sorted = sorted(population)
@@ -194,14 +151,11 @@ class SampleValidator:
             is_biased=is_biased,
             bias_score=bias_score,
             bias_type=bias_type,
-            details=f"Median diff: {median_diff:.3f}, Variance ratio: {variance_ratio:.3f}, Coverage: {coverage_ratio:.3f}"
+            details=f"Median diff: {median_diff:.3f}, Variance ratio: {variance_ratio:.3f}, Coverage: {coverage_ratio:.3f}",
         )
 
     def validate_sample_quality(
-        self,
-        population: list[float],
-        sample: list[float],
-        strata: dict[str, list] | None = None
+        self, population: list[float], sample: list[float], strata: dict[str, list] | None = None
     ) -> dict[str, ValidationResult]:
         """综合样本质量验证"""
         results = {}

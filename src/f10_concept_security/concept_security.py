@@ -47,9 +47,7 @@ class ConceptNode:
         if not self.created_at:
             self.created_at = ""
         if not self.definition_hash:
-            self.definition_hash = hashlib.sha256(
-                self.definition.encode()
-            ).hexdigest()
+            self.definition_hash = hashlib.sha256(self.definition.encode()).hexdigest()
 
     @property
     def should_auto_approve(self) -> bool:
@@ -137,23 +135,14 @@ class KnowledgeGraphSecurity:
             stored_hash=node.definition_hash,
         )
 
-    def _generate_approval_signature(
-        self,
-        concept_id: str,
-        reviewer_id: str
-    ) -> str:
+    def _generate_approval_signature(self, concept_id: str, reviewer_id: str) -> str:
         """生成安全的HMAC签名"""
         key = _get_signature_key()
         message = f"{concept_id}:{reviewer_id}"
         signature = hmac.new(key, message.encode(), hashlib.sha256).hexdigest()
         return f"sig-{concept_id}-{reviewer_id}-{signature[:16]}"
 
-    def verify_approval_signature(
-        self,
-        concept_id: str,
-        reviewer_id: str,
-        signature: str
-    ) -> bool:
+    def verify_approval_signature(self, concept_id: str, reviewer_id: str, signature: str) -> bool:
         """验证审批签名"""
         if not signature or not signature.startswith("sig-"):
             return False
@@ -161,9 +150,7 @@ class KnowledgeGraphSecurity:
         expected = self._generate_approval_signature(concept_id, reviewer_id)
         return hmac.compare_digest(signature, expected)
 
-    def verify_and_approve(
-        self, concept_id: str, reviewer_id: str | None
-    ) -> dict[str, Any]:
+    def verify_and_approve(self, concept_id: str, reviewer_id: str | None) -> dict[str, Any]:
         if reviewer_id is None:
             raise SecurityException("Reviewer ID is required")
 

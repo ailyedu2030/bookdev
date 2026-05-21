@@ -82,6 +82,7 @@ async def websocket_endpoint(websocket: WebSocket, channel: str = "global"):
 
     try:
         from api.deps import decode_token
+
         token_data = decode_token(token, "access")
         # Optionally store user info in websocket state
         websocket.state.user_id = token_data.sub
@@ -99,14 +100,20 @@ async def websocket_endpoint(websocket: WebSocket, channel: str = "global"):
                 event_type = message.get("type")
                 if event_type and event_type in manager.message_handlers:
                     result = await manager.message_handlers[event_type](message.get("data"))
-                    await manager.send_message({
-                        "type": f"{event_type}_response",
-                        "data": result,
-                    }, channel)
+                    await manager.send_message(
+                        {
+                            "type": f"{event_type}_response",
+                            "data": result,
+                        },
+                        channel,
+                    )
             except json.JSONDecodeError:
-                await manager.send_message({
-                    "type": "error",
-                    "data": "Invalid JSON",
-                }, channel)
+                await manager.send_message(
+                    {
+                        "type": "error",
+                        "data": "Invalid JSON",
+                    },
+                    channel,
+                )
     except WebSocketDisconnect:
         manager.disconnect(websocket, channel)

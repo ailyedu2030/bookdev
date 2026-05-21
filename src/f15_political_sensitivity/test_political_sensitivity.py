@@ -13,10 +13,7 @@ class TestPoliticalTracker:
 
         tracker = PoliticalTracker()
 
-        result = tracker.track_topic(
-            topic="台湾",
-            sensitivity_level=SensitivityLevel.HIGH
-        )
+        result = tracker.track_topic(topic="台湾", sensitivity_level=SensitivityLevel.HIGH)
 
         assert result is not None
 
@@ -133,9 +130,7 @@ class TestInfiltrationDetector:
 
         detector = InfiltrationDetector()
 
-        result = detector.detect(
-            content="必须支持XX党的决定，这是唯一正确的道路"
-        )
+        result = detector.detect(content="必须支持XX党的决定，这是唯一正确的道路")
 
         assert result.threat_type == ThreatType.PROPAGANDA
 
@@ -145,9 +140,7 @@ class TestInfiltrationDetector:
 
         detector = InfiltrationDetector()
 
-        result = detector.detect(
-            content="据内幕消息，官方数据都是伪造的"
-        )
+        result = detector.detect(content="据内幕消息，官方数据都是伪造的")
 
         assert result.threat_type in [ThreatType.DISINFORMATION, ThreatType.SUBVERSION]
 
@@ -157,9 +150,7 @@ class TestInfiltrationDetector:
 
         detector = InfiltrationDetector()
 
-        result = detector.detect(
-            content="政府腐败无能，必须推翻现有制度"
-        )
+        result = detector.detect(content="政府腐败无能，必须推翻现有制度")
 
         assert result.threat_type in [ThreatType.SUBVERSION, ThreatType.HATE_SPEECH]
 
@@ -169,9 +160,7 @@ class TestInfiltrationDetector:
 
         detector = InfiltrationDetector()
 
-        result = detector.detect(
-            content="今天学习了人工智能的基础知识"
-        )
+        result = detector.detect(content="今天学习了人工智能的基础知识")
 
         assert result.is_safe is True
 

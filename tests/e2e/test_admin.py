@@ -139,7 +139,7 @@ class TestEditUser:
         authenticated_page.goto("http://localhost:3000/admin/users")
         authenticated_page.wait_for_load_state("networkidle")
 
-        authenticated_page.click('.ant-btn-text:first-child')
+        authenticated_page.click(".ant-btn-text:first-child")
         authenticated_page.wait_for_selector(".ant-modal", state="visible")
 
         expect(authenticated_page.locator("text=编辑用户")).toBeVisible()
@@ -149,7 +149,7 @@ class TestEditUser:
         authenticated_page.goto("http://localhost:3000/admin/users")
         authenticated_page.wait_for_load_state("networkidle")
 
-        authenticated_page.click('.ant-btn-text:first-child')
+        authenticated_page.click(".ant-btn-text:first-child")
         authenticated_page.wait_for_selector(".ant-modal", state="visible")
 
         name_input = authenticated_page.locator('input[placeholder="请输入姓名"]')
@@ -160,7 +160,7 @@ class TestEditUser:
         authenticated_page.goto("http://localhost:3000/admin/users")
         authenticated_page.wait_for_load_state("networkidle")
 
-        authenticated_page.click('.ant-btn-text:first-child')
+        authenticated_page.click(".ant-btn-text:first-child")
         authenticated_page.wait_for_selector(".ant-modal", state="visible")
 
         authenticated_page.click(".ant-select")
@@ -172,7 +172,7 @@ class TestEditUser:
         authenticated_page.goto("http://localhost:3000/admin/users")
         authenticated_page.wait_for_load_state("networkidle")
 
-        authenticated_page.click('.ant-btn-text:first-child')
+        authenticated_page.click(".ant-btn-text:first-child")
         authenticated_page.wait_for_selector(".ant-modal", state="visible")
 
         password_input = authenticated_page.locator('input[placeholder*="留空则不修改"]')
@@ -187,7 +187,7 @@ class TestDeleteUser:
         authenticated_page.goto("http://localhost:3000/admin/users")
         authenticated_page.wait_for_load_state("networkidle")
 
-        delete_button = authenticated_page.locator('.ant-btn-dangerous').first
+        delete_button = authenticated_page.locator(".ant-btn-dangerous").first
         if delete_button.is_visible():
             delete_button.click()
             authenticated_page.wait_for_selector(".ant-popover", state="visible")
@@ -199,7 +199,7 @@ class TestDeleteUser:
         authenticated_page.goto("http://localhost:3000/admin/users")
         authenticated_page.wait_for_load_state("networkidle")
 
-        delete_button = authenticated_page.locator('.ant-btn-dangerous').first
+        delete_button = authenticated_page.locator(".ant-btn-dangerous").first
         if delete_button.is_visible():
             delete_button.click()
             authenticated_page.wait_for_selector(".ant-popover", state="visible")

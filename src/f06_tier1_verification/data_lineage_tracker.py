@@ -50,11 +50,7 @@ class DataLineageTracker:
     DEFAULT_MAX_DEPTH = 3
     DEFAULT_MAX_DERIVATION_CHAIN = 5
 
-    def __init__(
-        self,
-        max_depth: int = DEFAULT_MAX_DEPTH,
-        max_derivation_chain: int = DEFAULT_MAX_DERIVATION_CHAIN
-    ):
+    def __init__(self, max_depth: int = DEFAULT_MAX_DEPTH, max_derivation_chain: int = DEFAULT_MAX_DERIVATION_CHAIN):
         self.max_depth = max_depth
         self.max_derivation_chain = max_derivation_chain
         self._nodes: dict[str, DataNode] = {}
@@ -71,58 +67,39 @@ class DataLineageTracker:
         async with self._lock:
             range_result = self._check_value_range(value)
             if range_result:
-                return LineageResult(
-                    success=False,
-                    rejected=True,
-                    reason=f"INVALID_RANGE: {range_result}"
-                )
+                return LineageResult(success=False, rejected=True, reason=f"INVALID_RANGE: {range_result}")
 
             node = DataNode(
-                data_id=data_id,
-                value=value,
-                source=source,
-                is_raw=True,
-                depth=0,
-                status=NodeStatus.VERIFIED
+                data_id=data_id, value=value, source=source, is_raw=True, depth=0, status=NodeStatus.VERIFIED
             )
             node.provenance = [source]
             self._nodes[data_id] = node
             return LineageResult(success=True, node=node)
 
     async def register_derived_data(
-        self,
-        data_id: str,
-        formula: str | None,
-        input_data_ids: list[str],
-        **kwargs
+        self, data_id: str, formula: str | None, input_data_ids: list[str], **kwargs
     ) -> LineageResult:
         """注册派生数据"""
         async with self._lock:
             if formula is None:
                 return LineageResult(
-                    success=False,
-                    rejected=True,
-                    reason="MISSING_FORMULA: Derived data must include formula"
+                    success=False, rejected=True, reason="MISSING_FORMULA: Derived data must include formula"
                 )
 
             for input_id in input_data_ids:
                 if input_id not in self._nodes:
                     return LineageResult(
-                        success=False,
-                        rejected=True,
-                        reason=f"UNKNOWN_INPUT: Input data {input_id} not found"
+                        success=False, rejected=True, reason=f"UNKNOWN_INPUT: Input data {input_id} not found"
                     )
 
-            max_input_depth = max(
-                self._nodes[inp_id].depth for inp_id in input_data_ids
-            )
+            max_input_depth = max(self._nodes[inp_id].depth for inp_id in input_data_ids)
             new_depth = max_input_depth + 1
 
             if new_depth > self.max_depth:
                 return LineageResult(
                     success=False,
                     rejected=True,
-                    reason=f"DEPTH_EXCEEDED: Max depth is {self.max_depth}, got depth {new_depth}"
+                    reason=f"DEPTH_EXCEEDED: Max depth is {self.max_depth}, got depth {new_depth}",
                 )
 
             derivation_chain_length = self._calculate_derivation_chain(input_data_ids)
@@ -130,7 +107,7 @@ class DataLineageTracker:
                 return LineageResult(
                     success=False,
                     rejected=True,
-                    reason=f"DERIVATION_CHAIN_EXCEEDED: Max chain is {self.max_derivation_chain}"
+                    reason=f"DERIVATION_CHAIN_EXCEEDED: Max chain is {self.max_derivation_chain}",
                 )
 
             derived_value = kwargs.get("value")
@@ -142,7 +119,7 @@ class DataLineageTracker:
                 formula=formula,
                 input_data_ids=input_data_ids,
                 depth=new_depth,
-                status=NodeStatus.VERIFIED
+                status=NodeStatus.VERIFIED,
             )
 
             provenance = []
@@ -171,12 +148,7 @@ class DataLineageTracker:
         chain.reverse()
         return chain
 
-    def _build_propagation_chain(
-        self,
-        data_id: str,
-        chain: list[DataNode],
-        visited: set[str]
-    ):
+    def _build_propagation_chain(self, data_id: str, chain: list[DataNode], visited: set[str]):
         """递归构建传播链 - 深度优先，后序遍历确保原始数据在前"""
         if data_id in visited:
             return

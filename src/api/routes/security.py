@@ -43,11 +43,7 @@ router = APIRouter(prefix="/api/security", tags=["Security"])
     response_model=ScanResponse,
     dependencies=[
         Depends(csrf_protect),
-        Depends(rate_limit(RateLimitConfig(
-            requests=30,
-            window_seconds=60,
-            key_prefix="scan"
-        ))),
+        Depends(rate_limit(RateLimitConfig(requests=30, window_seconds=60, key_prefix="scan"))),
     ],
 )
 async def scan_content(
@@ -101,11 +97,7 @@ async def scan_content(
     response_model=DOIVerifyResponse,
     dependencies=[
         Depends(csrf_protect),
-        Depends(rate_limit(RateLimitConfig(
-            requests=30,
-            window_seconds=60,
-            key_prefix="scan"
-        ))),
+        Depends(rate_limit(RateLimitConfig(requests=30, window_seconds=60, key_prefix="scan"))),
     ],
 )
 async def verify_doi(
@@ -151,11 +143,7 @@ async def verify_doi(
     response_model=RegulationVerifyResponse,
     dependencies=[
         Depends(csrf_protect),
-        Depends(rate_limit(RateLimitConfig(
-            requests=30,
-            window_seconds=60,
-            key_prefix="scan"
-        ))),
+        Depends(rate_limit(RateLimitConfig(requests=30, window_seconds=60, key_prefix="scan"))),
     ],
 )
 async def verify_regulation(
@@ -197,11 +185,7 @@ async def verify_regulation(
     response_model=SemanticScanResponse,
     dependencies=[
         Depends(csrf_protect),
-        Depends(rate_limit(RateLimitConfig(
-            requests=30,
-            window_seconds=60,
-            key_prefix="scan"
-        ))),
+        Depends(rate_limit(RateLimitConfig(requests=30, window_seconds=60, key_prefix="scan"))),
     ],
 )
 async def semantic_scan(
@@ -353,11 +337,7 @@ async def verify_concept_integrity(
     response_model=dict,
     dependencies=[
         Depends(csrf_protect),
-        Depends(rate_limit(RateLimitConfig(
-            requests=10,
-            window_seconds=60,
-            key_prefix="scan"
-        ))),
+        Depends(rate_limit(RateLimitConfig(requests=10, window_seconds=60, key_prefix="scan"))),
     ],
 )
 async def batch_scan(
@@ -378,19 +358,23 @@ async def batch_scan(
             content_filter = ContentSecurityFilter()
             result = content_filter.filter_content(content)
 
-            results.append({
-                "content_preview": content[:100] + "..." if len(content) > 100 else content,
-                "is_safe": result.is_safe,
-                "action": result.action,
-                "violations_count": len(result.violations),
-            })
+            results.append(
+                {
+                    "content_preview": content[:100] + "..." if len(content) > 100 else content,
+                    "is_safe": result.is_safe,
+                    "action": result.action,
+                    "violations_count": len(result.violations),
+                }
+            )
         except (ImportError, AttributeError):
-            results.append({
-                "content_preview": content[:100] + "..." if len(content) > 100 else content,
-                "is_safe": True,
-                "action": "PASS",
-                "violations_count": 0,
-            })
+            results.append(
+                {
+                    "content_preview": content[:100] + "..." if len(content) > 100 else content,
+                    "is_safe": True,
+                    "action": "PASS",
+                    "violations_count": 0,
+                }
+            )
 
     return {
         "success": True,

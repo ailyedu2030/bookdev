@@ -93,12 +93,14 @@ async def create_project(
     - **description**: Project description
     - **total_chapters**: Total expected chapters
     """
-    project = db.create_project({
-        "name": project_data.name,
-        "description": project_data.description,
-        "total_chapters": project_data.total_chapters,
-        "owner_id": user.id,
-    })
+    project = db.create_project(
+        {
+            "name": project_data.name,
+            "description": project_data.description,
+            "total_chapters": project_data.total_chapters,
+            "owner_id": user.id,
+        }
+    )
 
     return ProjectResponse(**project)
 

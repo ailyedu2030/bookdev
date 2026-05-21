@@ -15,6 +15,7 @@ from f21_risk_classification.risk_thresholds import RISK_LEVELS
 
 class ReviewStatus(Enum):
     """审核状态"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -23,6 +24,7 @@ class ReviewStatus(Enum):
 
 class ReviewPriority(Enum):
     """审核优先级"""
+
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
@@ -36,6 +38,7 @@ class ReviewTask:
 
     QC-009 Fix: 使用frozen dataclass确保不可变性
     """
+
     task_id: str
     content_id: str
     risk_level: str
@@ -52,7 +55,7 @@ class ReviewTask:
     def __post_init__(self):
         if isinstance(self.status, str):
             # 使用object.__setattr__绕过frozen限制来进行转换
-            object.__setattr__(self, 'status', ReviewStatus(self.status))
+            object.__setattr__(self, "status", ReviewStatus(self.status))
 
 
 class ReviewScheduler:
@@ -63,7 +66,7 @@ class ReviewScheduler:
         "CRITICAL": 24,
         "HIGH": 72,
         "MEDIUM": 168,  # 1周
-        "LOW": 336      # 2周
+        "LOW": 336,  # 2周
     }
 
     # 优先级映射
@@ -71,7 +74,7 @@ class ReviewScheduler:
         "CRITICAL": ReviewPriority.CRITICAL.value,
         "HIGH": ReviewPriority.HIGH.value,
         "MEDIUM": ReviewPriority.MEDIUM.value,
-        "LOW": ReviewPriority.LOW.value
+        "LOW": ReviewPriority.LOW.value,
     }
 
     def __init__(self, seed: int | None = None):
@@ -110,12 +113,7 @@ class ReviewScheduler:
         # 概率性复核 - 使用实例随机数生成器
         return self._random.random() < review_ratio
 
-    def schedule_review(
-        self,
-        content_id: str,
-        risk_level: str,
-        content_hash: str
-    ) -> ReviewTask:
+    def schedule_review(self, content_id: str, risk_level: str, content_hash: str) -> ReviewTask:
         """
         调度审核任务
 
@@ -131,17 +129,11 @@ class ReviewScheduler:
         created_at = datetime.utcnow()
 
         # 计算截止时间
-        deadline_hours = self.REVIEW_DEADLINE_HOURS.get(
-            risk_level,
-            self.REVIEW_DEADLINE_HOURS["MEDIUM"]
-        )
+        deadline_hours = self.REVIEW_DEADLINE_HOURS.get(risk_level, self.REVIEW_DEADLINE_HOURS["MEDIUM"])
         due_date = created_at + timedelta(hours=deadline_hours)
 
         # 获取优先级
-        priority = self.PRIORITY_MAP.get(
-            risk_level,
-            ReviewPriority.MEDIUM.value
-        )
+        priority = self.PRIORITY_MAP.get(risk_level, ReviewPriority.MEDIUM.value)
 
         task = ReviewTask(
             task_id=task_id,
@@ -151,7 +143,7 @@ class ReviewScheduler:
             status=ReviewStatus.PENDING,
             priority=priority,
             created_at=created_at,
-            due_date=due_date
+            due_date=due_date,
         )
 
         self._tasks[task_id] = task
@@ -164,10 +156,7 @@ class ReviewScheduler:
         Returns:
             待审核任务列表（按优先级排序）
         """
-        pending = [
-            task for task in self._tasks.values()
-            if task.status == ReviewStatus.PENDING
-        ]
+        pending = [task for task in self._tasks.values() if task.status == ReviewStatus.PENDING]
         return sorted(pending, key=lambda t: t.priority)
 
     def get_review_task(self, task_id: str) -> ReviewTask | None:
@@ -182,13 +171,7 @@ class ReviewScheduler:
         """
         return self._tasks.get(task_id)
 
-    def complete_review(
-        self,
-        task_id: str,
-        result: str,
-        reviewer_id: str,
-        comments: str = ""
-    ) -> bool:
+    def complete_review(self, task_id: str, result: str, reviewer_id: str, comments: str = "") -> bool:
         """
         完成审核
 
@@ -219,7 +202,7 @@ class ReviewScheduler:
             completed_at=datetime.utcnow(),
             result=result,
             reviewer_id=reviewer_id,
-            comments=comments
+            comments=comments,
         )
 
         self._tasks[task_id] = updated_task
@@ -253,7 +236,7 @@ class ReviewScheduler:
             completed_at=task.completed_at,
             result=task.result,
             reviewer_id=task.reviewer_id,
-            comments=task.comments
+            comments=task.comments,
         )
 
         self._tasks[task_id] = updated_task
@@ -265,7 +248,4 @@ class ReviewScheduler:
 
     def get_tasks_by_status(self, status: ReviewStatus) -> list[ReviewTask]:
         """获取指定状态的任务"""
-        return [
-            task for task in self._tasks.values()
-            if task.status == status
-        ]
+        return [task for task in self._tasks.values() if task.status == status]

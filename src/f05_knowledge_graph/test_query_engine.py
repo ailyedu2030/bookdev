@@ -76,25 +76,18 @@ class TestMatchNodes:
 
     def test_match_nodes_filters_by_predicate(self, query_engine):
         """Filter by predicate works correctly"""
-        results = query_engine.match_nodes(
-            predicate=lambda n: hasattr(n, 'name') and n.name.startswith("M")
-        )
+        results = query_engine.match_nodes(predicate=lambda n: hasattr(n, "name") and n.name.startswith("M"))
         assert len(results) == 1
         assert results[0].name == "Machine Learning"
 
     def test_match_nodes_combines_filters(self, query_engine):
         """Both node_type and predicate filters work together"""
-        results = query_engine.match_nodes(
-            node_type=NodeType.CONCEPT.value,
-            predicate=lambda n: "Learning" in n.name
-        )
+        results = query_engine.match_nodes(node_type=NodeType.CONCEPT.value, predicate=lambda n: "Learning" in n.name)
         assert len(results) == 2
 
     def test_match_nodes_returns_empty_when_no_match(self, query_engine):
         """Returns empty list when no nodes match"""
-        results = query_engine.match_nodes(
-            node_type="NonExistentType"
-        )
+        results = query_engine.match_nodes(node_type="NonExistentType")
         assert len(results) == 0
 
 
@@ -113,25 +106,20 @@ class TestMatchEdges:
 
     def test_match_edges_filters_by_source_predicate(self, query_engine):
         """Filter by source_predicate works correctly"""
-        results = query_engine.match_edges(
-            source_predicate=lambda s: s.startswith("concept1")
-        )
+        results = query_engine.match_edges(source_predicate=lambda s: s.startswith("concept1"))
         assert len(results) == 2
         for edge in results:
             assert edge.source == "concept1"
 
     def test_match_edges_filters_by_target_predicate(self, query_engine):
         """Filter by target_predicate works correctly"""
-        results = query_engine.match_edges(
-            target_predicate=lambda t: t.startswith("concept")
-        )
+        results = query_engine.match_edges(target_predicate=lambda t: t.startswith("concept"))
         assert len(results) == 2
 
     def test_match_edges_combines_filters(self, query_engine):
         """Combines edge_type and source_predicate"""
         results = query_engine.match_edges(
-            edge_type=EdgeType.SIMILAR_TO.value,
-            source_predicate=lambda s: s == "concept1"
+            edge_type=EdgeType.SIMILAR_TO.value, source_predicate=lambda s: s == "concept1"
         )
         assert len(results) == 1
         assert results[0].source == "concept1"

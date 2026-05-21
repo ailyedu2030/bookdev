@@ -24,6 +24,7 @@ import pytest
 # RateLimiter 测试
 # ============================================================================
 
+
 class TestRateLimiter:
     """速率限制器测试"""
 
@@ -99,6 +100,7 @@ class TestRateLimiter:
 # TokenCounter 测试
 # ============================================================================
 
+
 class TestTokenCounter:
     """Token计数器测试"""
 
@@ -164,6 +166,7 @@ class TestTokenCounter:
 # ============================================================================
 # CostTracker 测试
 # ============================================================================
+
 
 class TestCostTracker:
     """成本追踪器测试"""
@@ -232,6 +235,7 @@ class TestCostTracker:
 # ResponseParser 测试
 # ============================================================================
 
+
 class TestResponseParser:
     """响应解析器测试"""
 
@@ -241,17 +245,8 @@ class TestResponseParser:
 
         parser = ResponseParser()
         response_data = {
-            "choices": [
-                {
-                    "message": {
-                        "content": "这是生成的教材内容"
-                    },
-                    "finish_reason": "stop"
-                }
-            ],
-            "usage": {
-                "total_tokens": 150
-            }
+            "choices": [{"message": {"content": "这是生成的教材内容"}, "finish_reason": "stop"}],
+            "usage": {"total_tokens": 150},
         }
 
         result = parser.parse(response_data)
@@ -264,16 +259,7 @@ class TestResponseParser:
         from f31_minimax_client.response_parser import ResponseParser
 
         parser = ResponseParser()
-        response_data = {
-            "choices": [
-                {
-                    "message": {
-                        "content": "内容"
-                    },
-                    "finish_reason": "stop"
-                }
-            ]
-        }
+        response_data = {"choices": [{"message": {"content": "内容"}, "finish_reason": "stop"}]}
 
         result = parser.parse(response_data)
         assert result.content == "内容"
@@ -284,16 +270,7 @@ class TestResponseParser:
         from f31_minimax_client.response_parser import ResponseParser
 
         parser = ResponseParser()
-        chunk_data = {
-            "choices": [
-                {
-                    "delta": {
-                        "content": "分块内容"
-                    },
-                    "finish_reason": None
-                }
-            ]
-        }
+        chunk_data = {"choices": [{"delta": {"content": "分块内容"}, "finish_reason": None}]}
 
         result = parser.parse(chunk_data, is_stream=True)
         assert result.content == "分块内容"
@@ -304,12 +281,7 @@ class TestResponseParser:
         from f31_minimax_client.response_parser import ResponseParser
 
         parser = ResponseParser()
-        error_data = {
-            "base_resp": {
-                "status_code": 1002,
-                "status_msg": "invalid parameter"
-            }
-        }
+        error_data = {"base_resp": {"status_code": 1002, "status_msg": "invalid parameter"}}
 
         with pytest.raises(ValueError, match="invalid parameter"):
             parser.parse(error_data)
@@ -327,6 +299,7 @@ class TestResponseParser:
 # ============================================================================
 # MiniMaxClient (Mock) 测试
 # ============================================================================
+
 
 class TestTokenCounterEdgeCases:
     """Token计数器边界测试"""
@@ -375,9 +348,7 @@ class TestResponseParserEdgeCases:
         from f31_minimax_client.response_parser import ResponseParser
 
         parser = ResponseParser()
-        error = parser.extract_error({
-            "base_resp": {"status_code": 1002, "status_msg": "rate limited"}
-        })
+        error = parser.extract_error({"base_resp": {"status_code": 1002, "status_msg": "rate limited"}})
         assert error == "rate limited"
 
     def test_extract_error_no_error(self):
@@ -385,9 +356,7 @@ class TestResponseParserEdgeCases:
         from f31_minimax_client.response_parser import ResponseParser
 
         parser = ResponseParser()
-        error = parser.extract_error({
-            "choices": [{"message": {"content": "ok"}}]
-        })
+        error = parser.extract_error({"choices": [{"message": {"content": "ok"}}]})
         assert error is None
 
     def test_extract_error_from_error_field(self):
@@ -395,9 +364,7 @@ class TestResponseParserEdgeCases:
         from f31_minimax_client.response_parser import ResponseParser
 
         parser = ResponseParser()
-        error = parser.extract_error({
-            "error": {"message": "server error"}
-        })
+        error = parser.extract_error({"error": {"message": "server error"}})
         assert error == "server error"
 
     def test_extract_error_string_format(self):
@@ -405,9 +372,7 @@ class TestResponseParserEdgeCases:
         from f31_minimax_client.response_parser import ResponseParser
 
         parser = ResponseParser()
-        error = parser.extract_error({
-            "error": "something broke"
-        })
+        error = parser.extract_error({"error": "something broke"})
         assert error == "something broke"
 
 
@@ -456,10 +421,7 @@ class TestMiniMaxClient:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="你是教材编写助手",
-            user_prompt="写一段关于人工智能的介绍"
-        )
+        result = await client.generate(system_prompt="你是教材编写助手", user_prompt="写一段关于人工智能的介绍")
 
         assert result.content is not None
         assert len(result.content) > 0
@@ -474,10 +436,7 @@ class TestMiniMaxClient:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        await client.generate(
-            system_prompt="test",
-            user_prompt="hello world"
-        )
+        await client.generate(system_prompt="test", user_prompt="hello world")
 
         stats = client.get_usage_stats()
         assert stats.total_calls == 1
@@ -490,10 +449,7 @@ class TestMiniMaxClient:
 
         client = MockMiniMaxClient()
         for i in range(3):
-            await client.generate(
-                system_prompt=f"system {i}",
-                user_prompt=f"user {i}"
-            )
+            await client.generate(system_prompt=f"system {i}", user_prompt=f"user {i}")
 
         stats = client.get_usage_stats()
         assert stats.total_calls == 3
@@ -504,11 +460,7 @@ class TestMiniMaxClient:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="系统提示",
-            user_prompt="用户输入",
-            max_tokens=100
-        )
+        result = await client.generate(system_prompt="系统提示", user_prompt="用户输入", max_tokens=100)
 
         assert result.content is not None
         # Mock should respect max_tokens limit
@@ -520,11 +472,7 @@ class TestMiniMaxClient:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate_with_retry(
-            system_prompt="system",
-            user_prompt="user",
-            max_retries=3
-        )
+        result = await client.generate_with_retry(system_prompt="system", user_prompt="user", max_retries=3)
 
         assert result.content is not None
         assert result.retry_count >= 0
@@ -562,11 +510,7 @@ class TestMiniMaxClient:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="test",
-            user_prompt="hello",
-            stream=True
-        )
+        result = await client.generate(system_prompt="test", user_prompt="hello", stream=True)
 
         assert result.content is not None
         assert result.is_streamed is True
@@ -586,16 +530,8 @@ class TestMiniMaxClient:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result1 = await client.generate(
-            system_prompt="test",
-            user_prompt="hello",
-            temperature=0.0
-        )
-        result2 = await client.generate(
-            system_prompt="test",
-            user_prompt="hello",
-            temperature=1.0
-        )
+        result1 = await client.generate(system_prompt="test", user_prompt="hello", temperature=0.0)
+        result2 = await client.generate(system_prompt="test", user_prompt="hello", temperature=1.0)
 
         assert result1.content is not None
         assert result2.content is not None
@@ -621,10 +557,7 @@ class TestMiniMaxClient:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="你返回JSON",
-            user_prompt="返回一个包含name和age的JSON对象"
-        )
+        result = await client.generate(system_prompt="你返回JSON", user_prompt="返回一个包含name和age的JSON对象")
 
         # Mock should try to return JSON when requested
         assert result.content is not None
@@ -656,9 +589,7 @@ class TestMiniMaxClient:
 
         client = MockMiniMaxClient()
         result = await client.generate(
-            system_prompt="你是教材编写助手",
-            user_prompt="请详细介绍人工智能的发展历史和应用领域" * 5,
-            max_tokens=50
+            system_prompt="你是教材编写助手", user_prompt="请详细介绍人工智能的发展历史和应用领域" * 5, max_tokens=50
         )
 
         assert result.content is not None
@@ -679,16 +610,13 @@ class TestMiniMaxClient:
 
         # 现在所有generate调用都会因rate limit失败
         with pytest.raises(MiniMaxClientError, match="attempts"):
-            await client.generate_with_retry(
-                system_prompt="test",
-                user_prompt="test",
-                max_retries=2
-            )
+            await client.generate_with_retry(system_prompt="test", user_prompt="test", max_retries=2)
 
 
 # ============================================================================
 # MiniMaxClient 内部方法测试 (覆盖真实API路径和Mock分支)
 # ============================================================================
+
 
 class TestMiniMaxClientInternal:
     """MiniMax客户端内部方法测试"""
@@ -733,10 +661,12 @@ class TestMiniMaxClientInternal:
 
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={
-            "choices": [{"message": {"content": "AI生成的内容"}, "finish_reason": "stop"}],
-            "usage": {"total_tokens": 100}
-        })
+        mock_response.json = AsyncMock(
+            return_value={
+                "choices": [{"message": {"content": "AI生成的内容"}, "finish_reason": "stop"}],
+                "usage": {"total_tokens": 100},
+            }
+        )
 
         # Proper async context manager mock
         mock_post_ctx = MagicMock()
@@ -749,10 +679,7 @@ class TestMiniMaxClientInternal:
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
         with patch("aiohttp.ClientSession", return_value=mock_session):
-            result = await client.generate(
-                system_prompt="你是AI助手",
-                user_prompt="写一段内容"
-            )
+            result = await client.generate(system_prompt="你是AI助手", user_prompt="写一段内容")
 
         assert result.content == "AI生成的内容"
         assert result.finish_reason == "stop"
@@ -782,10 +709,7 @@ class TestMiniMaxClientInternal:
 
         with patch("aiohttp.ClientSession", return_value=mock_session):
             with pytest.raises(MiniMaxClientError, match="API returned 500"):
-                await client.generate(
-                    system_prompt="sys",
-                    user_prompt="usr"
-                )
+                await client.generate(system_prompt="sys", user_prompt="usr")
 
     @pytest.mark.asyncio
     async def test_real_api_error_in_response(self):
@@ -796,11 +720,13 @@ class TestMiniMaxClientInternal:
 
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={
-            "base_resp": {"status_code": 1002, "status_msg": "rate limited"},
-            "choices": [{"message": {"content": ""}, "finish_reason": "error"}],
-            "usage": {"total_tokens": 0}
-        })
+        mock_response.json = AsyncMock(
+            return_value={
+                "base_resp": {"status_code": 1002, "status_msg": "rate limited"},
+                "choices": [{"message": {"content": ""}, "finish_reason": "error"}],
+                "usage": {"total_tokens": 0},
+            }
+        )
 
         mock_post_ctx = MagicMock()
         mock_post_ctx.__aenter__ = AsyncMock(return_value=mock_response)
@@ -813,10 +739,7 @@ class TestMiniMaxClientInternal:
 
         with patch("aiohttp.ClientSession", return_value=mock_session):
             with pytest.raises(MiniMaxClientError, match="API error: rate limited"):
-                await client.generate(
-                    system_prompt="sys",
-                    user_prompt="usr"
-                )
+                await client.generate(system_prompt="sys", user_prompt="usr")
 
     @pytest.mark.asyncio
     async def test_real_api_error_field_response(self):
@@ -827,11 +750,13 @@ class TestMiniMaxClientInternal:
 
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={
-            "error": {"message": "service unavailable"},
-            "choices": [{"message": {"content": ""}, "finish_reason": "error"}],
-            "usage": {"total_tokens": 0}
-        })
+        mock_response.json = AsyncMock(
+            return_value={
+                "error": {"message": "service unavailable"},
+                "choices": [{"message": {"content": ""}, "finish_reason": "error"}],
+                "usage": {"total_tokens": 0},
+            }
+        )
 
         mock_post_ctx = MagicMock()
         mock_post_ctx.__aenter__ = AsyncMock(return_value=mock_response)
@@ -844,10 +769,7 @@ class TestMiniMaxClientInternal:
 
         with patch("aiohttp.ClientSession", return_value=mock_session):
             with pytest.raises(MiniMaxClientError, match="API error: service unavailable"):
-                await client.generate(
-                    system_prompt="sys",
-                    user_prompt="usr"
-                )
+                await client.generate(system_prompt="sys", user_prompt="usr")
 
     @pytest.mark.asyncio
     async def test_real_api_network_error(self):
@@ -857,9 +779,7 @@ class TestMiniMaxClientInternal:
         client = MiniMaxClient(api_key="test-key")
 
         mock_post_ctx = MagicMock()
-        mock_post_ctx.__aenter__ = AsyncMock(
-            side_effect=aiohttp.ClientError("Connection refused")
-        )
+        mock_post_ctx.__aenter__ = AsyncMock(side_effect=aiohttp.ClientError("Connection refused"))
 
         mock_session = MagicMock()
         mock_session.post.return_value = mock_post_ctx
@@ -868,10 +788,7 @@ class TestMiniMaxClientInternal:
 
         with patch("aiohttp.ClientSession", return_value=mock_session):
             with pytest.raises(MiniMaxClientError, match="Network error"):
-                await client.generate(
-                    system_prompt="sys",
-                    user_prompt="usr"
-                )
+                await client.generate(system_prompt="sys", user_prompt="usr")
 
     @pytest.mark.asyncio
     async def test_real_api_unexpected_error(self):
@@ -881,9 +798,7 @@ class TestMiniMaxClientInternal:
         client = MiniMaxClient(api_key="test-key")
 
         mock_post_ctx = MagicMock()
-        mock_post_ctx.__aenter__ = AsyncMock(
-            side_effect=RuntimeError("Something unexpected")
-        )
+        mock_post_ctx.__aenter__ = AsyncMock(side_effect=RuntimeError("Something unexpected"))
 
         mock_session = MagicMock()
         mock_session.post.return_value = mock_post_ctx
@@ -892,10 +807,7 @@ class TestMiniMaxClientInternal:
 
         with patch("aiohttp.ClientSession", return_value=mock_session):
             with pytest.raises(MiniMaxClientError, match="Unexpected error"):
-                await client.generate(
-                    system_prompt="sys",
-                    user_prompt="usr"
-                )
+                await client.generate(system_prompt="sys", user_prompt="usr")
 
 
 class TestMiniMaxClientMockBranches:
@@ -907,11 +819,7 @@ class TestMiniMaxClientMockBranches:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="系统提示",
-            user_prompt="介绍人工智能的应用",
-            temperature=0.0
-        )
+        result = await client.generate(system_prompt="系统提示", user_prompt="介绍人工智能的应用", temperature=0.0)
         assert "人工智能" in result.content
 
     @pytest.mark.asyncio
@@ -920,11 +828,7 @@ class TestMiniMaxClientMockBranches:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="编写教材内容",
-            user_prompt="教材章节概要",
-            temperature=0.0
-        )
+        result = await client.generate(system_prompt="编写教材内容", user_prompt="教材章节概要", temperature=0.0)
         assert "教材编写" in result.content or "教材" in result.content
 
     @pytest.mark.asyncio
@@ -933,11 +837,7 @@ class TestMiniMaxClientMockBranches:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="系统提示",
-            user_prompt="介绍相关知识",
-            temperature=0.0
-        )
+        result = await client.generate(system_prompt="系统提示", user_prompt="介绍相关知识", temperature=0.0)
         assert "介绍" in result.content
 
     @pytest.mark.asyncio
@@ -950,7 +850,7 @@ class TestMiniMaxClientMockBranches:
             system_prompt="系统提示" * 20,
             user_prompt="请详细介绍人工智能的发展历史、核心技术、应用场景和未来趋势" * 5,
             temperature=0.0,
-            max_tokens=5000
+            max_tokens=5000,
         )
         assert result.content is not None
         assert len(result.content) > 100
@@ -963,10 +863,7 @@ class TestMiniMaxClientMockBranches:
 
         client = MockMiniMaxClient()
         result = await client.generate(
-            system_prompt="系统提示" * 20,
-            user_prompt="请详细介绍人工智能" * 10,
-            temperature=0.0,
-            max_tokens=30
+            system_prompt="系统提示" * 20, user_prompt="请详细介绍人工智能" * 10, temperature=0.0, max_tokens=30
         )
         assert result.content is not None
         assert result.usage.completion_tokens <= 30
@@ -977,11 +874,7 @@ class TestMiniMaxClientMockBranches:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="教材编写指导",
-            user_prompt="如何编写优质教材",
-            temperature=1.0
-        )
+        result = await client.generate(system_prompt="教材编写指导", user_prompt="如何编写优质教材", temperature=1.0)
         assert result.content is not None
         assert "教材" in result.content
 
@@ -991,11 +884,7 @@ class TestMiniMaxClientMockBranches:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="系统提示",
-            user_prompt="人工智能是什么",
-            temperature=1.0
-        )
+        result = await client.generate(system_prompt="系统提示", user_prompt="人工智能是什么", temperature=1.0)
         assert result.content is not None
         assert "人工智能" in result.content
 
@@ -1005,11 +894,7 @@ class TestMiniMaxClientMockBranches:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="通用助手",
-            user_prompt="你好",
-            temperature=1.0
-        )
+        result = await client.generate(system_prompt="通用助手", user_prompt="你好", temperature=1.0)
         assert result.content is not None
         assert len(result.content) > 0
 
@@ -1020,9 +905,7 @@ class TestMiniMaxClientMockBranches:
 
         client = MockMiniMaxClient()
         result = await client.generate(
-            system_prompt="返回json格式数据",
-            user_prompt="返回一个包含key和value的JSON对象",
-            temperature=0.0
+            system_prompt="返回json格式数据", user_prompt="返回一个包含key和value的JSON对象", temperature=0.0
         )
         assert result.content is not None
         try:
@@ -1037,11 +920,7 @@ class TestMiniMaxClientMockBranches:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="返回json",
-            user_prompt="JSON",
-            temperature=1.0
-        )
+        result = await client.generate(system_prompt="返回json", user_prompt="JSON", temperature=1.0)
         assert result.content is not None
         assert len(result.content) > 0
 
@@ -1051,12 +930,7 @@ class TestMiniMaxClientMockBranches:
         from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
-        result = await client.generate(
-            system_prompt="教材",
-            user_prompt="教材" * 20,
-            temperature=1.0,
-            max_tokens=20
-        )
+        result = await client.generate(system_prompt="教材", user_prompt="教材" * 20, temperature=1.0, max_tokens=20)
         assert result.content is not None
         assert result.usage.completion_tokens <= 20
 
@@ -1157,16 +1031,12 @@ class TestMiniMaxClientUncovered:
         original_method = MockMiniMaxClient._deterministic_response
 
         def fake_deterministic(self, system_prompt, user_prompt, max_tokens):
-            return '这是JSON: {invalid json} 结束了'
+            return "这是JSON: {invalid json} 结束了"
 
         MockMiniMaxClient._deterministic_response = fake_deterministic
         try:
             client = MockMiniMaxClient()
-            result = await client.generate(
-                system_prompt="返回json",
-                user_prompt="JSON",
-                temperature=0.0
-            )
+            result = await client.generate(system_prompt="返回json", user_prompt="JSON", temperature=0.0)
             assert result.content is not None
         finally:
             MockMiniMaxClient._deterministic_response = original_method
@@ -1193,13 +1063,10 @@ class TestMiniMaxClientUncovered:
         MockMiniMaxClient._varied_response = fake_varied_response
         try:
             client = MockMiniMaxClient()
-            result = await client.generate(
-                system_prompt="返回JSON格式",
-                user_prompt="JSON",
-                temperature=1.0
-            )
+            result = await client.generate(system_prompt="返回JSON格式", user_prompt="JSON", temperature=1.0)
             assert result.content is not None
             import json
+
             data = json.loads(result.content)
             assert data["name"] == "测试"
             assert data["value"] == 123
@@ -1211,7 +1078,5 @@ class TestMiniMaxClientUncovered:
         from f31_minimax_client.response_parser import ResponseParser
 
         parser = ResponseParser()
-        result = parser.validate_structure({
-            "choices": [{"finish_reason": "stop"}]
-        })
+        result = parser.validate_structure({"choices": [{"finish_reason": "stop"}]})
         assert result is False

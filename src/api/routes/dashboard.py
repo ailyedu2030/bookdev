@@ -49,6 +49,7 @@ async def get_activity_logs(
     """
     try:
         from f01_immutable_log.immutable_log import ImmutableLog, LogEntry
+
         log = ImmutableLog()
         all_entries: list[LogEntry] = log.get_entries()
         entries = all_entries[-limit:] if len(all_entries) > limit else all_entries

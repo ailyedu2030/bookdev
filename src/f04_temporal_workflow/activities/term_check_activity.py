@@ -12,6 +12,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 @dataclass
 class TermCheckInput:
     """术语检查输入"""
+
     chapter_id: str
     content: str
     glossary: dict | None = None
@@ -21,6 +22,7 @@ class TermCheckInput:
 @dataclass
 class TermIssue:
     """术语问题"""
+
     issue_id: str
     severity: str
     category: str
@@ -32,6 +34,7 @@ class TermIssue:
 @dataclass
 class TermCheckOutput:
     """术语检查输出"""
+
     chapter_id: str
     passed: bool
     consistency_score: float
@@ -55,10 +58,7 @@ class TermCheckActivity:
 
     @staticmethod
     @activity.defn(name="check_term_consistency")
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=10)
-    )
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=10))
     async def check_term_consistency(input_data: TermCheckInput) -> TermCheckOutput:
         """
         检查术语一致性
@@ -87,25 +87,29 @@ class TermCheckActivity:
                 terms_found.add(term)
 
             if preferred_lower in content_lower and term_lower in content_lower:
-                issues.append(TermIssue(
-                    issue_id=f"term-{len(issues)+1:03d}",
-                    severity="warning",
-                    category="inconsistent",
-                    original_term=term,
-                    suggested_term=preferred,
-                    location="content"
-                ))
+                issues.append(
+                    TermIssue(
+                        issue_id=f"term-{len(issues)+1:03d}",
+                        severity="warning",
+                        category="inconsistent",
+                        original_term=term,
+                        suggested_term=preferred,
+                        location="content",
+                    )
+                )
 
         for original, replacement in preferred_terms.items():
             if original.lower() in content_lower and replacement.lower() not in content_lower:
-                issues.append(TermIssue(
-                    issue_id=f"term-{len(issues)+1:03d}",
-                    severity="info",
-                    category="preferred",
-                    original_term=original,
-                    suggested_term=replacement,
-                    location="content"
-                ))
+                issues.append(
+                    TermIssue(
+                        issue_id=f"term-{len(issues)+1:03d}",
+                        severity="info",
+                        category="preferred",
+                        original_term=original,
+                        suggested_term=replacement,
+                        location="content",
+                    )
+                )
 
         glossary_terms = set(glossary.keys())
         glossary_coverage = len(terms_found & glossary_terms) / len(glossary_terms) if glossary_terms else 0.0
@@ -120,7 +124,7 @@ class TermCheckActivity:
             consistency_score=consistency_score,
             issues=issues,
             terms_used=terms_found,
-            glossary_coverage=glossary_coverage
+            glossary_coverage=glossary_coverage,
         )
 
     @staticmethod
@@ -167,17 +171,14 @@ class TermCheckActivity:
 
         for match in re.finditer(term_pattern, content):
             term = match.group()
-            line_num = content[:match.start()].count("\n") + 1
+            line_num = content[: match.start()].count("\n") + 1
             term_positions[term].append(f"line {line_num}")
 
         return dict(term_positions)
 
     @staticmethod
     @activity.defn(name="build_chapter_glossary")
-    async def build_chapter_glossary(
-        chapter_id: str,
-        terms: dict[str, list[str]]
-    ) -> dict:
+    async def build_chapter_glossary(chapter_id: str, terms: dict[str, list[str]]) -> dict:
         """
         为章节构建术语表
 
@@ -195,7 +196,7 @@ class TermCheckActivity:
             glossary[term] = {
                 "occurrences": len(locations),
                 "first_location": locations[0] if locations else None,
-                "definition": None
+                "definition": None,
             }
 
         return glossary

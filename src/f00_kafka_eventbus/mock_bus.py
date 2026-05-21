@@ -79,9 +79,7 @@ class MockEventBus:
         """取消订阅"""
         with self._lock:
             for event_type, subs in list(self._subscribers.items()):
-                self._subscribers[event_type] = [
-                    s for s in subs if s["id"] != subscription_id
-                ]
+                self._subscribers[event_type] = [s for s in subs if s["id"] != subscription_id]
                 if not self._subscribers[event_type]:
                     del self._subscribers[event_type]
 

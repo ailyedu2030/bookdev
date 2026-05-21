@@ -18,9 +18,7 @@ class TestConceptNodeSecurity:
 
         with pytest.raises(ConceptValidationError):
             kg_security.create_concept_node(
-                definition="人工智能是...",
-                source_chunk_id=None,
-                model_id="claude-3-5-sonnet"
+                definition="人工智能是...", source_chunk_id=None, model_id="claude-3-5-sonnet"
             )
 
     def test_concept_node_requires_approved_model(self):
@@ -31,9 +29,7 @@ class TestConceptNodeSecurity:
 
         with pytest.raises(SecurityException):
             kg_security.create_concept_node(
-                definition="人工智能是...",
-                source_chunk_id="chunk-001",
-                model_id="unapproved-model"
+                definition="人工智能是...", source_chunk_id="chunk-001", model_id="unapproved-model"
             )
 
     def test_integrity_verification_via_hash(self):
@@ -45,7 +41,7 @@ class TestConceptNodeSecurity:
         node = kg_security.create_concept_node(
             definition="人工智能是研究、开发用于模拟、延伸和扩展人的智能的理论、方法、技术及应用系统。",
             source_chunk_id="chunk-001",
-            model_id="claude-3-5-sonnet"
+            model_id="claude-3-5-sonnet",
         )
 
         result = kg_security.verify_integrity(node)
@@ -58,9 +54,7 @@ class TestConceptNodeSecurity:
         kg_security = KnowledgeGraphSecurity()
 
         node = kg_security.create_concept_node(
-            definition="人工智能是...",
-            source_chunk_id="chunk-001",
-            model_id="claude-3-5-sonnet"
+            definition="人工智能是...", source_chunk_id="chunk-001", model_id="claude-3-5-sonnet"
         )
 
         node.definition = "被篡改的定义"
@@ -77,7 +71,7 @@ class TestConceptNodeSecurity:
             definition="清晰定义",
             confidence=0.98,
             source_chunk_id="chunk-001",
-            model_id="claude-3-5-sonnet"
+            model_id="claude-3-5-sonnet",
         )
         assert high_confidence_node.should_auto_approve is True
 
@@ -86,7 +80,7 @@ class TestConceptNodeSecurity:
             definition="较清晰定义",
             confidence=0.85,
             source_chunk_id="chunk-002",
-            model_id="claude-3-5-sonnet"
+            model_id="claude-3-5-sonnet",
         )
         assert medium_confidence_node.requires_manual_review is True
 
@@ -97,10 +91,7 @@ class TestConceptNodeSecurity:
         kg_security = KnowledgeGraphSecurity()
 
         with pytest.raises(SecurityException):
-            kg_security.verify_and_approve(
-                concept_id="c-001",
-                reviewer_id=None
-            )
+            kg_security.verify_and_approve(concept_id="c-001", reviewer_id=None)
 
 
 class TestIntegrityVerifier:
@@ -148,9 +139,7 @@ class TestSecurityTests:
 
         with pytest.raises(SecurityException):
             kg_security.create_concept_node(
-                definition="恶意概念定义",
-                source_chunk_id="chunk-001",
-                model_id="unapproved-model"
+                definition="恶意概念定义", source_chunk_id="chunk-001", model_id="unapproved-model"
             )
 
     def test_untrained_model_rejection(self):
@@ -161,9 +150,7 @@ class TestSecurityTests:
 
         with pytest.raises(SecurityException):
             kg_security.create_concept_node(
-                definition="测试定义",
-                source_chunk_id="chunk-001",
-                model_id="unknown-model"
+                definition="测试定义", source_chunk_id="chunk-001", model_id="unknown-model"
             )
 
     def test_confidence_threshold_enforcement(self):
@@ -173,10 +160,7 @@ class TestSecurityTests:
         kg_security = KnowledgeGraphSecurity()
 
         node = kg_security.create_concept_node(
-            definition="低质量定义",
-            source_chunk_id="chunk-001",
-            model_id="claude-3-5-sonnet",
-            confidence=0.5
+            definition="低质量定义", source_chunk_id="chunk-001", model_id="claude-3-5-sonnet", confidence=0.5
         )
 
         assert node.status == "REJECTED"
@@ -194,7 +178,7 @@ class TestIntegrationTests:
         node = kg_security.create_concept_node(
             definition="人工智能是研究、开发用于模拟、延伸和扩展人的智能的理论、方法、技术及应用系统。",
             source_chunk_id="chunk-001",
-            model_id="claude-3-5-sonnet"
+            model_id="claude-3-5-sonnet",
         )
 
         assert node.concept_id is not None
@@ -210,9 +194,7 @@ class TestIntegrationTests:
         kg_security = KnowledgeGraphSecurity()
 
         node = kg_security.create_concept_node(
-            definition="有效定义",
-            source_chunk_id="chunk-001",
-            model_id="claude-3-5-sonnet"
+            definition="有效定义", source_chunk_id="chunk-001", model_id="claude-3-5-sonnet"
         )
 
         assert kg_security.verify_integrity(node).is_integral is True
@@ -250,15 +232,10 @@ class TestConceptSecurityUncovered:
         kg_security = KnowledgeGraphSecurity()
 
         node = kg_security.create_concept_node(
-            definition="有效定义",
-            source_chunk_id="chunk-001",
-            model_id="claude-3-5-sonnet"
+            definition="有效定义", source_chunk_id="chunk-001", model_id="claude-3-5-sonnet"
         )
 
-        result = kg_security.verify_and_approve(
-            concept_id=node.concept_id,
-            reviewer_id="reviewer-001"
-        )
+        result = kg_security.verify_and_approve(concept_id=node.concept_id, reviewer_id="reviewer-001")
 
         assert result["approved"] is True
         assert result["concept_id"] == node.concept_id

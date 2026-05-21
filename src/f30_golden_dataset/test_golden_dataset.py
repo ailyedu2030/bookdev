@@ -31,7 +31,7 @@ class TestGoldenDatasetSamples:
             "gd002_medium_quality.json",
             "gd003_low_quality.json",
             "gd004_hallucination.json",
-            "gd005_regulation_error.json"
+            "gd005_regulation_error.json",
         ]
 
         for sample_file in expected_samples:
@@ -157,7 +157,7 @@ class TestGoldenDatasetSamples:
             "gd002_medium_quality.json",
             "gd003_low_quality.json",
             "gd004_hallucination.json",
-            "gd005_regulation_error.json"
+            "gd005_regulation_error.json",
         ]
 
         for sample_file in sample_files:
@@ -240,7 +240,7 @@ class TestDatasetBuilder:
             "expected_score": 9.0,
             "content": {"title": "测试样本"},
             "quality_metrics": {},
-            "metadata": {}
+            "metadata": {},
         }
 
         builder.add_sample(new_sample)
@@ -260,7 +260,7 @@ class TestDatasetBuilder:
             "expected_score": 9.0,
             "content": {"title": "测试"},
             "quality_metrics": {},
-            "metadata": {}
+            "metadata": {},
         }
 
         assert builder.validate_sample_structure(valid_sample) is True
@@ -369,7 +369,7 @@ class TestSampleManager:
             expected_score=9.0,
             content={"text": "test"},
             quality_metrics={},
-            metadata={}
+            metadata={},
         )
 
         assert sample.hallucination_markers == []
@@ -395,13 +395,12 @@ class TestSampleManager:
             expected_score=9.0,
             content={"text": "original"},
             quality_metrics={"accuracy": 0.9},
-            metadata={}
+            metadata={},
         )
 
-        result = manager.update_sample("test-001", {
-            "quality_metrics": {"accuracy": 0.95},
-            "content": {"text": "updated"}
-        })
+        result = manager.update_sample(
+            "test-001", {"quality_metrics": {"accuracy": 0.95}, "content": {"text": "updated"}}
+        )
 
         assert result is not None
         assert result.quality_metrics["accuracy"] == 0.95
@@ -436,8 +435,8 @@ class TestGoldenDatasetEvaluator:
                 "knowledge_accuracy": 0.99,
                 "citation_validity": 1.0,
                 "logical_coherence": 0.95,
-                "format_compliance": 1.0
-            }
+                "format_compliance": 1.0,
+            },
         }
 
         evaluation = evaluator.evaluate(sample)
@@ -462,14 +461,12 @@ class TestGoldenDatasetEvaluator:
                     {
                         "paragraphs": [
                             "2024年，中国GDP增长率为30%",  # 明显幻觉
-                            "[@ref:inexistent_source]"  # 虚假引用
+                            "[@ref:inexistent_source]",  # 虚假引用
                         ]
                     }
-                ]
+                ],
             },
-            "hallucination_markers": [
-                {"type": "numerical_hallucination", "content": "30%"}
-            ]
+            "hallucination_markers": [{"type": "numerical_hallucination", "content": "30%"}],
         }
 
         result = evaluator.detect_hallucinations(sample)
@@ -486,9 +483,7 @@ class TestGoldenDatasetEvaluator:
         sample = {
             "sample_id": "GD-005",
             "quality_level": "regulation_error",
-            "regulation_errors": [
-                {"type": "nonexistent_article", "cited_article": "第九十九条"}
-            ]
+            "regulation_errors": [{"type": "nonexistent_article", "cited_article": "第九十九条"}],
         }
 
         result = evaluator.detect_regulation_errors(sample)
@@ -530,10 +525,10 @@ class TestGoldenDatasetEvaluator:
                 "knowledge_accuracy": 0.99,
                 "citation_validity": 1.0,
                 "logical_coherence": 0.95,
-                "format_compliance": 1.0
+                "format_compliance": 1.0,
             },
             "content": {},
-            "metadata": {}
+            "metadata": {},
         }
 
         evaluation = evaluator.evaluate(sample)
@@ -630,7 +625,7 @@ class TestF30CoverageGapsRemaining:
             "quality_metrics": {"accuracy": 0.9},
             "metadata": {"source": "test"},
             "hallucination_markers": [],
-            "regulation_errors": []
+            "regulation_errors": [],
         }
 
         result = manager.add_sample(sample_data)

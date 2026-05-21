@@ -18,6 +18,7 @@ class KafkaConfig:
         topic_prefix: 主题前缀
         consumer_group: 消费者组名
     """
+
     bootstrap_servers: str = "localhost:9092"
     topic_prefix: str = "textbook"
     consumer_group: str = "textbook-system"

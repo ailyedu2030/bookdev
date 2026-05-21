@@ -10,6 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class TermRegistration:
     """术语注册记录"""
+
     term: str
     definition: str
     location: str  # 位置标识，如 "ch01_s01"
@@ -24,13 +25,7 @@ class TermRegistry:
         self._first_definition: dict[str, TermRegistration] = {}
         self._redefinitions: dict[str, list[TermRegistration]] = {}
 
-    def register(
-        self,
-        location: str,
-        term: str,
-        definition: str,
-        timestamp: str = None
-    ) -> None:
+    def register(self, location: str, term: str, definition: str, timestamp: str = None) -> None:
         """注册术语
 
         Args:
@@ -41,6 +36,7 @@ class TermRegistry:
         """
         if timestamp is None:
             from datetime import datetime
+
             timestamp = datetime.utcnow().isoformat()
 
         registration = TermRegistration(
@@ -102,20 +98,24 @@ class TermRegistry:
 
         first = self._first_definition.get(term)
         if first:
-            history.append({
-                "location": first.location,
-                "definition": first.definition,
-                "timestamp": first.timestamp,
-                "is_first": True,
-            })
+            history.append(
+                {
+                    "location": first.location,
+                    "definition": first.definition,
+                    "timestamp": first.timestamp,
+                    "is_first": True,
+                }
+            )
 
         for r in self._redefinitions.get(term, []):
-            history.append({
-                "location": r.location,
-                "definition": r.definition,
-                "timestamp": r.timestamp,
-                "is_first": False,
-            })
+            history.append(
+                {
+                    "location": r.location,
+                    "definition": r.definition,
+                    "timestamp": r.timestamp,
+                    "is_first": False,
+                }
+            )
 
         return history
 

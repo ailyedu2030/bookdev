@@ -13,6 +13,7 @@ from api.deps import generate_uuid
 def clear_knowledge_graph_state():
     """Clear in-memory knowledge graph state before each test"""
     from api.routes import knowledge_graph as kg_module
+
     kg_module._in_memory_nodes.clear()
     kg_module._in_memory_edges.clear()
     kg_module._edge_id_counter = 0
@@ -730,6 +731,7 @@ class TestInitializeGraph:
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
         from tests.api.conftest import create_test_chapter, create_test_project
+
         create_test_project(test_db, owner_id=user.id, name="Any Name")
         chapter1 = create_test_chapter(test_db, project_id="demo-project", title="Chapter 1")
         chapter2 = create_test_chapter(test_db, project_id="demo-project", title="Chapter 2")

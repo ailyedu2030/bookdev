@@ -8,6 +8,7 @@ import pytest
 
 class MockProject:
     """Mock Project model."""
+
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -15,6 +16,7 @@ class MockProject:
 
 class MockProjectMember:
     """Mock ProjectMember model."""
+
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -48,7 +50,7 @@ class TestProjectRepository:
 
         mock_project = MagicMock()
 
-        with patch.object(ProjectRepository, 'get_with_owner', return_value=mock_project):
+        with patch.object(ProjectRepository, "get_with_owner", return_value=mock_project):
             repo = ProjectRepository(mock_session)
             result = await repo.get_with_owner(uuid.uuid4())
 
@@ -61,7 +63,7 @@ class TestProjectRepository:
 
         mock_project = MagicMock()
 
-        with patch.object(ProjectRepository, 'get_with_members', return_value=mock_project):
+        with patch.object(ProjectRepository, "get_with_members", return_value=mock_project):
             repo = ProjectRepository(mock_session)
             result = await repo.get_with_members(uuid.uuid4())
 
@@ -74,7 +76,7 @@ class TestProjectRepository:
 
         mock_project = MagicMock()
 
-        with patch.object(ProjectRepository, 'get_with_chapters', return_value=mock_project):
+        with patch.object(ProjectRepository, "get_with_chapters", return_value=mock_project):
             repo = ProjectRepository(mock_session)
             result = await repo.get_with_chapters(uuid.uuid4())
 
@@ -87,7 +89,7 @@ class TestProjectRepository:
 
         mock_project = MagicMock()
 
-        with patch.object(ProjectRepository, 'get_full_project', return_value=mock_project):
+        with patch.object(ProjectRepository, "get_full_project", return_value=mock_project):
             repo = ProjectRepository(mock_session)
             result = await repo.get_full_project(uuid.uuid4())
 
@@ -147,11 +149,7 @@ class TestProjectRepository:
         owner_id = uuid.uuid4()
 
         with patch.object(repo, "create", return_value=MockProject(id="123")) as mock_create:
-            await repo.create_project(
-                name="Test Project",
-                owner_id=owner_id,
-                description="Test description"
-            )
+            await repo.create_project(name="Test Project", owner_id=owner_id, description="Test description")
 
             mock_create.assert_called_once()
             call_kwargs = mock_create.call_args[1]
@@ -192,7 +190,7 @@ class TestProjectRepository:
 
         mock_projects = [MagicMock()]
 
-        with patch.object(ProjectRepository, 'search_by_name', return_value=mock_projects):
+        with patch.object(ProjectRepository, "search_by_name", return_value=mock_projects):
             repo = ProjectRepository(mock_session)
             result = await repo.search_by_name("test")
 
@@ -226,7 +224,7 @@ class TestProjectMemberRepository:
 
         mock_members = [MagicMock()]
 
-        with patch.object(ProjectMemberRepository, 'get_members_of_project', return_value=mock_members):
+        with patch.object(ProjectMemberRepository, "get_members_of_project", return_value=mock_members):
             repo = ProjectMemberRepository(mock_session)
             result = await repo.get_members_of_project(uuid.uuid4())
 
@@ -239,7 +237,7 @@ class TestProjectMemberRepository:
 
         mock_project_members = [MagicMock()]
 
-        with patch.object(ProjectMemberRepository, 'get_projects_of_user', return_value=mock_project_members):
+        with patch.object(ProjectMemberRepository, "get_projects_of_user", return_value=mock_project_members):
             repo = ProjectMemberRepository(mock_session)
             result = await repo.get_projects_of_user(uuid.uuid4())
 
@@ -435,6 +433,3 @@ class TestProjectMemberRepository:
         assert result is False
         mock_session.delete.assert_not_called()
         mock_session.flush.assert_not_called()
-
-
-

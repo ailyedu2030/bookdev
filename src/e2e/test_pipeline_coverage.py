@@ -240,9 +240,7 @@ class TestReviewSchedulerComplete:
         scheduler = ReviewScheduler()
         task = scheduler.schedule_review("ch-001", "HIGH", "hash123")
 
-        result = scheduler.complete_review(
-            task.task_id, "approved", "reviewer-1", "Looks good"
-        )
+        result = scheduler.complete_review(task.task_id, "approved", "reviewer-1", "Looks good")
 
         assert result is True
         updated_task = scheduler.get_review_task(task.task_id)
@@ -703,7 +701,7 @@ class TestScoringEngineComplete:
         }
 
         result = engine.calculate_weighted_score(scores)
-        expected = 0.9*0.25 + 0.8*0.30 + 0.85*0.20 + 0.75*0.15 + 0.95*0.10
+        expected = 0.9 * 0.25 + 0.8 * 0.30 + 0.85 * 0.20 + 0.75 * 0.15 + 0.95 * 0.10
         assert abs(result - round(expected, 4)) < 0.001
 
     def test_calculate_weighted_score_missing_dim(self):
@@ -887,7 +885,7 @@ class TestGoldenDatasetEvaluatorComplete:
             "content": {"text": "some text"},
             "hallucination_markers": [
                 {"type": "factual", "location": "ch1", "content": "wrong fact", "issue": "incorrect"}
-            ]
+            ],
         }
 
         result = evaluator.detect_hallucinations(sample)
@@ -900,10 +898,7 @@ class TestGoldenDatasetEvaluatorComplete:
 
         evaluator = GoldenDatasetEvaluator()
 
-        sample = {
-            "content": {"text": "some text"},
-            "hallucination_markers": []
-        }
+        sample = {"content": {"text": "some text"}, "hallucination_markers": []}
 
         result = evaluator.detect_hallucinations(sample)
         assert result["has_hallucinations"] is False
@@ -1005,23 +1000,27 @@ class TestGoldenDatasetEvaluatorComplete:
 
         evaluator = GoldenDatasetEvaluator()
 
-        evaluator._builder.add_sample({
-            "sample_id": "gd-001",
-            "quality_level": "high",
-            "expected_score": 9.0,
-            "content": {},
-            "quality_metrics": {"accuracy": 0.95},
-            "metadata": {},
-        })
+        evaluator._builder.add_sample(
+            {
+                "sample_id": "gd-001",
+                "quality_level": "high",
+                "expected_score": 9.0,
+                "content": {},
+                "quality_metrics": {"accuracy": 0.95},
+                "metadata": {},
+            }
+        )
 
-        evaluator._builder.add_sample({
-            "sample_id": "gd-002",
-            "quality_level": "high",
-            "expected_score": 8.0,
-            "content": {},
-            "quality_metrics": {"accuracy": 0.85},
-            "metadata": {},
-        })
+        evaluator._builder.add_sample(
+            {
+                "sample_id": "gd-002",
+                "quality_level": "high",
+                "expected_score": 8.0,
+                "content": {},
+                "quality_metrics": {"accuracy": 0.85},
+                "metadata": {},
+            }
+        )
 
         report = evaluator.generate_evaluation_report()
         assert report["total_samples"] == 2
@@ -1115,22 +1114,26 @@ class TestDatasetBuilderComplete:
 
         builder = DatasetBuilder()
 
-        builder.add_sample({
-            "sample_id": "s1",
-            "quality_level": "high",
-            "expected_score": 9.0,
-            "content": {},
-            "quality_metrics": {},
-            "metadata": {},
-        })
-        builder.add_sample({
-            "sample_id": "s2",
-            "quality_level": "low",
-            "expected_score": 4.0,
-            "content": {},
-            "quality_metrics": {},
-            "metadata": {},
-        })
+        builder.add_sample(
+            {
+                "sample_id": "s1",
+                "quality_level": "high",
+                "expected_score": 9.0,
+                "content": {},
+                "quality_metrics": {},
+                "metadata": {},
+            }
+        )
+        builder.add_sample(
+            {
+                "sample_id": "s2",
+                "quality_level": "low",
+                "expected_score": 4.0,
+                "content": {},
+                "quality_metrics": {},
+                "metadata": {},
+            }
+        )
 
         high_samples = builder.load_samples_by_quality("high")
         assert len(high_samples) == 1
@@ -1142,18 +1145,36 @@ class TestDatasetBuilderComplete:
 
         builder = DatasetBuilder()
 
-        builder.add_sample({
-            "sample_id": "s1", "quality_level": "high", "expected_score": 9.0,
-            "content": {}, "quality_metrics": {}, "metadata": {}
-        })
-        builder.add_sample({
-            "sample_id": "s2", "quality_level": "medium", "expected_score": 6.0,
-            "content": {}, "quality_metrics": {}, "metadata": {}
-        })
-        builder.add_sample({
-            "sample_id": "s3", "quality_level": "low", "expected_score": 3.0,
-            "content": {}, "quality_metrics": {}, "metadata": {}
-        })
+        builder.add_sample(
+            {
+                "sample_id": "s1",
+                "quality_level": "high",
+                "expected_score": 9.0,
+                "content": {},
+                "quality_metrics": {},
+                "metadata": {},
+            }
+        )
+        builder.add_sample(
+            {
+                "sample_id": "s2",
+                "quality_level": "medium",
+                "expected_score": 6.0,
+                "content": {},
+                "quality_metrics": {},
+                "metadata": {},
+            }
+        )
+        builder.add_sample(
+            {
+                "sample_id": "s3",
+                "quality_level": "low",
+                "expected_score": 3.0,
+                "content": {},
+                "quality_metrics": {},
+                "metadata": {},
+            }
+        )
 
         mid_range = builder.load_samples_by_score_range(5.0, 8.0)
         assert len(mid_range) == 1
@@ -1427,11 +1448,7 @@ class TestCitationIntegrityManagerComplete:
         from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager, IntegrityStatus
 
         manager = CitationIntegrityManager()
-        result = manager.verify_citation_integrity(
-            "10.1234/test",
-            "wrong_hash",
-            "test content"
-        )
+        result = manager.verify_citation_integrity("10.1234/test", "wrong_hash", "test content")
         assert result.is_valid is False
         assert result.status == IntegrityStatus.HASH_MISMATCH
 
@@ -1563,9 +1580,7 @@ class TestCitationRegistryComplete:
         registry = CitationRegistry()
 
         reg_id = registry.register_citation(
-            doi="10.1234/test",
-            fact_hash="abc123",
-            position={"page": 1, "paragraph": 2}
+            doi="10.1234/test", fact_hash="abc123", position={"page": 1, "paragraph": 2}
         )
 
         assert reg_id is not None
@@ -1581,16 +1596,8 @@ class TestCitationRegistryComplete:
 
         registry = CitationRegistry()
 
-        registry.register_citation(
-            doi="10.1234/test",
-            fact_hash="hash1",
-            position={"page": 1}
-        )
-        registry.register_citation(
-            doi="10.1234/test",
-            fact_hash="hash2",
-            position={"page": 2}
-        )
+        registry.register_citation(doi="10.1234/test", fact_hash="hash1", position={"page": 1})
+        registry.register_citation(doi="10.1234/test", fact_hash="hash2", position={"page": 2})
 
         citations = registry.list_citations_by_doi("10.1234/test")
         assert len(citations) == 2
@@ -1601,11 +1608,7 @@ class TestCitationRegistryComplete:
 
         registry = CitationRegistry()
 
-        reg_id = registry.register_citation(
-            doi="10.1234/test",
-            fact_hash="abc",
-            position={"page": 1}
-        )
+        reg_id = registry.register_citation(doi="10.1234/test", fact_hash="abc", position={"page": 1})
 
         result = registry.mark_citation_verified(reg_id)
         assert result is True
@@ -1626,11 +1629,7 @@ class TestCitationRegistryComplete:
 
         registry = CitationRegistry()
 
-        registry.register_citation(
-            doi="10.1234/test",
-            fact_hash="abc",
-            position={"page": 1}
-        )
+        registry.register_citation(doi="10.1234/test", fact_hash="abc", position={"page": 1})
 
         unverified = registry.get_unverified_citations()
         assert len(unverified) == 1
@@ -1641,16 +1640,8 @@ class TestCitationRegistryComplete:
 
         registry = CitationRegistry()
 
-        registry.register_citation(
-            doi="10.1234/test",
-            fact_hash="abc",
-            position={"page": 1}
-        )
-        registry.register_citation(
-            doi="10.5678/test",
-            fact_hash="def",
-            position={"page": 2}
-        )
+        registry.register_citation(doi="10.1234/test", fact_hash="abc", position={"page": 1})
+        registry.register_citation(doi="10.5678/test", fact_hash="def", position={"page": 2})
 
         assert registry.count_citations() == 2
         assert registry.count_verified_citations() == 0
@@ -1708,9 +1699,9 @@ class TestQualityGateComplete:
         test_file.write_text("x = 1\ny = 2\n")
 
         import subprocess
+
         result = subprocess.run(
-            ["python", "-m", "coverage", "run", str(test_file)],
-            capture_output=True, text=True, cwd=str(tmp_path)
+            ["python", "-m", "coverage", "run", str(test_file)], capture_output=True, text=True, cwd=str(tmp_path)
         )
 
         coverage_file = tmp_path / ".coverage"

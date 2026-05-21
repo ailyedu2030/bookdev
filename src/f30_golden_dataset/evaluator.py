@@ -15,6 +15,7 @@ from f30_golden_dataset.sample_manager import SampleManager
 @dataclass
 class EvaluationResult:
     """评估结果"""
+
     overall_score: float
     dimension_scores: dict[str, float]
     has_hallucinations: bool = False
@@ -26,6 +27,7 @@ class EvaluationResult:
 @dataclass
 class CalibrationResult:
     """校准结果"""
+
     correlation: float
     bias: float
     samples_evaluated: int
@@ -62,16 +64,13 @@ class GoldenDatasetEvaluator:
                 expected_score=sample["expected_score"],
                 content=sample.get("content", {}),
                 quality_metrics=sample.get("quality_metrics", {}),
-                metadata=sample.get("metadata", {})
+                metadata=sample.get("metadata", {}),
             )
 
         dimension_scores = sample.quality_metrics.copy()
         overall_score = sample.expected_score
 
-        return EvaluationResult(
-            overall_score=overall_score,
-            dimension_scores=dimension_scores
-        )
+        return EvaluationResult(overall_score=overall_score, dimension_scores=dimension_scores)
 
     def detect_hallucinations(self, sample: dict[str, Any]) -> dict[str, Any]:
         """
@@ -88,17 +87,19 @@ class GoldenDatasetEvaluator:
 
         detected = []
         for marker in hallucination_markers:
-            detected.append({
-                "type": marker.get("type"),
-                "location": marker.get("location"),
-                "content": marker.get("content"),
-                "issue": marker.get("issue")
-            })
+            detected.append(
+                {
+                    "type": marker.get("type"),
+                    "location": marker.get("location"),
+                    "content": marker.get("content"),
+                    "issue": marker.get("issue"),
+                }
+            )
 
         return {
             "has_hallucinations": len(detected) > 0,
             "detected_hallucinations": detected,
-            "total_count": len(detected)
+            "total_count": len(detected),
         }
 
     def detect_regulation_errors(self, sample: dict[str, Any]) -> dict[str, Any]:
@@ -115,23 +116,18 @@ class GoldenDatasetEvaluator:
 
         detected = []
         for error in regulation_errors:
-            detected.append({
-                "type": error.get("type"),
-                "law": error.get("law"),
-                "cited_article": error.get("cited_article"),
-                "issue": error.get("issue")
-            })
+            detected.append(
+                {
+                    "type": error.get("type"),
+                    "law": error.get("law"),
+                    "cited_article": error.get("cited_article"),
+                    "issue": error.get("issue"),
+                }
+            )
 
-        return {
-            "has_errors": len(detected) > 0,
-            "detected_errors": detected,
-            "total_count": len(detected)
-        }
+        return {"has_errors": len(detected) > 0, "detected_errors": detected, "total_count": len(detected)}
 
-    def calibrate_judge(
-        self,
-        llm_results: list[dict[str, Any]]
-    ) -> CalibrationResult:
+    def calibrate_judge(self, llm_results: list[dict[str, Any]]) -> CalibrationResult:
         """
         使用样本校准评判器
 
@@ -142,11 +138,7 @@ class GoldenDatasetEvaluator:
             校准结果
         """
         if not llm_results:
-            return CalibrationResult(
-                correlation=0.0,
-                bias=0.0,
-                samples_evaluated=0
-            )
+            return CalibrationResult(correlation=0.0, bias=0.0, samples_evaluated=0)
 
         samples = self._manager.list_all_sample_ids()
         expected_scores = []
@@ -161,33 +153,18 @@ class GoldenDatasetEvaluator:
                     llm_scores.append(result.get("overall_score", 0.0))
 
         if len(expected_scores) < 2:
-            return CalibrationResult(
-                correlation=0.0,
-                bias=0.0,
-                samples_evaluated=len(expected_scores)
-            )
+            return CalibrationResult(correlation=0.0, bias=0.0, samples_evaluated=len(expected_scores))
 
         # 计算相关性
         correlation = self._calculate_correlation(expected_scores, llm_scores)
 
         # 计算偏差
-        total_bias = sum(
-            llm - expected
-            for llm, expected in zip(llm_scores, expected_scores)
-        )
+        total_bias = sum(llm - expected for llm, expected in zip(llm_scores, expected_scores))
         bias = total_bias / len(expected_scores)
 
-        return CalibrationResult(
-            correlation=correlation,
-            bias=bias,
-            samples_evaluated=len(expected_scores)
-        )
+        return CalibrationResult(correlation=correlation, bias=bias, samples_evaluated=len(expected_scores))
 
-    def _calculate_correlation(
-        self,
-        x: list[float],
-        y: list[float]
-    ) -> float:
+    def _calculate_correlation(self, x: list[float], y: list[float]) -> float:
         """
         计算皮尔逊相关系数
 
@@ -205,10 +182,7 @@ class GoldenDatasetEvaluator:
         mean_x = sum(x) / n
         mean_y = sum(y) / n
 
-        numerator = sum(
-            (x[i] - mean_x) * (y[i] - mean_y)
-            for i in range(n)
-        )
+        numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
 
         sum_sq_x = sum((xi - mean_x) ** 2 for xi in x)
         sum_sq_y = sum((yi - mean_y) ** 2 for yi in y)
@@ -242,5 +216,5 @@ class GoldenDatasetEvaluator:
         return {
             "total_samples": len(samples),
             "average_score": round(avg_score, 2),
-            "quality_distribution": quality_distribution
+            "quality_distribution": quality_distribution,
         }

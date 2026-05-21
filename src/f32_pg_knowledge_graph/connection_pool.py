@@ -58,16 +58,19 @@ class ConnectionPool:
     def initialize(self) -> None:
         """初始化连接池，创建最小数量的连接"""
         import psycopg2
+
         with self._lock:
             for _ in range(self._min_connections):
                 conn = psycopg2.connect(self._dsn, connect_timeout=int(self._connection_timeout))
                 conn.autocommit = False
-                self._pool.append(_PooledConnection(
-                    conn=conn,
-                    created_at=time.time(),
-                    last_used=time.time(),
-                    conn_id=self._total_created,
-                ))
+                self._pool.append(
+                    _PooledConnection(
+                        conn=conn,
+                        created_at=time.time(),
+                        last_used=time.time(),
+                        conn_id=self._total_created,
+                    )
+                )
                 self._total_created += 1
         logger.info("Connection pool initialized with %d connections", self._min_connections)
 
@@ -79,6 +82,7 @@ class ConnectionPool:
         is now within the lock to prevent race conditions.
         """
         import psycopg2
+
         with self._lock:
             if self._closed:
                 raise RuntimeError("Connection pool is closed")
@@ -98,12 +102,14 @@ class ConnectionPool:
                 conn = psycopg2.connect(self._dsn, connect_timeout=int(self._connection_timeout))
                 conn.autocommit = False
                 idx = len(self._pool)
-                self._pool.append(_PooledConnection(
-                    conn=conn,
-                    created_at=time.time(),
-                    last_used=time.time(),
-                    conn_id=self._total_created,
-                ))
+                self._pool.append(
+                    _PooledConnection(
+                        conn=conn,
+                        created_at=time.time(),
+                        last_used=time.time(),
+                        conn_id=self._total_created,
+                    )
+                )
                 self._total_created += 1
                 self._in_use.add(idx)
                 return conn
@@ -192,6 +198,7 @@ class ConnectionPool:
         KG-014: This method must be called while holding the lock.
         """
         import psycopg2
+
         try:
             pooled.conn.close()
         except Exception:
@@ -209,6 +216,7 @@ class ConnectionPool:
 
 class _PooledConnection:
     """池中的单个连接"""
+
     __slots__ = ("conn", "created_at", "last_used", "conn_id")
 
     def __init__(self, conn, created_at: float, last_used: float, conn_id: int):

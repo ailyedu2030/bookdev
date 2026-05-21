@@ -76,9 +76,7 @@ class KafkaTopicManager:
             async with self._admin_lock:
                 # Double-check after acquiring lock
                 if self._admin is None:
-                    self._admin = AIOKafkaAdminClient(
-                        bootstrap_servers=self.bootstrap_servers
-                    )
+                    self._admin = AIOKafkaAdminClient(bootstrap_servers=self.bootstrap_servers)
                     await self._admin.start()
                     logger.debug(f"Admin client created for {self.bootstrap_servers}")
         return self._admin
@@ -190,10 +188,7 @@ class KafkaTopicManager:
 
     def _get_default_topics(self) -> list[dict]:
         """Get default topic configurations"""
-        return [
-            {"name": name, **config}
-            for name, config in self.TOPICS.items()
-        ]
+        return [{"name": name, **config} for name, config in self.TOPICS.items()]
 
     @classmethod
     def get_standard_topics(cls) -> dict[str, dict[str, Any]]:

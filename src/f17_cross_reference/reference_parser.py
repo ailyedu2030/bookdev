@@ -14,6 +14,7 @@ from typing import NamedTuple
 
 class ReferencePattern:
     """引用模式类型"""
+
     DEFINITION_REF = "definition_ref"
     APPLICATION_REF = "application_ref"
     COMPARISON_REF = "comparison_ref"
@@ -22,6 +23,7 @@ class ReferencePattern:
 
 class ParsedReference(NamedTuple):
     """解析后的引用"""
+
     ref_type: str
     target_id: str
     source_location: tuple[int, int]  # (line, column)
@@ -32,22 +34,19 @@ class ReferenceParser:
     """引用解析器"""
 
     PATTERNS = {
-        ReferencePattern.DEFINITION_REF: r'\[@def:([^\]]+)\]',
-        ReferencePattern.APPLICATION_REF: r'\[@app:([^\]]+)\]',
-        ReferencePattern.COMPARISON_REF: r'\[@cmp:([^\]]+)\]',
-        ReferencePattern.CITATION_REF: r'\[@cite:([^\]]+)\]',
+        ReferencePattern.DEFINITION_REF: r"\[@def:([^\]]+)\]",
+        ReferencePattern.APPLICATION_REF: r"\[@app:([^\]]+)\]",
+        ReferencePattern.COMPARISON_REF: r"\[@cmp:([^\]]+)\]",
+        ReferencePattern.CITATION_REF: r"\[@cite:([^\]]+)\]",
     }
 
     def __init__(self):
-        self._compiled_patterns = {
-            ref_type: re.compile(pattern)
-            for ref_type, pattern in self.PATTERNS.items()
-        }
+        self._compiled_patterns = {ref_type: re.compile(pattern) for ref_type, pattern in self.PATTERNS.items()}
 
     def parse_references(self, content: str) -> list[ParsedReference]:
         """解析文本中的所有引用"""
         references = []
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         for line_num, line in enumerate(lines, start=1):
             for ref_type, pattern in self._compiled_patterns.items():
@@ -57,12 +56,11 @@ class ReferenceParser:
 
                     context = self._extract_context(line, match.start(), match.end())
 
-                    references.append(ParsedReference(
-                        ref_type=ref_type,
-                        target_id=target_id,
-                        source_location=(line_num, col),
-                        context=context
-                    ))
+                    references.append(
+                        ParsedReference(
+                            ref_type=ref_type, target_id=target_id, source_location=(line_num, col), context=context
+                        )
+                    )
 
         return references
 

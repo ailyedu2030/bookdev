@@ -10,23 +10,23 @@ RISK_LEVELS: dict[str, dict[str, Any]] = {
     "CRITICAL": {
         "score_range": [0.0, 0.3],  # 0 <= score <= 0.3
         "review_ratio": 1.0,
-        "auto_approve": False
+        "auto_approve": False,
     },
     "HIGH": {
         "score_range": [0.31, 0.6],  # 0.31 <= score <= 0.6
         "review_ratio": 0.5,
-        "auto_approve": False
+        "auto_approve": False,
     },
     "MEDIUM": {
         "score_range": [0.61, 0.8],  # 0.61 <= score <= 0.8
         "review_ratio": 0.1,
-        "auto_approve": True
+        "auto_approve": True,
     },
     "LOW": {
         "score_range": [0.81, 1.0],  # 0.81 <= score <= 1.0
         "review_ratio": 0.0,
-        "auto_approve": True
-    }
+        "auto_approve": True,
+    },
 }
 
 

@@ -52,10 +52,7 @@ async def list_users(
 
     if search:
         search_lower = search.lower()
-        all_users = [
-            u for u in all_users
-            if search_lower in u.username.lower() or search_lower in u.email.lower()
-        ]
+        all_users = [u for u in all_users if search_lower in u.username.lower() or search_lower in u.email.lower()]
 
     len(all_users)
     start_idx = (page - 1) * per_page
@@ -106,14 +103,16 @@ async def create_user(
             },
         )
 
-    new_user = db.create_user({
-        "username": user_data.username,
-        "email": user_data.email,
-        "password_hash": get_password_hash(user_data.password),
-        "role": user_data.role or "viewer",
-        "organization_id": user_data.organization_id,
-        "clearance_level": 1,
-    })
+    new_user = db.create_user(
+        {
+            "username": user_data.username,
+            "email": user_data.email,
+            "password_hash": get_password_hash(user_data.password),
+            "role": user_data.role or "viewer",
+            "organization_id": user_data.organization_id,
+            "clearance_level": 1,
+        }
+    )
 
     return UserResponse(
         id=new_user.id,
@@ -362,11 +361,13 @@ async def list_roles(
 
     roles = []
     for role_name, level in sorted(ROLE_HIERARCHY.items(), key=lambda x: x[1], reverse=True):
-        roles.append({
-            "name": role_name,
-            "level": level,
-            "permissions": list(ROLE_PERMISSIONS.get(role_name, [])),
-        })
+        roles.append(
+            {
+                "name": role_name,
+                "level": level,
+                "permissions": list(ROLE_PERMISSIONS.get(role_name, [])),
+            }
+        )
 
     return roles
 

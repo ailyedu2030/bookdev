@@ -43,6 +43,7 @@ def generate_uuid() -> uuid.UUID:
 
 class User(Base):
     """用户表"""
+
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -54,9 +55,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(50), nullable=False, default="viewer")
-    organization_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     clearance_level: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -68,15 +67,9 @@ class User(Base):
         onupdate=func.now(),
     )
 
-    roles: Mapped[list[Role]] = relationship(
-        secondary="user_roles", back_populates="users"
-    )
-    owned_projects: Mapped[list[Project]] = relationship(
-        back_populates="owner", foreign_keys="Project.owner_id"
-    )
-    project_memberships: Mapped[list[ProjectMember]] = relationship(
-        back_populates="user"
-    )
+    roles: Mapped[list[Role]] = relationship(secondary="user_roles", back_populates="users")
+    owned_projects: Mapped[list[Project]] = relationship(back_populates="owner", foreign_keys="Project.owner_id")
+    project_memberships: Mapped[list[ProjectMember]] = relationship(back_populates="user")
     reviews: Mapped[list[Review]] = relationship(back_populates="reviewer")
 
     __table_args__ = (
@@ -87,6 +80,7 @@ class User(Base):
 
 class Role(Base):
     """角色表"""
+
     __tablename__ = "roles"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -101,16 +95,13 @@ class Role(Base):
         server_default=func.now(),
     )
 
-    users: Mapped[list[User]] = relationship(
-        secondary="user_roles", back_populates="roles"
-    )
-    permissions: Mapped[list[Permission]] = relationship(
-        secondary="role_permissions", back_populates="roles"
-    )
+    users: Mapped[list[User]] = relationship(secondary="user_roles", back_populates="roles")
+    permissions: Mapped[list[Permission]] = relationship(secondary="role_permissions", back_populates="roles")
 
 
 class Permission(Base):
     """权限表"""
+
     __tablename__ = "permissions"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -122,17 +113,14 @@ class Permission(Base):
     action: Mapped[str] = mapped_column(String(50), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    roles: Mapped[list[Role]] = relationship(
-        secondary="role_permissions", back_populates="permissions"
-    )
+    roles: Mapped[list[Role]] = relationship(secondary="role_permissions", back_populates="permissions")
 
-    __table_args__ = (
-        Index("idx_permissions_resource_action", "resource", "action", unique=True),
-    )
+    __table_args__ = (Index("idx_permissions_resource_action", "resource", "action", unique=True),)
 
 
 class UserRole(Base):
     """用户角色关联表"""
+
     __tablename__ = "user_roles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -149,6 +137,7 @@ class UserRole(Base):
 
 class RolePermission(Base):
     """角色权限关联表"""
+
     __tablename__ = "role_permissions"
 
     role_id: Mapped[uuid.UUID] = mapped_column(
@@ -170,6 +159,7 @@ class RolePermission(Base):
 
 class Project(Base):
     """项目表"""
+
     __tablename__ = "projects"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -197,15 +187,9 @@ class Project(Base):
         onupdate=func.now(),
     )
 
-    owner: Mapped[User | None] = relationship(
-        back_populates="owned_projects", foreign_keys=[owner_id]
-    )
-    members: Mapped[list[ProjectMember]] = relationship(
-        back_populates="project", cascade="all, delete-orphan"
-    )
-    chapters: Mapped[list[Chapter]] = relationship(
-        back_populates="project", cascade="all, delete-orphan"
-    )
+    owner: Mapped[User | None] = relationship(back_populates="owned_projects", foreign_keys=[owner_id])
+    members: Mapped[list[ProjectMember]] = relationship(back_populates="project", cascade="all, delete-orphan")
+    chapters: Mapped[list[Chapter]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_projects_status", "status"),
@@ -215,6 +199,7 @@ class Project(Base):
 
 class ProjectMember(Base):
     """项目成员表"""
+
     __tablename__ = "project_members"
 
     project_id: Mapped[uuid.UUID] = mapped_column(
@@ -239,6 +224,7 @@ class ProjectMember(Base):
 
 class Review(Base):
     """审核记录表"""
+
     __tablename__ = "reviews"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -280,6 +266,7 @@ class Review(Base):
 
 class Chapter(Base):
     """章节表"""
+
     __tablename__ = "chapters"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -314,20 +301,12 @@ class Chapter(Base):
     )
 
     project: Mapped[Project] = relationship(back_populates="chapters")
-    parent_chapter: Mapped[Chapter | None] = relationship(
-        remote_side="Chapter.id", back_populates="child_chapters"
-    )
+    parent_chapter: Mapped[Chapter | None] = relationship(remote_side="Chapter.id", back_populates="child_chapters")
     child_chapters: Mapped[list[Chapter]] = relationship(back_populates="parent_chapter")
-    contents: Mapped[list[ChapterContent]] = relationship(
-        back_populates="chapter", cascade="all, delete-orphan"
-    )
-    sections: Mapped[list[Section]] = relationship(
-        back_populates="chapter", cascade="all, delete-orphan"
-    )
+    contents: Mapped[list[ChapterContent]] = relationship(back_populates="chapter", cascade="all, delete-orphan")
+    sections: Mapped[list[Section]] = relationship(back_populates="chapter", cascade="all, delete-orphan")
     reviews: Mapped[list[Review]] = relationship(back_populates="chapter")
-    citations: Mapped[list[Citation]] = relationship(
-        back_populates="chapter", cascade="all, delete-orphan"
-    )
+    citations: Mapped[list[Citation]] = relationship(back_populates="chapter", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_chapters_project", "project_id"),
@@ -339,6 +318,7 @@ class Chapter(Base):
 
 class ChapterContent(Base):
     """章节内容表"""
+
     __tablename__ = "chapter_content"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -354,9 +334,7 @@ class ChapterContent(Base):
     content: Mapped[str | None] = mapped_column(Text, nullable=True)
     version: Mapped[str] = mapped_column(String(20), nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    created_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -372,6 +350,7 @@ class ChapterContent(Base):
 
 class Section(Base):
     """小节表"""
+
     __tablename__ = "sections"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -404,9 +383,7 @@ class Section(Base):
     )
 
     chapter: Mapped[Chapter] = relationship(back_populates="sections")
-    parent_section: Mapped[Section | None] = relationship(
-        remote_side="Section.id", back_populates="child_sections"
-    )
+    parent_section: Mapped[Section | None] = relationship(remote_side="Section.id", back_populates="child_sections")
     child_sections: Mapped[list[Section]] = relationship(back_populates="parent_section")
 
     __table_args__ = (
@@ -418,6 +395,7 @@ class Section(Base):
 
 class Concept(Base):
     """概念表"""
+
     __tablename__ = "concepts"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -452,6 +430,7 @@ class Concept(Base):
 
 class Term(Base):
     """术语表"""
+
     __tablename__ = "terms"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -485,6 +464,7 @@ class Term(Base):
 
 class AuditLog(Base):
     """审计日志表"""
+
     __tablename__ = "audit_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -493,13 +473,9 @@ class AuditLog(Base):
         default=generate_uuid,
     )
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    user_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
+    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     resource_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    resource_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
+    resource_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     action: Mapped[str | None] = mapped_column(String(50), nullable=True)
     result: Mapped[str | None] = mapped_column(String(20), nullable=True)
     details: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
@@ -521,6 +497,7 @@ class AuditLog(Base):
 
 class ContentVersion(Base):
     """内容版本表"""
+
     __tablename__ = "content_versions"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -537,9 +514,7 @@ class ContentVersion(Base):
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     merkle_root: Mapped[str | None] = mapped_column(String(128), nullable=True)
     change_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -558,6 +533,7 @@ class ContentVersion(Base):
 
 class MaterialAsset(Base):
     """素材资产表"""
+
     __tablename__ = "material_assets"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -591,6 +567,7 @@ class MaterialAsset(Base):
 
 class Citation(Base):
     """引用表"""
+
     __tablename__ = "citations"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -610,9 +587,7 @@ class Citation(Base):
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    verified_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     properties: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -635,6 +610,7 @@ class Citation(Base):
 
 class GraphNode(Base):
     """图谱节点表"""
+
     __tablename__ = "graph_nodes"
 
     id: Mapped[str] = mapped_column(String(255), primary_key=True)
@@ -669,6 +645,7 @@ class GraphNode(Base):
 
 class GraphEdge(Base):
     """图谱边表"""
+
     __tablename__ = "graph_edges"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -689,12 +666,8 @@ class GraphEdge(Base):
         server_default=func.now(),
     )
 
-    source_node: Mapped[GraphNode] = relationship(
-        foreign_keys=[source_id], back_populates="outgoing_edges"
-    )
-    target_node: Mapped[GraphNode] = relationship(
-        foreign_keys=[target_id], back_populates="incoming_edges"
-    )
+    source_node: Mapped[GraphNode] = relationship(foreign_keys=[source_id], back_populates="outgoing_edges")
+    target_node: Mapped[GraphNode] = relationship(foreign_keys=[target_id], back_populates="incoming_edges")
 
     __table_args__ = (
         Index("idx_graph_edges_source", "source_id"),

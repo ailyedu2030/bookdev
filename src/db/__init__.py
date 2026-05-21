@@ -57,6 +57,7 @@ def _get_session_maker():
 
 class Base(DeclarativeBase):
     """SQLAlchemy 声明性基类"""
+
     pass
 
 

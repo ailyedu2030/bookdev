@@ -10,6 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class ParsedResponse:
     """解析后的API响应"""
+
     content: str
     finish_reason: str | None = None
     usage_total_tokens: int = 0

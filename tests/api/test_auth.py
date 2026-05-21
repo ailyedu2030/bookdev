@@ -122,7 +122,9 @@ class TestLogin:
         assert data["token_type"] == "bearer"
         assert data["expires_in"] == 1800
 
-    @pytest.mark.xfail(reason="Bug in auth.py:130 - verify_password called with (email, user.id) instead of (password, hash)")
+    @pytest.mark.xfail(
+        reason="Bug in auth.py:130 - verify_password called with (email, user.id) instead of (password, hash)"
+    )
     def test_login_wrong_password(self, test_client, test_db, test_user):
         """Test login with wrong password fails"""
         test_db._user_passwords[test_user.email] = "correctpassword"
@@ -173,11 +175,13 @@ class TestTokenRefresh:
 
     def test_refresh_token(self, test_client, test_db, test_user):
         """Test successful token refresh"""
-        refresh_token = create_refresh_token({
-            "sub": test_user.id,
-            "email": test_user.email,
-            "role": test_user.role,
-        })
+        refresh_token = create_refresh_token(
+            {
+                "sub": test_user.id,
+                "email": test_user.email,
+                "role": test_user.role,
+            }
+        )
 
         response = test_client.post(
             "/api/auth/refresh",
@@ -262,7 +266,9 @@ class TestLogout:
 class TestCurrentUser:
     """Tests for current user endpoint"""
 
-    @pytest.mark.xfail(reason="Bug in deps.py:212 - username set to token_data.sub (user ID) instead of actual username")
+    @pytest.mark.xfail(
+        reason="Bug in deps.py:212 - username set to token_data.sub (user ID) instead of actual username"
+    )
     def test_get_current_user(self, test_client, test_user_authenticated):
         """Test getting current user info"""
         token = test_user_authenticated["access_token"]
@@ -288,7 +294,9 @@ class TestCurrentUser:
 class TestPasswordChange:
     """Tests for password change endpoint"""
 
-    @pytest.mark.xfail(reason="Bug in auth.py:283 - get_password_hash(user.email) hashes email instead of stored password")
+    @pytest.mark.xfail(
+        reason="Bug in auth.py:283 - get_password_hash(user.email) hashes email instead of stored password"
+    )
     def test_change_password(self, test_client, test_db, test_user_authenticated):
         """Test successful password change"""
         token = test_user_authenticated["access_token"]
@@ -382,11 +390,13 @@ class TestRefreshTokenEdgeCases:
     def test_refresh_token_user_not_found(self, test_client, test_db, test_user):
         """Test refresh with valid token but user deleted from DB (line 178)"""
 
-        token = create_refresh_token({
-            "sub": test_user.id,
-            "email": test_user.email,
-            "role": test_user.role,
-        })
+        token = create_refresh_token(
+            {
+                "sub": test_user.id,
+                "email": test_user.email,
+                "role": test_user.role,
+            }
+        )
 
         test_db._users.pop(test_user.id, None)
 
@@ -411,11 +421,13 @@ class TestRefreshTokenEdgeCases:
 
     def test_refresh_token_wrong_type(self, test_client, test_db, test_user):
         """Test refresh with access token instead of refresh token"""
-        access_token = create_access_token({
-            "sub": test_user.id,
-            "email": test_user.email,
-            "role": test_user.role,
-        })
+        access_token = create_access_token(
+            {
+                "sub": test_user.id,
+                "email": test_user.email,
+                "role": test_user.role,
+            }
+        )
 
         response = test_client.post(
             "/api/auth/refresh",

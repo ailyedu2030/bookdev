@@ -47,18 +47,13 @@ class FactCollision:
 class CitationIntegrityManager:
     """引用完整性管理器"""
 
-    DOI_PATTERN = re.compile(r'^10\.\d{4,}/[^\s]+$')
+    DOI_PATTERN = re.compile(r"^10\.\d{4,}/[^\s]+$")
 
     def __init__(self, registry: CitationRegistry | None = None):
         self._registry = registry or CitationRegistry()
         self._content_cache: dict[str, str] = {}
 
-    def verify_citation_integrity(
-        self,
-        doi: str,
-        fact_hash: str,
-        content: str
-    ) -> CitationIntegrityResult:
+    def verify_citation_integrity(self, doi: str, fact_hash: str, content: str) -> CitationIntegrityResult:
         """验证引用完整性"""
         if not doi or not doi.strip():
             return CitationIntegrityResult(
@@ -67,7 +62,7 @@ class CitationIntegrityManager:
                 fact_hash=fact_hash,
                 content_hash="",
                 mismatch_reason="Empty DOI",
-                status=IntegrityStatus.INVALID_FORMAT
+                status=IntegrityStatus.INVALID_FORMAT,
             )
 
         if not self._is_valid_doi_format(doi):
@@ -77,7 +72,7 @@ class CitationIntegrityManager:
                 fact_hash=fact_hash,
                 content_hash="",
                 mismatch_reason="Invalid DOI format",
-                status=IntegrityStatus.INVALID_FORMAT
+                status=IntegrityStatus.INVALID_FORMAT,
             )
 
         content_hash = hashlib.sha256(content.encode()).hexdigest()
@@ -89,26 +84,18 @@ class CitationIntegrityManager:
                 fact_hash=fact_hash,
                 content_hash=content_hash,
                 mismatch_reason="Content hash does not match fact_hash",
-                status=IntegrityStatus.HASH_MISMATCH
+                status=IntegrityStatus.HASH_MISMATCH,
             )
 
         self._content_cache[f"{doi}:{fact_hash}"] = content
 
         return CitationIntegrityResult(
-            is_valid=True,
-            doi=doi,
-            fact_hash=fact_hash,
-            content_hash=content_hash,
-            status=IntegrityStatus.VALID
+            is_valid=True, doi=doi, fact_hash=fact_hash, content_hash=content_hash, status=IntegrityStatus.VALID
         )
 
     def register_unverified_citation(self, doi: str, fact_hash: str) -> str:
         """注册未验证的引用"""
-        return self._registry.register_citation(
-            doi=doi,
-            fact_hash=fact_hash,
-            position={}
-        )
+        return self._registry.register_citation(doi=doi, fact_hash=fact_hash, position={})
 
     def get_unverified_citations(self) -> list[Citation]:
         """获取所有未验证的引用"""
@@ -140,12 +127,7 @@ class CitationIntegrityManager:
 
         is_valid = len(issues) == 0
 
-        return CitationChainResult(
-            is_valid=is_valid,
-            chain=dois,
-            is_biased=has_self_reference,
-            issues=issues
-        )
+        return CitationChainResult(is_valid=is_valid, chain=dois, is_biased=has_self_reference, issues=issues)
 
     def detect_fact_collision(self) -> list[FactCollision]:
         """检测事实冲突 - 同一哈希对应多个DOI"""
@@ -161,11 +143,7 @@ class CitationIntegrityManager:
         collisions: list[FactCollision] = []
         for fact_hash, dois in fact_to_dois.items():
             if len(dois) > 1:
-                collisions.append(FactCollision(
-                    fact_hash=fact_hash,
-                    dois=list(dois),
-                    count=len(dois)
-                ))
+                collisions.append(FactCollision(fact_hash=fact_hash, dois=list(dois), count=len(dois)))
 
         return collisions
 
@@ -179,7 +157,7 @@ class CitationIntegrityManager:
             "total_citations": total,
             "verified_citations": verified,
             "unverified_citations": unverified,
-            "verification_rate": verified / total if total > 0 else 0
+            "verification_rate": verified / total if total > 0 else 0,
         }
 
     def _is_valid_doi_format(self, doi: str) -> bool:

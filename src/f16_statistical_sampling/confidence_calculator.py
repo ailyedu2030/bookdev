@@ -27,11 +27,7 @@ class ConfidenceCalculator:
         pass
 
     def calculate_confidence_interval(
-        self,
-        sample_mean: float,
-        sample_std: float,
-        sample_size: int,
-        confidence_level: float = 0.95
+        self, sample_mean: float, sample_std: float, sample_size: int, confidence_level: float = 0.95
     ) -> ConfidenceInterval:
         """计算置信区间"""
         if sample_size <= 0:
@@ -49,14 +45,11 @@ class ConfidenceCalculator:
             lower_bound=sample_mean - margin,
             upper_bound=sample_mean + margin,
             confidence_level=confidence_level,
-            margin_of_error=margin
+            margin_of_error=margin,
         )
 
     def calculate_margin_of_error(
-        self,
-        sample_proportion: float,
-        sample_size: int,
-        confidence_level: float = 0.95
+        self, sample_proportion: float, sample_size: int, confidence_level: float = 0.95
     ) -> float:
         """计算误差范围"""
         if sample_size <= 0:
@@ -66,17 +59,12 @@ class ConfidenceCalculator:
 
         z = self.Z_SCORES.get(confidence_level, 1.96)
 
-        margin = z * math.sqrt(
-            (sample_proportion * (1 - sample_proportion)) / sample_size
-        )
+        margin = z * math.sqrt((sample_proportion * (1 - sample_proportion)) / sample_size)
 
         return margin
 
     def sample_size_from_margin_of_error(
-        self,
-        margin_of_error: float,
-        population_proportion: float = 0.5,
-        confidence_level: float = 0.95
+        self, margin_of_error: float, population_proportion: float = 0.5, confidence_level: float = 0.95
     ) -> int:
         """从误差范围反推样本量"""
         if margin_of_error <= 0 or margin_of_error >= 1:
@@ -89,7 +77,7 @@ class ConfidenceCalculator:
         p = population_proportion
         e = margin_of_error
 
-        n = (z ** 2 * p * (1 - p)) / (e ** 2)
+        n = (z**2 * p * (1 - p)) / (e**2)
 
         return int(math.ceil(n))
 
@@ -98,7 +86,7 @@ class ConfidenceCalculator:
         population_size: int,
         confidence_level: float = 0.95,
         margin_of_error: float = 0.05,
-        population_proportion: float = 0.5
+        population_proportion: float = 0.5,
     ) -> int:
         """计算有限总体所需的样本量"""
         if population_size <= 0:
@@ -108,17 +96,13 @@ class ConfidenceCalculator:
         p = population_proportion
         e = margin_of_error
 
-        n0 = (z ** 2 * p * (1 - p)) / (e ** 2)
+        n0 = (z**2 * p * (1 - p)) / (e**2)
 
         n = n0 / (1 + (n0 - 1) / population_size)
 
         return int(math.ceil(n))
 
-    def calculate_standard_error(
-        self,
-        sample_std: float,
-        sample_size: int
-    ) -> float:
+    def calculate_standard_error(self, sample_std: float, sample_size: int) -> float:
         """计算标准误差"""
         if sample_size <= 0:
             raise ValueError("Sample size must be positive")
@@ -131,7 +115,6 @@ class ConfidenceCalculator:
         """获取Z分数"""
         if confidence_level not in self.Z_SCORES:
             raise ValueError(
-                f"Confidence level {confidence_level} not supported. "
-                f"Supported levels: {list(self.Z_SCORES.keys())}"
+                f"Confidence level {confidence_level} not supported. " f"Supported levels: {list(self.Z_SCORES.keys())}"
             )
         return self.Z_SCORES[confidence_level]

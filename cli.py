@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 def cmd_test(args):
     import subprocess
+
     cmd = ["python", "-m", "pytest", "src/", "-v", "--tb=short"]
     if args.quiet:
         cmd[4] = "-q"
@@ -20,6 +21,7 @@ def cmd_test(args):
 
 def cmd_status(args):
     import importlib
+
     modules = [
         ("F01", "不可变日志", "f01_immutable_log.immutable_log"),
         ("F02", "上下文预算", "f02_context_budget.context_budget_manager"),
@@ -79,30 +81,36 @@ def cmd_check(args):
     """快速系统检查"""
     try:
         from f01_immutable_log.immutable_log import ImmutableLog
+
         log = ImmutableLog()
         log.append("system_check", {"status": "online"})
         print(f"✅ 不可变日志: {len(log.get_entries())} 条")
 
         from f02_context_budget.context_budget_manager import ContextBudgetManager
+
         budget = ContextBudgetManager()
         u = budget.get_total_usage()
         print(f"✅ 上下文预算: {u if isinstance(u, int | float) else u.get('total', 0)} tokens")
 
         from f03_content_addressing.content_addressing import calculate_content_hash
+
         h = calculate_content_hash("hello world")
         print(f"✅ 内容寻址: SHA256={h[:16]}...")
 
         from f23_content_security.content_filter import ContentSecurityFilter
+
         cf = ContentSecurityFilter()
         r = cf.filter_content("正常内容")
         print(f"✅ 安全过滤: {'safe' if r.is_safe else 'blocked'}")
 
         from f24_config_center.config_center import ConfigCenter
+
         c = ConfigCenter()
         c.set_config("version", "1.0.0")
         print(f"✅ 配置中心: v{c.get_config('version')}")
 
         from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard
+
         d = MonitoringDashboard()
         s = d.get_health_status()
         print(f"✅ 监控: {s.status}")

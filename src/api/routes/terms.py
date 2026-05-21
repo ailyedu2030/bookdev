@@ -93,13 +93,15 @@ async def create_term(
     - **synonyms**: List of synonyms
     - **first_defined_at**: Where term was first defined
     """
-    term = db.create_term({
-        "term": term_data.term,
-        "definition": term_data.definition,
-        "domain": term_data.domain,
-        "synonyms": term_data.synonyms,
-        "first_defined_at": term_data.first_defined_at,
-    })
+    term = db.create_term(
+        {
+            "term": term_data.term,
+            "definition": term_data.definition,
+            "domain": term_data.domain,
+            "synonyms": term_data.synonyms,
+            "first_defined_at": term_data.first_defined_at,
+        }
+    )
 
     return TermResponse(**term)
 
@@ -311,7 +313,8 @@ async def search_terms(
 
     query_lower = search_request.query.lower()
     matching_terms = [
-        t for t in all_terms
+        t
+        for t in all_terms
         if query_lower in t.get("term", "").lower()
         or query_lower in t.get("definition", "").lower()
         or any(query_lower in syn.lower() for syn in t.get("synonyms", []))
@@ -319,7 +322,7 @@ async def search_terms(
 
     return TermSearchResponse(
         success=True,
-        data=[TermResponse(**t) for t in matching_terms[:search_request.limit]],
+        data=[TermResponse(**t) for t in matching_terms[: search_request.limit]],
         total=len(matching_terms),
     )
 

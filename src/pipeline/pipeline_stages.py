@@ -166,9 +166,11 @@ class PipelineState:
         }
 
     def record_checkpoint(self, stage: PipelineStage) -> None:
-        self.checkpoints.append({
-            "stage": stage.value,
-            "timestamp": datetime.now().isoformat(),
-            "completed_stages": [s.value for s in self.completed_stages],
-            "failed_stages": [s.value for s in self.failed_stages],
-        })
+        self.checkpoints.append(
+            {
+                "stage": stage.value,
+                "timestamp": datetime.now().isoformat(),
+                "completed_stages": [s.value for s in self.completed_stages],
+                "failed_stages": [s.value for s in self.failed_stages],
+            }
+        )

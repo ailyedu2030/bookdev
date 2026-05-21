@@ -51,11 +51,7 @@ class TestKnowledgeGraphNodes:
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
 
         kg = KnowledgeGraph()
-        node = kg.create_chapter(
-            chapter_id="ch-001",
-            title="人工智能概述",
-            order=1
-        )
+        node = kg.create_chapter(chapter_id="ch-001", title="人工智能概述", order=1)
 
         assert node.type == "Chapter"
         assert node.id == "ch-001"
@@ -69,11 +65,7 @@ class TestKnowledgeGraphNodes:
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
 
         kg = KnowledgeGraph()
-        section = kg.create_section(
-            section_id="sec-001",
-            title="人工智能的定义",
-            parent_chapter_id="ch-001"
-        )
+        section = kg.create_section(section_id="sec-001", title="人工智能的定义", parent_chapter_id="ch-001")
 
         assert section.type == "Section"
         assert section.id == "sec-001"
@@ -86,10 +78,7 @@ class TestKnowledgeGraphNodes:
 
         kg = KnowledgeGraph()
         subsection = kg.create_subsection(
-            subsection_id="sub-001",
-            title="AI的历史",
-            parent_section_id="sec-001",
-            content="人工智能起源于1956年..."
+            subsection_id="sub-001", title="AI的历史", parent_section_id="sec-001", content="人工智能起源于1956年..."
         )
 
         assert subsection.type == "Subsection"
@@ -106,7 +95,7 @@ class TestKnowledgeGraphNodes:
             concept_id="c-001",
             name="人工智能",
             definition="研究、开发用于模拟、延伸和扩展人的智能的理论、方法、技术...",
-            domain="计算机科学"
+            domain="计算机科学",
         )
 
         assert concept.type == "Concept"
@@ -124,7 +113,7 @@ class TestKnowledgeGraphNodes:
             term="机器学习",
             definition="研究、使用数据提升性能的算法...",
             domain="计算机科学",
-            synonyms=["ML", "Machine Learning"]
+            synonyms=["ML", "Machine Learning"],
         )
 
         assert term.type == "Term"
@@ -157,11 +146,7 @@ class TestKnowledgeGraphEdges:
         kg.create_chapter("ch-001", "第一章", 1)
         kg.create_chapter("ch-002", "第二章", 2)
 
-        edge = kg.add_edge(
-            "ch-001", "ch-002",
-            "FOLLOWS",
-            logical_type=LogicalType.SEQUENTIAL
-        )
+        edge = kg.add_edge("ch-001", "ch-002", "FOLLOWS", logical_type=LogicalType.SEQUENTIAL)
 
         assert edge.edge_type == "FOLLOWS"
         assert edge.source == "ch-001"
@@ -177,11 +162,7 @@ class TestKnowledgeGraphEdges:
         kg.create_section("sec-001", "第一节", parent_chapter_id="ch-001")
         kg.create_section("sec-002", "第二节", parent_chapter_id="ch-001")
 
-        edge = kg.add_edge(
-            "sec-001", "sec-002",
-            "FOLLOWS",
-            logical_type=LogicalType.PREREQUISITE
-        )
+        edge = kg.add_edge("sec-001", "sec-002", "FOLLOWS", logical_type=LogicalType.PREREQUISITE)
 
         assert edge.edge_type == "FOLLOWS"
         assert edge.properties["logical_type"] == LogicalType.PREREQUISITE
@@ -194,11 +175,7 @@ class TestKnowledgeGraphEdges:
         kg.create_chapter("ch-001", "第一章", 1)
         kg.create_concept("c-001", "人工智能", "AI的定义...", "CS")
 
-        edge = kg.add_edge(
-            "ch-001", "c-001",
-            "DEFINES",
-            definition_text="本章定义了人工智能的基本概念"
-        )
+        edge = kg.add_edge("ch-001", "c-001", "DEFINES", definition_text="本章定义了人工智能的基本概念")
 
         assert edge.edge_type == "DEFINES"
         assert edge.properties["definition_text"] == "本章定义了人工智能的基本概念"
@@ -211,11 +188,7 @@ class TestKnowledgeGraphEdges:
         kg.create_chapter("ch-001", "第一章", 1)
         kg.create_term("t-001", "机器学习", "ML的定义...", "CS")
 
-        edge = kg.add_edge(
-            "ch-001", "t-001",
-            "USES",
-            usage_context="本章多处使用机器学习术语"
-        )
+        edge = kg.add_edge("ch-001", "t-001", "USES", usage_context="本章多处使用机器学习术语")
 
         assert edge.edge_type == "USES"
         assert edge.properties["usage_context"] == "本章多处使用机器学习术语"
@@ -230,10 +203,11 @@ class TestKnowledgeGraphEdges:
         kg.create_section("sec-002", "应用节", parent_chapter_id="ch-001")
 
         edge = kg.add_edge(
-            "sec-001", "sec-002",
+            "sec-001",
+            "sec-002",
             "REFERENCES",
             reference_type=ReferenceType.APPLICATION,
-            context="用于说明定义的应用场景"
+            context="用于说明定义的应用场景",
         )
 
         assert edge.edge_type == "REFERENCES"
@@ -248,11 +222,7 @@ class TestKnowledgeGraphEdges:
         kg.create_concept("c-001", "人工智能", "AI定义...", "CS")
         kg.create_concept("c-002", "机器学习", "ML定义...", "CS")
 
-        edge = kg.add_edge(
-            "c-001", "c-002",
-            "SIMILAR_TO",
-            similarity_score=0.85
-        )
+        edge = kg.add_edge("c-001", "c-002", "SIMILAR_TO", similarity_score=0.85)
 
         assert edge.edge_type == "SIMILAR_TO"
         assert edge.properties["similarity_score"] == 0.85
@@ -500,9 +470,17 @@ class TestKnowledgeGraphPersistence:
 
         data = {
             "nodes": [
-                {"id": "ch-001", "type": "Chapter", "title": "第一章", "order": 1, "status": "draft", "word_count": 0, "version": "1.0"}
+                {
+                    "id": "ch-001",
+                    "type": "Chapter",
+                    "title": "第一章",
+                    "order": 1,
+                    "status": "draft",
+                    "word_count": 0,
+                    "version": "1.0",
+                }
             ],
-            "edges": []
+            "edges": [],
         }
 
         kg = KnowledgeGraph()
@@ -539,12 +517,7 @@ class TestKnowledgeGraphPersistence:
         kg.create_chapter("ch-001", "第一章", 1)
 
         data = kg.export_to_dict()
-        data["edges"].append({
-            "edge_type": "FOLLOWS",
-            "source": "ch-001",
-            "target": "external_node",
-            "properties": {}
-        })
+        data["edges"].append({"edge_type": "FOLLOWS", "source": "ch-001", "target": "external_node", "properties": {}})
 
         kg2 = KnowledgeGraph()
         kg2.import_from_dict(data)
@@ -695,13 +668,7 @@ class TestNodesToDictCoverage:
         """SubsectionNode.to_dict覆盖 (覆盖lines 102-108)"""
         from f05_knowledge_graph.nodes import SubsectionNode
 
-        node = SubsectionNode(
-            id="sub-001",
-            title="小节标题",
-            order=1,
-            content="小节内容",
-            parent_section_id="sec-001"
-        )
+        node = SubsectionNode(id="sub-001", title="小节标题", order=1, content="小节内容", parent_section_id="sec-001")
 
         d = node.to_dict()
         assert d["id"] == "sub-001"
@@ -714,11 +681,7 @@ class TestNodesToDictCoverage:
         from f05_knowledge_graph.nodes import ConceptNode
 
         node = ConceptNode(
-            id="c-001",
-            name="人工智能",
-            definition="AI的定义",
-            domain="计算机科学",
-            related_terms=["AI", "ML"]
+            id="c-001", name="人工智能", definition="AI的定义", domain="计算机科学", related_terms=["AI", "ML"]
         )
 
         d = node.to_dict()
@@ -733,11 +696,7 @@ class TestNodesToDictCoverage:
         from f05_knowledge_graph.nodes import TermNode
 
         node = TermNode(
-            id="t-001",
-            term="机器学习",
-            definition="ML的定义",
-            domain="计算机科学",
-            synonyms=["ML", "Machine Learning"]
+            id="t-001", term="机器学习", definition="ML的定义", domain="计算机科学", synonyms=["ML", "Machine Learning"]
         )
 
         d = node.to_dict()

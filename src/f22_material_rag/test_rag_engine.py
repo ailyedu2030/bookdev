@@ -23,6 +23,7 @@ import pytest
 @dataclass
 class RetrievedMaterial:
     """检索到的素材"""
+
     material_id: str
     content: str
     score: float
@@ -68,31 +69,31 @@ def add_test_materials(engine):
             "id": "m-001",
             "content": "人工智能是研究、开发用于模拟、延伸和扩展人的智能的理论、方法、技术及应用系统的技术科学。",
             "chapter_id": "ch-001",
-            "metadata": {"type": "definition"}
+            "metadata": {"type": "definition"},
         },
         {
             "id": "m-002",
             "content": "机器学习是人工智能的一个分支，专门研究如何使用计算机模拟人类学习行为并自动改进算法。",
             "chapter_id": "ch-002",
-            "metadata": {"type": "explanation"}
+            "metadata": {"type": "explanation"},
         },
         {
             "id": "m-003",
             "content": "深度学习是机器学习的分支，使用多层神经网络分析各种因素进行数据表征学习。",
             "chapter_id": "ch-003",
-            "metadata": {"type": "explanation"}
+            "metadata": {"type": "explanation"},
         },
         {
             "id": "m-004",
             "content": "神经网络是一种受人脑启发的计算模型，用于识别数据中的复杂模式和关系。",
             "chapter_id": "ch-003",
-            "metadata": {"type": "definition"}
+            "metadata": {"type": "definition"},
         },
         {
             "id": "m-005",
             "content": "自然语言处理是人工智能的一个分支，研究如何让计算机理解和生成人类语言。",
             "chapter_id": "ch-001",
-            "metadata": {"type": "definition"}
+            "metadata": {"type": "definition"},
         },
     ]
 
@@ -103,12 +104,7 @@ def add_test_materials(engine):
 def add_large_materials(engine):
     """添加大尺寸素材"""
     materials = [
-        {
-            "id": f"large-m-{i}",
-            "content": "这是第{i}个大型素材内容。" * 100,
-            "chapter_id": f"ch-{i}",
-            "metadata": {}
-        }
+        {"id": f"large-m-{i}", "content": "这是第{i}个大型素材内容。" * 100, "chapter_id": f"ch-{i}", "metadata": {}}
         for i in range(10)
     ]
 
@@ -121,12 +117,7 @@ def add_duplicate_materials(engine):
     content = "人工智能是研究、开发用于模拟、延伸和扩展人的智能的理论、方法、技术及应用系统的技术科学。"
 
     for i in range(3):
-        engine.add_material({
-            "id": f"dup-{i}",
-            "content": content,
-            "chapter_id": "ch-001",
-            "metadata": {}
-        })
+        engine.add_material({"id": f"dup-{i}", "content": content, "chapter_id": "ch-001", "metadata": {}})
 
 
 def add_near_duplicate_materials(engine):
@@ -140,12 +131,7 @@ def add_near_duplicate_materials(engine):
     ]
 
     for i, content in enumerate(variations):
-        engine.add_material({
-            "id": f"near-dup-{i}",
-            "content": content,
-            "chapter_id": "ch-002",
-            "metadata": {}
-        })
+        engine.add_material({"id": f"near-dup-{i}", "content": content, "chapter_id": "ch-002", "metadata": {}})
 
 
 class TestMaterialRAGRetrieval:
@@ -161,13 +147,11 @@ class TestMaterialRAGRetrieval:
 
         add_test_materials(engine)
 
-        results = engine.retrieve_relevant_materials(
-            query="人工智能 机器学习",
-            top_k=3
-        )
+        results = engine.retrieve_relevant_materials(query="人工智能 机器学习", top_k=3)
 
         assert len(results) > 0
         from f22_material_rag.rag_engine import RetrievedMaterial as RRM
+
         assert all(isinstance(r, RRM) for r in results)
         assert all(r.score >= 0.0 and r.score <= 1.0 for r in results)
 
@@ -181,10 +165,7 @@ class TestMaterialRAGRetrieval:
 
         add_test_materials(engine)
 
-        results = engine.retrieve_relevant_materials(
-            query="人工智能",
-            top_k=2
-        )
+        results = engine.retrieve_relevant_materials(query="人工智能", top_k=2)
 
         assert len(results) <= 2
 
@@ -210,10 +191,7 @@ class TestMaterialRAGRetrieval:
 
         add_test_materials(engine)
 
-        results = engine.retrieve_relevant_materials(
-            query="完全不匹配的查询 xyz123",
-            top_k=3
-        )
+        results = engine.retrieve_relevant_materials(query="完全不匹配的查询 xyz123", top_k=3)
 
         assert len(results) >= 0
 
@@ -231,11 +209,7 @@ class TestBudgetAwareRetrieval:
 
         add_test_materials(engine)
 
-        results = engine.retrieve_relevant_materials(
-            query="人工智能",
-            top_k=10,
-            max_tokens=5000
-        )
+        results = engine.retrieve_relevant_materials(query="人工智能", top_k=10, max_tokens=5000)
 
         total_tokens = sum(r.token_count for r in results)
         assert total_tokens <= 5000
@@ -250,11 +224,7 @@ class TestBudgetAwareRetrieval:
 
         add_large_materials(engine)
 
-        results = engine.retrieve_relevant_materials(
-            query="教学",
-            top_k=10,
-            max_tokens=1000
-        )
+        results = engine.retrieve_relevant_materials(query="教学", top_k=10, max_tokens=1000)
 
         total_tokens = sum(r.token_count for r in results)
         assert total_tokens <= 1000
@@ -273,21 +243,18 @@ class TestBudgetAwareRetrieval:
                 content="人工智能是研究、开发用于模拟、延伸和扩展人的智能的理论、方法、技术及应用系统。",
                 score=0.95,
                 token_count=50,
-                source_chapter_id="ch-001"
+                source_chapter_id="ch-001",
             ),
             RetrievedMaterial(
                 material_id="m2",
                 content="机器学习是人工智能的一个分支，专门研究如何使用计算机模拟人类学习行为。",
                 score=0.85,
                 token_count=45,
-                source_chapter_id="ch-002"
+                source_chapter_id="ch-002",
             ),
         ]
 
-        context = engine.build_context_from_materials(
-            materials,
-            max_tokens=8000
-        )
+        context = engine.build_context_from_materials(materials, max_tokens=8000)
 
         assert isinstance(context, str)
         assert len(context) > 0
@@ -306,14 +273,11 @@ class TestBudgetAwareRetrieval:
                 content="这是一段很长的内容，" * 100,
                 score=0.95,
                 token_count=500,
-                source_chapter_id="ch-001"
+                source_chapter_id="ch-001",
             ),
         ]
 
-        context = engine.build_context_from_materials(
-            materials,
-            max_tokens=100
-        )
+        context = engine.build_context_from_materials(materials, max_tokens=100)
 
         token_count = engine.estimate_tokens(context)
         assert token_count <= 100
@@ -332,19 +296,13 @@ class TestKGraphEnhancement:
 
         add_test_materials(engine)
 
-        results_with_kg = engine.retrieve_relevant_materials(
-            query="深度学习",
-            top_k=5,
-            use_kg_enhancement=True
-        )
+        results_with_kg = engine.retrieve_relevant_materials(query="深度学习", top_k=5, use_kg_enhancement=True)
 
-        results_without_kg = engine.retrieve_relevant_materials(
-            query="深度学习",
-            top_k=5,
-            use_kg_enhancement=False
-        )
+        results_without_kg = engine.retrieve_relevant_materials(query="深度学习", top_k=5, use_kg_enhancement=False)
 
-        assert len(results_with_kg) >= len(results_without_kg) or results_with_kg[0].score >= results_without_kg[0].score
+        assert (
+            len(results_with_kg) >= len(results_without_kg) or results_with_kg[0].score >= results_without_kg[0].score
+        )
 
     def test_kg_boosts_related_concepts(self):
         """相关概念被知识图谱提升"""
@@ -358,11 +316,7 @@ class TestKGraphEnhancement:
 
         add_test_materials(engine)
 
-        results = engine.retrieve_relevant_materials(
-            query="神经网络",
-            top_k=5,
-            use_kg_enhancement=True
-        )
+        results = engine.retrieve_relevant_materials(query="神经网络", top_k=5, use_kg_enhancement=True)
 
         if results:
             result_chapters = [r.source_chapter_id for r in results]
@@ -380,11 +334,7 @@ class TestKGraphEnhancement:
 
         add_test_materials(engine)
 
-        results = engine.retrieve_relevant_materials(
-            query="人工智能定义",
-            top_k=3,
-            use_kg_enhancement=True
-        )
+        results = engine.retrieve_relevant_materials(query="人工智能定义", top_k=3, use_kg_enhancement=True)
 
         assert isinstance(results, list)
 
@@ -402,11 +352,7 @@ class TestMaterialDeduplication:
 
         add_duplicate_materials(engine)
 
-        results = engine.retrieve_relevant_materials(
-            query="人工智能",
-            top_k=10,
-            deduplicate=True
-        )
+        results = engine.retrieve_relevant_materials(query="人工智能", top_k=10, deduplicate=True)
 
         material_ids = [r.material_id for r in results]
         assert len(material_ids) == len(set(material_ids))
@@ -422,17 +368,12 @@ class TestMaterialDeduplication:
         add_near_duplicate_materials(engine)
 
         results = engine.retrieve_relevant_materials(
-            query="机器学习",
-            top_k=5,
-            deduplicate=True,
-            similarity_threshold=0.9
+            query="机器学习", top_k=5, deduplicate=True, similarity_threshold=0.9
         )
 
         for i, r1 in enumerate(results):
-            for r2 in results[i+1:]:
-                similarity = engine._compute_similarity(
-                    r1.content, r2.content
-                )
+            for r2 in results[i + 1 :]:
+                similarity = engine._compute_similarity(r1.content, r2.content)
                 if similarity > 0.9:
                     raise AssertionError("Similar materials should be deduplicated")
 
@@ -450,12 +391,14 @@ class TestMaterialIndexing:
 
         initial_count = engine.get_material_count()
 
-        engine.add_material({
-            "id": "new-material-001",
-            "content": "这是一个新添加的素材内容。",
-            "chapter_id": "ch-new",
-            "metadata": {"type": "example"}
-        })
+        engine.add_material(
+            {
+                "id": "new-material-001",
+                "content": "这是一个新添加的素材内容。",
+                "chapter_id": "ch-new",
+                "metadata": {"type": "example"},
+            }
+        )
 
         new_count = engine.get_material_count()
         assert new_count == initial_count + 1
@@ -468,17 +411,16 @@ class TestMaterialIndexing:
         budget = create_mock_budget_manager()
         engine = MaterialRAGEngine(knowledge_graph=kg, context_budget=budget)
 
-        engine.add_material({
-            "id": "unique-material-xyz",
-            "content": "区块链技术是一种分布式账本技术。",
-            "chapter_id": "ch-blockchain",
-            "metadata": {}
-        })
-
-        results = engine.retrieve_relevant_materials(
-            query="区块链 分布式账本",
-            top_k=5
+        engine.add_material(
+            {
+                "id": "unique-material-xyz",
+                "content": "区块链技术是一种分布式账本技术。",
+                "chapter_id": "ch-blockchain",
+                "metadata": {},
+            }
         )
+
+        results = engine.retrieve_relevant_materials(query="区块链 分布式账本", top_k=5)
 
         material_ids = [r.material_id for r in results]
         assert "unique-material-xyz" in material_ids
@@ -492,12 +434,7 @@ class TestMaterialIndexing:
         engine = MaterialRAGEngine(knowledge_graph=kg, context_budget=budget)
 
         materials = [
-            {
-                "id": f"batch-material-{i}",
-                "content": f"批量素材内容 {i}",
-                "chapter_id": "ch-batch",
-                "metadata": {}
-            }
+            {"id": f"batch-material-{i}", "content": f"批量素材内容 {i}", "chapter_id": "ch-batch", "metadata": {}}
             for i in range(5)
         ]
 
@@ -514,12 +451,9 @@ class TestMaterialIndexing:
         budget = create_mock_budget_manager()
         engine = MaterialRAGEngine(knowledge_graph=kg, context_budget=budget)
 
-        engine.add_material({
-            "id": "embedding-test",
-            "content": "测试嵌入生成",
-            "chapter_id": "ch-test",
-            "metadata": {}
-        })
+        engine.add_material(
+            {"id": "embedding-test", "content": "测试嵌入生成", "chapter_id": "ch-test", "metadata": {}}
+        )
 
         embedding = engine.get_embedding("embedding-test")
         assert embedding is not None
@@ -663,11 +597,7 @@ class TestMaterialDataClass:
         from f22_material_rag.material import Material
 
         material = Material(
-            id="test-001",
-            content="测试内容",
-            chapter_id="ch-001",
-            token_count=10,
-            metadata={"key": "value"}
+            id="test-001", content="测试内容", chapter_id="ch-001", token_count=10, metadata={"key": "value"}
         )
 
         assert material.id == "test-001"
@@ -678,11 +608,7 @@ class TestMaterialDataClass:
         """素材转换为字典"""
         from f22_material_rag.material import Material
 
-        material = Material(
-            id="test-001",
-            content="测试内容",
-            chapter_id="ch-001"
-        )
+        material = Material(id="test-001", content="测试内容", chapter_id="ch-001")
 
         d = material.to_dict()
 
@@ -697,14 +623,9 @@ class TestRAGEngineUncovered:
         """_kg_enhance_results处理无KG情况 (覆盖line 205)"""
         from f22_material_rag.rag_engine import MaterialRAGEngine
 
-        rag = MaterialRAGEngine(
-            knowledge_graph=None,
-            context_budget=None
-        )
+        rag = MaterialRAGEngine(knowledge_graph=None, context_budget=None)
 
-        results = [
-            {"content": "test", "score": 0.8, "metadata": {}}
-        ]
+        results = [{"content": "test", "score": 0.8, "metadata": {}}]
 
         boosted = rag._kg_enhance_results(results, "test query")
         assert len(boosted) == 1
@@ -714,10 +635,7 @@ class TestRAGEngineUncovered:
         """_deduplicate_results处理空列表 (覆盖line 250)"""
         from f22_material_rag.rag_engine import MaterialRAGEngine
 
-        rag = MaterialRAGEngine(
-            knowledge_graph=None,
-            context_budget=None
-        )
+        rag = MaterialRAGEngine(knowledge_graph=None, context_budget=None)
 
         result = rag._deduplicate_results([])
         assert result == []
@@ -726,10 +644,7 @@ class TestRAGEngineUncovered:
         """_compute_similarity处理空文本 (覆盖line 275)"""
         from f22_material_rag.rag_engine import MaterialRAGEngine
 
-        rag = MaterialRAGEngine(
-            knowledge_graph=None,
-            context_budget=None
-        )
+        rag = MaterialRAGEngine(knowledge_graph=None, context_budget=None)
 
         result = rag._compute_similarity("", "text")
         assert result == 0.0
@@ -772,7 +687,7 @@ class TestMaterialUncovered:
             "content": "测试内容",
             "chapter_id": "ch-001",
             "token_count": 100,
-            "metadata": {"source": "test"}
+            "metadata": {"source": "test"},
         }
 
         material = Material.from_dict(data)
@@ -787,10 +702,7 @@ class TestMaterialUncovered:
         """line 43-45: from_dict使用默认值"""
         from f22_material_rag.material import Material
 
-        data = {
-            "id": "mat-002",
-            "content": "最小数据"
-        }
+        data = {"id": "mat-002", "content": "最小数据"}
 
         material = Material.from_dict(data)
 
@@ -815,14 +727,9 @@ class TestRAGEngineKGUncovered:
         kg.create_concept("concept-001", "人工智能 机器学习", "AI和ML的定义", "CS")
         kg.add_edge("ch-001", "concept-001", "DEFINES")
 
-        rag = MaterialRAGEngine(
-            knowledge_graph=kg,
-            context_budget=None
-        )
+        rag = MaterialRAGEngine(knowledge_graph=kg, context_budget=None)
 
-        results = [
-            {"content": "AI是人工智能", "score": 0.5, "metadata": {"chapter_id": "ch-001"}}
-        ]
+        results = [{"content": "AI是人工智能", "score": 0.5, "metadata": {"chapter_id": "ch-001"}}]
 
         boosted = rag._kg_enhance_results(results, "人工智能")
 

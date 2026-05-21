@@ -56,7 +56,7 @@ class TestGraphRAGQuery:
         rag = RAGEngine()
         query_engine = GraphRAGQuery(kg, rag)
         result = query_engine.query("什么是机器学习?")
-        assert hasattr(result, 'answer')
+        assert hasattr(result, "answer")
         assert isinstance(result.answer, str)
 
     def test_query_confidence_field(self):
@@ -67,7 +67,7 @@ class TestGraphRAGQuery:
         rag = RAGEngine()
         query_engine = GraphRAGQuery(kg, rag)
         result = query_engine.query("什么是机器学习?")
-        assert hasattr(result, 'confidence')
+        assert hasattr(result, "confidence")
         assert isinstance(result.confidence, float)
         assert 0.0 <= result.confidence <= 1.0
 
@@ -79,7 +79,7 @@ class TestGraphRAGQuery:
         rag = RAGEngine()
         query_engine = GraphRAGQuery(kg, rag)
         result = query_engine.query("什么是机器学习?")
-        assert hasattr(result, 'sources')
+        assert hasattr(result, "sources")
         assert isinstance(result.sources, list)
 
     def test_query_graph_paths_field(self):
@@ -90,7 +90,7 @@ class TestGraphRAGQuery:
         rag = RAGEngine()
         query_engine = GraphRAGQuery(kg, rag)
         result = query_engine.query("什么是机器学习?")
-        assert hasattr(result, 'graph_paths')
+        assert hasattr(result, "graph_paths")
         assert isinstance(result.graph_paths, list)
 
     def test_query_with_kg_nodes(self):
@@ -115,11 +115,7 @@ class TestGraphRAGQuery:
 
         kg = KnowledgeGraph()
         rag = RAGEngine()
-        rag.add_document(RAGDocument(
-            id="doc1",
-            content="机器学习是人工智能的子领域",
-            embedding=[0.1] * 128
-        ))
+        rag.add_document(RAGDocument(id="doc1", content="机器学习是人工智能的子领域", embedding=[0.1] * 128))
 
         query_engine = GraphRAGQuery(kg, rag)
         result = query_engine.query("什么是机器学习?")
@@ -161,11 +157,7 @@ class TestGraphRAGQuery:
 
         kg = KnowledgeGraph()
         rag = RAGEngine()
-        rag.add_document(RAGDocument(
-            id="doc1",
-            content="Python是一种编程语言",
-            embedding=[0.1] * 128
-        ))
+        rag.add_document(RAGDocument(id="doc1", content="Python是一种编程语言", embedding=[0.1] * 128))
 
         query_engine = GraphRAGQuery(kg, rag)
         results = query_engine._vector_search("Python是什么?", top_k=3)
@@ -181,9 +173,7 @@ class TestGraphRAGQuery:
         query_engine = GraphRAGQuery(kg, rag)
 
         answer = query_engine._generate_answer(
-            question="什么是AI?",
-            graph_context=["机器学习是AI的子领域"],
-            rag_context=["人工智能使机器具有人类智能"]
+            question="什么是AI?", graph_context=["机器学习是AI的子领域"], rag_context=["人工智能使机器具有人类智能"]
         )
 
         assert isinstance(answer, str)

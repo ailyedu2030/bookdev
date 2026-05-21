@@ -12,6 +12,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 @dataclass
 class QualityCheckInput:
     """质量检查输入"""
+
     chapter_id: str
     content: str
     outline: dict
@@ -22,6 +23,7 @@ class QualityCheckInput:
 @dataclass
 class QualityIssue:
     """质量问题"""
+
     issue_id: str
     severity: str
     category: str
@@ -33,6 +35,7 @@ class QualityIssue:
 @dataclass
 class QualityCheckOutput:
     """质量检查输出"""
+
     chapter_id: str
     passed: bool
     overall_score: float
@@ -46,10 +49,7 @@ class QualityCheckActivity:
 
     @staticmethod
     @activity.defn(name="check_content_quality")
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=10)
-    )
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=10))
     async def check_content_quality(input_data: QualityCheckInput) -> QualityCheckOutput:
         """
         检查内容质量
@@ -61,8 +61,7 @@ class QualityCheckActivity:
             QualityCheckOutput: 质量检查结果
         """
         activity.logger.info(
-            f"Checking quality for chapter: {input_data.chapter_id}, "
-            f"checks: {input_data.check_types}"
+            f"Checking quality for chapter: {input_data.chapter_id}, " f"checks: {input_data.check_types}"
         )
 
         issues = []
@@ -75,18 +74,12 @@ class QualityCheckActivity:
                 if not result["passed"]:
                     issues.extend(result["issues"])
             elif check_type == "coherence":
-                result = await QualityCheckActivity._check_coherence(
-                    input_data.content,
-                    input_data.outline
-                )
+                result = await QualityCheckActivity._check_coherence(input_data.content, input_data.outline)
                 checks_performed["coherence"] = result["passed"]
                 if not result["passed"]:
                     issues.extend(result["issues"])
             elif check_type == "completeness":
-                result = await QualityCheckActivity._check_completeness(
-                    input_data.content,
-                    input_data.outline
-                )
+                result = await QualityCheckActivity._check_completeness(input_data.content, input_data.outline)
                 checks_performed["completeness"] = result["passed"]
                 if not result["passed"]:
                     issues.extend(result["issues"])
@@ -106,16 +99,13 @@ class QualityCheckActivity:
             overall_score=overall_score,
             issues=issues,
             checks_performed=checks_performed,
-            recommendations=QualityCheckActivity._generate_recommendations(issues)
+            recommendations=QualityCheckActivity._generate_recommendations(issues),
         )
 
     @staticmethod
     async def _check_grammar(content: str) -> dict[str, Any]:
         """检查语法"""
-        return {
-            "passed": True,
-            "issues": []
-        }
+        return {"passed": True, "issues": []}
 
     @staticmethod
     async def _check_coherence(content: str, outline: dict) -> dict[str, Any]:
@@ -125,18 +115,17 @@ class QualityCheckActivity:
         estimated_words = outline.get("estimated_words", 5000)
 
         if word_count < estimated_words * 0.5:
-            issues.append(QualityIssue(
-                issue_id="coh-001",
-                severity="warning",
-                category="coherence",
-                description=f"内容字数({word_count})远低于预期({estimated_words})",
-                location="overall"
-            ))
+            issues.append(
+                QualityIssue(
+                    issue_id="coh-001",
+                    severity="warning",
+                    category="coherence",
+                    description=f"内容字数({word_count})远低于预期({estimated_words})",
+                    location="overall",
+                )
+            )
 
-        return {
-            "passed": len(issues) == 0,
-            "issues": issues
-        }
+        return {"passed": len(issues) == 0, "issues": issues}
 
     @staticmethod
     async def _check_completeness(content: str, outline: dict) -> dict[str, Any]:
@@ -147,26 +136,22 @@ class QualityCheckActivity:
         for section in sections:
             section_title = section.get("title", "")
             if section_title not in content:
-                issues.append(QualityIssue(
-                    issue_id="comp-001",
-                    severity="error",
-                    category="completeness",
-                    description=f"章节'{section_title}'内容缺失",
-                    location=section_title
-                ))
+                issues.append(
+                    QualityIssue(
+                        issue_id="comp-001",
+                        severity="error",
+                        category="completeness",
+                        description=f"章节'{section_title}'内容缺失",
+                        location=section_title,
+                    )
+                )
 
-        return {
-            "passed": len(issues) == 0,
-            "issues": issues
-        }
+        return {"passed": len(issues) == 0, "issues": issues}
 
     @staticmethod
     async def _check_readability(content: str) -> dict[str, Any]:
         """检查可读性"""
-        return {
-            "passed": True,
-            "issues": []
-        }
+        return {"passed": True, "issues": []}
 
     @staticmethod
     def _generate_recommendations(issues: list[QualityIssue]) -> list[str]:
@@ -195,12 +180,7 @@ class QualityCheckActivity:
         """
         activity.logger.info(f"Checking plagiarism for chapter: {chapter_id}")
 
-        return {
-            "chapter_id": chapter_id,
-            "plagiarism_score": 0.05,
-            "passed": True,
-            "sources": []
-        }
+        return {"chapter_id": chapter_id, "plagiarism_score": 0.05, "passed": True, "sources": []}
 
     @staticmethod
     @activity.defn(name="validate_references")
@@ -215,9 +195,7 @@ class QualityCheckActivity:
         Returns:
             Dict: 验证结果
         """
-        activity.logger.info(
-            f"Validating {len(references)} references for chapter: {chapter_id}"
-        )
+        activity.logger.info(f"Validating {len(references)} references for chapter: {chapter_id}")
 
         valid_refs = []
         invalid_refs = []
@@ -233,5 +211,5 @@ class QualityCheckActivity:
             "total": len(references),
             "valid": len(valid_refs),
             "invalid": len(invalid_refs),
-            "passed": len(invalid_refs) == 0
+            "passed": len(invalid_refs) == 0,
         }

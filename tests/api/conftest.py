@@ -87,6 +87,7 @@ def clear_workflows_store():
 def clear_knowledge_graph():
     """Clear knowledge graph in-memory stores before each test"""
     from api.routes import knowledge_graph as kg_module
+
     kg_module._in_memory_nodes.clear()
     kg_module._in_memory_edges.clear()
     kg_module._edge_id_counter = 0
@@ -109,13 +110,17 @@ def test_app(test_db: TestDatabaseSession) -> FastAPI:
     app.dependency_overrides[csrf_protect] = override_csrf_protect
 
     with patch("api.middleware.rate_limit.rate_limiter.check_rate_limit", new_callable=AsyncMock) as mock_rate_limit:
+
         async def allow_all(*args, **kwargs):
             return (True, 100, 0)
+
         mock_rate_limit.side_effect = allow_all
 
         with patch("api.routes.auth.verify_password") as mock_verify:
+
             def verify_always_true(*args, **kwargs):
                 return True
+
             mock_verify.side_effect = verify_always_true
 
             yield app
@@ -134,14 +139,16 @@ def test_client(test_app: FastAPI) -> Generator[TestClient, None, None]:
 @pytest.fixture
 def test_user(test_db: TestDatabaseSession) -> User:
     """Create a test user with viewer role"""
-    user = test_db.create_user({
-        "username": "testuser",
-        "email": "testuser@example.com",
-        "password": "testpassword123",
-        "role": "viewer",
-        "organization_id": "test-org-123",
-        "clearance_level": 1,
-    })
+    user = test_db.create_user(
+        {
+            "username": "testuser",
+            "email": "testuser@example.com",
+            "password": "testpassword123",
+            "role": "viewer",
+            "organization_id": "test-org-123",
+            "clearance_level": 1,
+        }
+    )
     return user
 
 
@@ -149,16 +156,20 @@ def test_user(test_db: TestDatabaseSession) -> User:
 def test_user_authenticated(test_db: TestDatabaseSession, test_user: User) -> dict:
     """Create authenticated test user with tokens"""
     user = test_user
-    access_token = create_access_token({
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role,
-    })
-    refresh_token = create_refresh_token({
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role,
-    })
+    access_token = create_access_token(
+        {
+            "sub": user.id,
+            "email": user.email,
+            "role": user.role,
+        }
+    )
+    refresh_token = create_refresh_token(
+        {
+            "sub": user.id,
+            "email": user.email,
+            "role": user.role,
+        }
+    )
     test_db.add_session(user.id, access_token)
 
     return {
@@ -171,14 +182,16 @@ def test_user_authenticated(test_db: TestDatabaseSession, test_user: User) -> di
 @pytest.fixture
 def test_admin(test_db: TestDatabaseSession) -> User:
     """Create a test admin user"""
-    admin = test_db.create_user({
-        "username": "testadmin",
-        "email": "testadmin@example.com",
-        "password": "adminpassword123",
-        "role": "system_admin",
-        "organization_id": "test-org-123",
-        "clearance_level": 5,
-    })
+    admin = test_db.create_user(
+        {
+            "username": "testadmin",
+            "email": "testadmin@example.com",
+            "password": "adminpassword123",
+            "role": "system_admin",
+            "organization_id": "test-org-123",
+            "clearance_level": 5,
+        }
+    )
     return admin
 
 
@@ -186,16 +199,20 @@ def test_admin(test_db: TestDatabaseSession) -> User:
 def test_admin_authenticated(test_db: TestDatabaseSession, test_admin: User) -> dict:
     """Create authenticated admin user with tokens"""
     user = test_admin
-    access_token = create_access_token({
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role,
-    })
-    refresh_token = create_refresh_token({
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role,
-    })
+    access_token = create_access_token(
+        {
+            "sub": user.id,
+            "email": user.email,
+            "role": user.role,
+        }
+    )
+    refresh_token = create_refresh_token(
+        {
+            "sub": user.id,
+            "email": user.email,
+            "role": user.role,
+        }
+    )
     test_db.add_session(user.id, access_token)
 
     return {
@@ -208,34 +225,40 @@ def test_admin_authenticated(test_db: TestDatabaseSession, test_admin: User) -> 
 @pytest.fixture
 def author_user(test_db: TestDatabaseSession) -> User:
     """Create a test author user"""
-    author = test_db.create_user({
-        "username": "testauthor",
-        "email": "testauthor@example.com",
-        "password": "authorpassword123",
-        "role": "author",
-        "organization_id": "test-org-123",
-        "clearance_level": 2,
-    })
+    author = test_db.create_user(
+        {
+            "username": "testauthor",
+            "email": "testauthor@example.com",
+            "password": "authorpassword123",
+            "role": "author",
+            "organization_id": "test-org-123",
+            "clearance_level": 2,
+        }
+    )
     return author
 
 
 @pytest.fixture
 def author_authenticated(test_db: TestDatabaseSession, author_user: User) -> dict:
     """Create authenticated author user with tokens"""
-    access_token = create_access_token({
-        "sub": author_user.id,
-        "email": author_user.email,
-        "role": author_user.role,
-        "organization_id": author_user.organization_id,
-        "clearance_level": author_user.clearance_level,
-    })
-    refresh_token = create_refresh_token({
-        "sub": author_user.id,
-        "email": author_user.email,
-        "role": author_user.role,
-        "organization_id": author_user.organization_id,
-        "clearance_level": author_user.clearance_level,
-    })
+    access_token = create_access_token(
+        {
+            "sub": author_user.id,
+            "email": author_user.email,
+            "role": author_user.role,
+            "organization_id": author_user.organization_id,
+            "clearance_level": author_user.clearance_level,
+        }
+    )
+    refresh_token = create_refresh_token(
+        {
+            "sub": author_user.id,
+            "email": author_user.email,
+            "role": author_user.role,
+            "organization_id": author_user.organization_id,
+            "clearance_level": author_user.clearance_level,
+        }
+    )
     test_db.add_session(author_user.id, access_token)
 
     return {
@@ -248,34 +271,40 @@ def author_authenticated(test_db: TestDatabaseSession, author_user: User) -> dic
 @pytest.fixture
 def reviewer_user(test_db: TestDatabaseSession) -> User:
     """Create a test reviewer user"""
-    reviewer = test_db.create_user({
-        "username": "testreviewer",
-        "email": "testreviewer@example.com",
-        "password": "reviewerpassword123",
-        "role": "reviewer",
-        "organization_id": "test-org-123",
-        "clearance_level": 3,
-    })
+    reviewer = test_db.create_user(
+        {
+            "username": "testreviewer",
+            "email": "testreviewer@example.com",
+            "password": "reviewerpassword123",
+            "role": "reviewer",
+            "organization_id": "test-org-123",
+            "clearance_level": 3,
+        }
+    )
     return reviewer
 
 
 @pytest.fixture
 def reviewer_authenticated(test_db: TestDatabaseSession, reviewer_user: User) -> dict:
     """Create authenticated reviewer user with tokens"""
-    access_token = create_access_token({
-        "sub": reviewer_user.id,
-        "email": reviewer_user.email,
-        "role": reviewer_user.role,
-        "organization_id": reviewer_user.organization_id,
-        "clearance_level": reviewer_user.clearance_level,
-    })
-    refresh_token = create_refresh_token({
-        "sub": reviewer_user.id,
-        "email": reviewer_user.email,
-        "role": reviewer_user.role,
-        "organization_id": reviewer_user.organization_id,
-        "clearance_level": reviewer_user.clearance_level,
-    })
+    access_token = create_access_token(
+        {
+            "sub": reviewer_user.id,
+            "email": reviewer_user.email,
+            "role": reviewer_user.role,
+            "organization_id": reviewer_user.organization_id,
+            "clearance_level": reviewer_user.clearance_level,
+        }
+    )
+    refresh_token = create_refresh_token(
+        {
+            "sub": reviewer_user.id,
+            "email": reviewer_user.email,
+            "role": reviewer_user.role,
+            "organization_id": reviewer_user.organization_id,
+            "clearance_level": reviewer_user.clearance_level,
+        }
+    )
     test_db.add_session(reviewer_user.id, access_token)
 
     return {
@@ -288,34 +317,40 @@ def reviewer_authenticated(test_db: TestDatabaseSession, reviewer_user: User) ->
 @pytest.fixture
 def editor_user(test_db: TestDatabaseSession) -> User:
     """Create a test editor user"""
-    editor = test_db.create_user({
-        "username": "testeditor",
-        "email": "testeditor@example.com",
-        "password": "editorpassword123",
-        "role": "editor",
-        "organization_id": "test-org-123",
-        "clearance_level": 4,
-    })
+    editor = test_db.create_user(
+        {
+            "username": "testeditor",
+            "email": "testeditor@example.com",
+            "password": "editorpassword123",
+            "role": "editor",
+            "organization_id": "test-org-123",
+            "clearance_level": 4,
+        }
+    )
     return editor
 
 
 @pytest.fixture
 def editor_authenticated(test_db: TestDatabaseSession, editor_user: User) -> dict:
     """Create authenticated editor user with tokens"""
-    access_token = create_access_token({
-        "sub": editor_user.id,
-        "email": editor_user.email,
-        "role": editor_user.role,
-        "organization_id": editor_user.organization_id,
-        "clearance_level": editor_user.clearance_level,
-    })
-    refresh_token = create_refresh_token({
-        "sub": editor_user.id,
-        "email": editor_user.email,
-        "role": editor_user.role,
-        "organization_id": editor_user.organization_id,
-        "clearance_level": editor_user.clearance_level,
-    })
+    access_token = create_access_token(
+        {
+            "sub": editor_user.id,
+            "email": editor_user.email,
+            "role": editor_user.role,
+            "organization_id": editor_user.organization_id,
+            "clearance_level": editor_user.clearance_level,
+        }
+    )
+    refresh_token = create_refresh_token(
+        {
+            "sub": editor_user.id,
+            "email": editor_user.email,
+            "role": editor_user.role,
+            "organization_id": editor_user.organization_id,
+            "clearance_level": editor_user.clearance_level,
+        }
+    )
     test_db.add_session(editor_user.id, access_token)
 
     return {
@@ -328,30 +363,36 @@ def editor_authenticated(test_db: TestDatabaseSession, editor_user: User) -> dic
 @pytest.fixture
 def content_admin_user(test_db: TestDatabaseSession) -> User:
     """Create a test content admin user"""
-    admin = test_db.create_user({
-        "username": "testcontentadmin",
-        "email": "testcontentadmin@example.com",
-        "password": "contentadminpassword123",
-        "role": "content_admin",
-        "organization_id": "test-org-123",
-        "clearance_level": 5,
-    })
+    admin = test_db.create_user(
+        {
+            "username": "testcontentadmin",
+            "email": "testcontentadmin@example.com",
+            "password": "contentadminpassword123",
+            "role": "content_admin",
+            "organization_id": "test-org-123",
+            "clearance_level": 5,
+        }
+    )
     return admin
 
 
 @pytest.fixture
 def content_admin_authenticated(test_db: TestDatabaseSession, content_admin_user: User) -> dict:
     """Create authenticated content admin user with tokens"""
-    access_token = create_access_token({
-        "sub": content_admin_user.id,
-        "email": content_admin_user.email,
-        "role": content_admin_user.role,
-    })
-    refresh_token = create_refresh_token({
-        "sub": content_admin_user.id,
-        "email": content_admin_user.email,
-        "role": content_admin_user.role,
-    })
+    access_token = create_access_token(
+        {
+            "sub": content_admin_user.id,
+            "email": content_admin_user.email,
+            "role": content_admin_user.role,
+        }
+    )
+    refresh_token = create_refresh_token(
+        {
+            "sub": content_admin_user.id,
+            "email": content_admin_user.email,
+            "role": content_admin_user.role,
+        }
+    )
     test_db.add_session(content_admin_user.id, access_token)
 
     return {
@@ -397,20 +438,20 @@ def create_test_user(test_db: TestDatabaseSession, **kwargs) -> User:
     """Helper to create a test user"""
     email = kwargs.get("email", f"testuser-{generate_uuid()[:8]}@example.com")
     password = kwargs.get("password", "testpassword123")
-    user = test_db.create_user({
-        "username": kwargs.get("username", f"testuser-{generate_uuid()[:8]}"),
-        "email": email,
-        "role": kwargs.get("role", "viewer"),
-        "organization_id": kwargs.get("organization_id", "test-org-123"),
-        "clearance_level": kwargs.get("clearance_level", 1),
-    })
+    user = test_db.create_user(
+        {
+            "username": kwargs.get("username", f"testuser-{generate_uuid()[:8]}"),
+            "email": email,
+            "role": kwargs.get("role", "viewer"),
+            "organization_id": kwargs.get("organization_id", "test-org-123"),
+            "clearance_level": kwargs.get("clearance_level", 1),
+        }
+    )
     test_db._user_passwords[email] = password
     return user
 
 
-def create_test_chapter(
-    test_db: TestDatabaseSession, project_id: str, author_id: str = None, **kwargs
-) -> dict:
+def create_test_chapter(test_db: TestDatabaseSession, project_id: str, author_id: str = None, **kwargs) -> dict:
     """Helper to create a test chapter"""
     chapter_id = generate_uuid()
     chapter = {
@@ -476,10 +517,12 @@ def mock_kafka_producer():
         producer = AsyncMock()
         producer.start = AsyncMock()
         producer.stop = AsyncMock()
-        producer.send_and_wait = AsyncMock(return_value=MagicMock(
-            partition=MagicMock(return_value=0),
-            offset=MagicMock(return_value=1),
-        ))
+        producer.send_and_wait = AsyncMock(
+            return_value=MagicMock(
+                partition=MagicMock(return_value=0),
+                offset=MagicMock(return_value=1),
+            )
+        )
         mock.return_value = producer
         yield producer
 
@@ -499,11 +542,11 @@ def mock_minimax_client():
     with patch("aiohttp.ClientSession") as mock:
         session = AsyncMock()
         mock.return_value = session
-        session.post = AsyncMock(return_value=AsyncMock(
-            json=AsyncMock(return_value={
-                "choices": [{"message": {"content": "Generated content"}}]
-            })
-        ))
+        session.post = AsyncMock(
+            return_value=AsyncMock(
+                json=AsyncMock(return_value={"choices": [{"message": {"content": "Generated content"}}]})
+            )
+        )
         yield session
 
 

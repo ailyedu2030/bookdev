@@ -15,9 +15,7 @@ class TestCitationRegistry:
         registry = CitationRegistry()
 
         citation_id = registry.register_citation(
-            doi="10.1234/example",
-            fact_hash="abc123",
-            position={"page": 10, "line": 5}
+            doi="10.1234/example", fact_hash="abc123", position={"page": 10, "line": 5}
         )
 
         assert citation_id is not None
@@ -29,17 +27,9 @@ class TestCitationRegistry:
 
         registry = CitationRegistry()
 
-        id1 = registry.register_citation(
-            doi="10.1234/example",
-            fact_hash="abc123",
-            position={"page": 10}
-        )
+        id1 = registry.register_citation(doi="10.1234/example", fact_hash="abc123", position={"page": 10})
 
-        id2 = registry.register_citation(
-            doi="10.1234/example",
-            fact_hash="abc123",
-            position={"page": 10}
-        )
+        id2 = registry.register_citation(doi="10.1234/example", fact_hash="abc123", position={"page": 10})
 
         assert id1 == id2
 
@@ -49,11 +39,7 @@ class TestCitationRegistry:
 
         registry = CitationRegistry()
 
-        registered_id = registry.register_citation(
-            doi="10.1234/example",
-            fact_hash="abc123",
-            position={"page": 10}
-        )
+        registered_id = registry.register_citation(doi="10.1234/example", fact_hash="abc123", position={"page": 10})
 
         citation = registry.get_citation(registered_id)
 
@@ -121,14 +107,10 @@ class TestCitationIntegrityManager:
 
         manager = CitationIntegrityManager()
 
-        result = manager.verify_citation_integrity(
-            doi="10.1234/example",
-            fact_hash="abc123",
-            content="测试内容"
-        )
+        result = manager.verify_citation_integrity(doi="10.1234/example", fact_hash="abc123", content="测试内容")
 
         assert result is not None
-        assert hasattr(result, 'is_valid')
+        assert hasattr(result, "is_valid")
 
     def test_verify_citation_with_wrong_hash(self):
         """F14-T008: 验证错误哈希的引用"""
@@ -136,11 +118,7 @@ class TestCitationIntegrityManager:
 
         manager = CitationIntegrityManager()
 
-        result = manager.verify_citation_integrity(
-            doi="10.1234/example",
-            fact_hash="wrong_hash",
-            content="测试内容"
-        )
+        result = manager.verify_citation_integrity(doi="10.1234/example", fact_hash="wrong_hash", content="测试内容")
 
         assert result.is_valid is False
 
@@ -207,11 +185,7 @@ class TestSecurityTests:
 
         manager = CitationIntegrityManager()
 
-        result = manager.verify_citation_integrity(
-            doi="10.FABRICATED/fake",
-            fact_hash="fakehash",
-            content="捏造内容"
-        )
+        result = manager.verify_citation_integrity(doi="10.FABRICATED/fake", fact_hash="fakehash", content="捏造内容")
 
         assert result.is_valid is False
 
@@ -226,17 +200,9 @@ class TestSecurityTests:
         hash_a = hashlib.sha256(content_a.encode()).hexdigest()
         hash_b = hashlib.sha256(content_b.encode()).hexdigest()
 
-        result1 = manager.verify_citation_integrity(
-            doi="10.1234/A",
-            fact_hash=hash_a,
-            content=content_a
-        )
+        result1 = manager.verify_citation_integrity(doi="10.1234/A", fact_hash=hash_a, content=content_a)
 
-        result2 = manager.verify_citation_integrity(
-            doi="10.1234/B",
-            fact_hash=hash_b,
-            content=content_b
-        )
+        result2 = manager.verify_citation_integrity(doi="10.1234/B", fact_hash=hash_b, content=content_b)
 
         assert result1.is_valid is True
         assert result2.is_valid is True
@@ -247,11 +213,7 @@ class TestSecurityTests:
 
         manager = CitationIntegrityManager()
 
-        result = manager.verify_citation_integrity(
-            doi="",
-            fact_hash="hash1",
-            content="内容"
-        )
+        result = manager.verify_citation_integrity(doi="", fact_hash="hash1", content="内容")
 
         assert result.is_valid is False
 
@@ -287,17 +249,13 @@ class TestSecurityTests:
         original_hash = hashlib.sha256(original_content.encode()).hexdigest()
 
         result = manager.verify_citation_integrity(
-            doi="10.1234/tampered",
-            fact_hash=original_hash,
-            content=original_content
+            doi="10.1234/tampered", fact_hash=original_hash, content=original_content
         )
 
         assert result.is_valid is True
 
         tampered_result = manager.verify_citation_integrity(
-            doi="10.1234/tampered",
-            fact_hash=original_hash,
-            content="被篡改的内容"
+            doi="10.1234/tampered", fact_hash=original_hash, content="被篡改的内容"
         )
 
         assert tampered_result.is_valid is False
@@ -317,17 +275,9 @@ class TestIntegrationTests:
         content = "测试内容"
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        registry.register_citation(
-            doi="10.1234/fulltest",
-            fact_hash=content_hash,
-            position={"page": 1}
-        )
+        registry.register_citation(doi="10.1234/fulltest", fact_hash=content_hash, position={"page": 1})
 
-        result = manager.verify_citation_integrity(
-            doi="10.1234/fulltest",
-            fact_hash=content_hash,
-            content=content
-        )
+        result = manager.verify_citation_integrity(doi="10.1234/fulltest", fact_hash=content_hash, content=content)
 
         assert result.is_valid is True
 

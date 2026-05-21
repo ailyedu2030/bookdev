@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI):
 
     try:
         from f01_immutable_log.immutable_log import ImmutableLog
+
         log = ImmutableLog()
         log.append("system_start", {"status": "online"})
         print("  [OK] Immutable Log")
@@ -39,6 +40,7 @@ async def lifespan(app: FastAPI):
 
     try:
         from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard
+
         dashboard = MonitoringDashboard()
         health = dashboard.get_health_status()
         print(f"  [OK] Monitoring Dashboard - Status: {health.status}")
@@ -47,6 +49,7 @@ async def lifespan(app: FastAPI):
 
     try:
         from f31_minimax_client.minimax_client import MiniMaxClient
+
         print("  [OK] MiniMax Client")
     except ImportError:
         print("  [SKIP] MiniMax Client (module not available)")

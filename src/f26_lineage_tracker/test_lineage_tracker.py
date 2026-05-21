@@ -22,21 +22,14 @@ class TestLineageTrackerBasic(unittest.TestCase):
         tracker = DataLineageTracker()
 
         source = DataSource(
-            source_id="src_001",
-            source_type="database",
-            name="原始数据库",
-            metadata={"region": "CN", "year": 2023}
+            source_id="src_001", source_type="database", name="原始数据库", metadata={"region": "CN", "year": 2023}
         )
 
         tracker.track_provenance(
             data_id="data_001",
             source=source,
             transformation="ETL_TRANSFORM",
-            metadata={
-                "transform_type": "aggregation",
-                "author": "system",
-                "timestamp": "2024-01-01T00:00:00Z"
-            }
+            metadata={"transform_type": "aggregation", "author": "system", "timestamp": "2024-01-01T00:00:00Z"},
         )
 
         self.assertTrue(tracker.has_lineage("data_001"))
@@ -50,18 +43,10 @@ class TestLineageTrackerBasic(unittest.TestCase):
         tracker = DataLineageTracker()
 
         source = DataSource(source_id="src_001", source_type="db", name="数据库")
-        tracker.track_provenance(
-            data_id="data_001",
-            source=source,
-            transformation="INGEST",
-            metadata={"version": 1}
-        )
+        tracker.track_provenance(data_id="data_001", source=source, transformation="INGEST", metadata={"version": 1})
 
         tracker.track_provenance(
-            data_id="data_001",
-            source=source,
-            transformation="FILTER",
-            metadata={"version": 2, "condition": "x > 5"}
+            data_id="data_001", source=source, transformation="FILTER", metadata={"version": 2, "condition": "x > 5"}
         )
 
         node = tracker.get_node("data_001")
@@ -76,10 +61,7 @@ class TestLineageTrackerBasic(unittest.TestCase):
         DataSource(source_id="src_002", source_type="file", name="文件数据源")
 
         tracker.track_provenance(
-            data_id="merged_data",
-            source=source1,
-            transformation="MERGE",
-            metadata={"method": "inner_join"}
+            data_id="merged_data", source=source1, transformation="MERGE", metadata={"method": "inner_join"}
         )
 
         node = tracker.get_node("merged_data")
@@ -91,17 +73,10 @@ class TestLineageTrackerBasic(unittest.TestCase):
         """测试记录没有source的节点"""
         tracker = DataLineageTracker()
 
-        source = DataSource(
-            source_id="src_001",
-            source_type="database",
-            name="测试数据源"
-        )
+        source = DataSource(source_id="src_001", source_type="database", name="测试数据源")
 
         tracker.track_provenance(
-            data_id="processed_001",
-            source=source,
-            transformation="FILTER",
-            metadata={"condition": "value > 100"}
+            data_id="processed_001", source=source, transformation="FILTER", metadata={"condition": "value > 100"}
         )
 
         node = tracker.get_node("processed_001")
@@ -119,25 +94,17 @@ class TestLineageChain(unittest.TestCase):
         source1 = DataSource(source_id="src_001", source_type="database", name="数据库A")
         DataSource(source_id="src_002", source_type="database", name="数据库B")
 
-        tracker.track_provenance(
-            data_id="raw_data",
-            source=source1,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="raw_data", source=source1, transformation="INGEST", metadata={})
 
         tracker.track_provenance(
             data_id="cleaned_data",
             source=source1,
             transformation="CLEAN",
-            metadata={"rules": ["remove_nulls", "dedup"]}
+            metadata={"rules": ["remove_nulls", "dedup"]},
         )
 
         tracker.track_provenance(
-            data_id="aggregated_data",
-            source=source1,
-            transformation="AGGREGATE",
-            metadata={"group_by": "category"}
+            data_id="aggregated_data", source=source1, transformation="AGGREGATE", metadata={"group_by": "category"}
         )
 
         chain = tracker.get_lineage_chain("aggregated_data")
@@ -157,20 +124,12 @@ class TestLineageChain(unittest.TestCase):
         source = DataSource(source_id="src_001", source_type="database", name="原始数据")
 
         current_id = "level_0"
-        tracker.track_provenance(
-            data_id=current_id,
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id=current_id, source=source, transformation="INGEST", metadata={})
 
         for i in range(1, 6):
             next_id = f"level_{i}"
             tracker.track_provenance(
-                data_id=next_id,
-                source=source,
-                transformation=f"TRANSFORM_{i}",
-                metadata={"level": i}
+                data_id=next_id, source=source, transformation=f"TRANSFORM_{i}", metadata={"level": i}
             )
 
         chain = tracker.get_lineage_chain("level_5")
@@ -187,26 +146,11 @@ class TestImpactAnalysis(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="核心数据源")
 
-        tracker.track_provenance(
-            data_id="source_data",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="source_data", source=source, transformation="INGEST", metadata={})
 
-        tracker.track_provenance(
-            data_id="derived_1",
-            source=source,
-            transformation="TRANSFORM_1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="derived_1", source=source, transformation="TRANSFORM_1", metadata={})
 
-        tracker.track_provenance(
-            data_id="derived_2",
-            source=source,
-            transformation="TRANSFORM_2",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="derived_2", source=source, transformation="TRANSFORM_2", metadata={})
 
         report = analyzer.compute_impact_analysis("source_data")
 
@@ -222,12 +166,7 @@ class TestImpactAnalysis(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="独立数据源")
 
-        tracker.track_provenance(
-            data_id="isolated_data",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="isolated_data", source=source, transformation="INGEST", metadata={})
 
         report = analyzer.compute_impact_analysis("isolated_data")
 
@@ -242,33 +181,13 @@ class TestImpactAnalysis(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="源头")
 
-        tracker.track_provenance(
-            data_id="level_0",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="level_0", source=source, transformation="INGEST", metadata={})
 
-        tracker.track_provenance(
-            data_id="level_1a",
-            source=source,
-            transformation="T1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="level_1a", source=source, transformation="T1", metadata={})
 
-        tracker.track_provenance(
-            data_id="level_1b",
-            source=source,
-            transformation="T1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="level_1b", source=source, transformation="T1", metadata={})
 
-        tracker.track_provenance(
-            data_id="level_2",
-            source=source,
-            transformation="T2",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="level_2", source=source, transformation="T2", metadata={})
 
         report = analyzer.compute_impact_analysis("level_0")
 
@@ -285,20 +204,12 @@ class TestPropagationDepth(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="data_root",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="data_root", source=source, transformation="INGEST", metadata={})
 
         for i in range(1, 10):
             next_id = f"data_level_{i}"
             tracker.track_provenance(
-                data_id=next_id,
-                source=source,
-                transformation=f"TRANSFORM_{i}",
-                metadata={"depth": i}
+                data_id=next_id, source=source, transformation=f"TRANSFORM_{i}", metadata={"depth": i}
             )
 
         result = verifier.verify_propagation_depth("data_root", max_depth=5)
@@ -314,20 +225,10 @@ class TestPropagationDepth(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="root",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="root", source=source, transformation="INGEST", metadata={})
 
         for i in range(1, 4):
-            tracker.track_provenance(
-                data_id=f"node_{i}",
-                source=source,
-                transformation=f"T{i}",
-                metadata={}
-            )
+            tracker.track_provenance(data_id=f"node_{i}", source=source, transformation=f"T{i}", metadata={})
 
         result = verifier.verify_propagation_depth("root", max_depth=3)
         self.assertTrue(result)
@@ -338,12 +239,7 @@ class TestPropagationDepth(unittest.TestCase):
         verifier = PropagationVerifier(tracker)
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
-        tracker.track_provenance(
-            data_id="single_node",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="single_node", source=source, transformation="INGEST", metadata={})
 
         result = verifier.verify_propagation_depth("single_node", max_depth=5)
         self.assertTrue(result)
@@ -358,26 +254,11 @@ class TestCircularDetection(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="node_a",
-            source=source,
-            transformation="T1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="node_a", source=source, transformation="T1", metadata={})
 
-        tracker.track_provenance(
-            data_id="node_b",
-            source=source,
-            transformation="T2",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="node_b", source=source, transformation="T2", metadata={})
 
-        tracker.track_provenance(
-            data_id="node_c",
-            source=source,
-            transformation="T3",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="node_c", source=source, transformation="T3", metadata={})
 
         has_cycle = tracker.detect_circular_lineage()
         self.assertFalse(has_cycle)
@@ -388,12 +269,7 @@ class TestCircularDetection(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="self_ref",
-            source=source,
-            transformation="SELF",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="self_ref", source=source, transformation="SELF", metadata={})
 
         has_cycle = tracker.detect_circular_lineage()
         self.assertFalse(has_cycle)
@@ -404,19 +280,9 @@ class TestCircularDetection(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="node_1",
-            source=source,
-            transformation="T1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="node_1", source=source, transformation="T1", metadata={})
 
-        tracker.track_provenance(
-            data_id="node_2",
-            source=source,
-            transformation="T2",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="node_2", source=source, transformation="T2", metadata={})
 
         self.assertEqual(tracker.get_node_count(), 2)
         self.assertTrue(tracker.has_lineage("node_1"))
@@ -439,17 +305,11 @@ class TestEdgeCases(unittest.TestCase):
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
         tracker.track_provenance(
-            data_id="data_v1",
-            source=source,
-            transformation="V1_TRANSFORM",
-            metadata={"version": 1}
+            data_id="data_v1", source=source, transformation="V1_TRANSFORM", metadata={"version": 1}
         )
 
         tracker.track_provenance(
-            data_id="data_v2",
-            source=source,
-            transformation="V2_TRANSFORM",
-            metadata={"version": 2}
+            data_id="data_v2", source=source, transformation="V2_TRANSFORM", metadata={"version": 2}
         )
 
         self.assertEqual(tracker.get_node_count(), 2)
@@ -463,15 +323,10 @@ class TestEdgeCases(unittest.TestCase):
             "author": "test_user",
             "timestamp": "2024-01-01T00:00:00Z",
             "version": "1.0",
-            "custom_field": "custom_value"
+            "custom_field": "custom_value",
         }
 
-        tracker.track_provenance(
-            data_id="data_with_meta",
-            source=source,
-            transformation="TEST",
-            metadata=metadata
-        )
+        tracker.track_provenance(data_id="data_with_meta", source=source, transformation="TEST", metadata=metadata)
 
         node = tracker.get_node("data_with_meta")
         self.assertIsNotNone(node)
@@ -489,19 +344,9 @@ class TestImpactAnalyzerExtended(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="level_0",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="level_0", source=source, transformation="INGEST", metadata={})
 
-        tracker.track_provenance(
-            data_id="level_1",
-            source=source,
-            transformation="T1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="level_1", source=source, transformation="T1", metadata={})
 
         report = analyzer.compute_upstream_impact("level_1")
 
@@ -515,26 +360,11 @@ class TestImpactAnalyzerExtended(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="root",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="root", source=source, transformation="INGEST", metadata={})
 
-        tracker.track_provenance(
-            data_id="child_a",
-            source=source,
-            transformation="A",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="child_a", source=source, transformation="A", metadata={})
 
-        tracker.track_provenance(
-            data_id="child_b",
-            source=source,
-            transformation="B",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="child_b", source=source, transformation="B", metadata={})
 
         report = analyzer.compute_impact_analysis("root")
 
@@ -576,20 +406,10 @@ class TestPropagationVerifierExtended(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="root",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="root", source=source, transformation="INGEST", metadata={})
 
         for i in range(1, 8):
-            tracker.track_provenance(
-                data_id=f"level_{i}",
-                source=source,
-                transformation=f"T{i}",
-                metadata={}
-            )
+            tracker.track_provenance(data_id=f"level_{i}", source=source, transformation=f"T{i}", metadata={})
 
         result = verifier.verify_depth_limit_exceeded("root", max_depth=5)
         self.assertEqual(result, 7)
@@ -604,12 +424,7 @@ class TestPropagationVerifierExtended(unittest.TestCase):
 
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="data_1",
-            source=source,
-            transformation="T1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="data_1", source=source, transformation="T1", metadata={})
 
         verifier.verify_propagation_depth("data_1", max_depth=5)
         self.assertGreater(len(verifier._cache), 0)
@@ -634,39 +449,19 @@ class TestLineageNodeTypes(unittest.TestCase):
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="filter_node",
-            source=source,
-            transformation="FILTER_CONDITION",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="filter_node", source=source, transformation="FILTER_CONDITION", metadata={})
         node = tracker.get_node("filter_node")
         self.assertEqual(node.node_type.value, "filter")
 
-        tracker.track_provenance(
-            data_id="agg_node",
-            source=source,
-            transformation="AGGREGATE_SUM",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="agg_node", source=source, transformation="AGGREGATE_SUM", metadata={})
         node = tracker.get_node("agg_node")
         self.assertEqual(node.node_type.value, "aggregate")
 
-        tracker.track_provenance(
-            data_id="join_node",
-            source=source,
-            transformation="JOIN_TABLES",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="join_node", source=source, transformation="JOIN_TABLES", metadata={})
         node = tracker.get_node("join_node")
         self.assertEqual(node.node_type.value, "join")
 
-        tracker.track_provenance(
-            data_id="output_node",
-            source=source,
-            transformation="EXPORT_CSV",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="output_node", source=source, transformation="EXPORT_CSV", metadata={})
         node = tracker.get_node("output_node")
         self.assertEqual(node.node_type.value, "output")
 
@@ -679,19 +474,9 @@ class TestGetChildrenParents(unittest.TestCase):
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="parent",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="parent", source=source, transformation="INGEST", metadata={})
 
-        tracker.track_provenance(
-            data_id="child1",
-            source=source,
-            transformation="T1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="child1", source=source, transformation="T1", metadata={})
 
         children = tracker.get_children("parent")
         self.assertGreaterEqual(len(children), 1)
@@ -704,12 +489,7 @@ class TestGetChildrenParents(unittest.TestCase):
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="child",
-            source=source,
-            transformation="TRANSFORM",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="child", source=source, transformation="TRANSFORM", metadata={})
 
         parents = tracker.get_parents("child")
         self.assertGreaterEqual(len(parents), 0)
@@ -724,12 +504,7 @@ class TestGetAllNodes(unittest.TestCase):
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
         for i in range(5):
-            tracker.track_provenance(
-                data_id=f"data_{i}",
-                source=source,
-                transformation=f"T{i}",
-                metadata={}
-            )
+            tracker.track_provenance(data_id=f"data_{i}", source=source, transformation=f"T{i}", metadata={})
 
         all_nodes = tracker.get_all_nodes()
         self.assertEqual(len(all_nodes), 5)
@@ -743,26 +518,11 @@ class TestCircularLineageDetection(unittest.TestCase):
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="a",
-            source=source,
-            transformation="T1",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="a", source=source, transformation="T1", metadata={})
 
-        tracker.track_provenance(
-            data_id="b",
-            source=source,
-            transformation="T2",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="b", source=source, transformation="T2", metadata={})
 
-        tracker.track_provenance(
-            data_id="c",
-            source=source,
-            transformation="T3",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="c", source=source, transformation="T3", metadata={})
 
         self.assertFalse(tracker.detect_circular_lineage())
 
@@ -776,18 +536,12 @@ class TestPropagationVerifierFullCoverage(unittest.TestCase):
         self.source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
         self.tracker.track_provenance(
-            data_id="root",
-            source=self.source,
-            transformation="INGEST",
-            metadata={"depth": 0}
+            data_id="root", source=self.source, transformation="INGEST", metadata={"depth": 0}
         )
 
         for i in range(1, 8):
             self.tracker.track_provenance(
-                data_id=f"depth_{i}",
-                source=self.source,
-                transformation=f"T{i}",
-                metadata={"depth": i}
+                data_id=f"depth_{i}", source=self.source, transformation=f"T{i}", metadata={"depth": i}
             )
 
         self.verifier = PropagationVerifier(self.tracker)
@@ -807,12 +561,7 @@ class TestPropagationVerifierFullCoverage(unittest.TestCase):
         """F26-CG003: 获取实际深度-孤立节点(有节点但无graph)"""
         isolated_tracker = DataLineageTracker()
         s = DataSource(source_id="src_iso", source_type="api", name="独立源")
-        isolated_tracker.track_provenance(
-            data_id="isolated",
-            source=s,
-            transformation="INGEST",
-            metadata={}
-        )
+        isolated_tracker.track_provenance(data_id="isolated", source=s, transformation="INGEST", metadata={})
         v = PropagationVerifier(isolated_tracker)
         depth = v.get_actual_depth("isolated")
         self.assertEqual(depth, 0)
@@ -826,12 +575,7 @@ class TestPropagationVerifierFullCoverage(unittest.TestCase):
         """F26-CG005: 深度超限验证-节点在index但不在graph返回0"""
         isolated_tracker = DataLineageTracker()
         s = DataSource(source_id="src_iso", source_type="api", name="独立源")
-        isolated_tracker.track_provenance(
-            data_id="isolated",
-            source=s,
-            transformation="INGEST",
-            metadata={}
-        )
+        isolated_tracker.track_provenance(data_id="isolated", source=s, transformation="INGEST", metadata={})
         v = PropagationVerifier(isolated_tracker)
         result = v.verify_depth_limit_exceeded("isolated", max_depth=5)
         self.assertEqual(result, 0)
@@ -858,12 +602,7 @@ class TestPropagationVerifierFullCoverage(unittest.TestCase):
         """F26-CG009: 传播深度验证-节点在index但不在graph"""
         isolated_tracker = DataLineageTracker()
         s = DataSource(source_id="src_x", source_type="api", name="独立源")
-        isolated_tracker.track_provenance(
-            data_id="isolated_x",
-            source=s,
-            transformation="INGEST",
-            metadata={}
-        )
+        isolated_tracker.track_provenance(data_id="isolated_x", source=s, transformation="INGEST", metadata={})
         v = PropagationVerifier(isolated_tracker)
         result = v.verify_propagation_depth("isolated_x", max_depth=5)
         self.assertTrue(result)
@@ -926,19 +665,9 @@ class TestLineageTrackerUncoveredBranches(unittest.TestCase):
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="src_001",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="src_001", source=source, transformation="INGEST", metadata={})
 
-        tracker.track_provenance(
-            data_id="derived_1",
-            source=source,
-            transformation="TRANSFORM",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="derived_1", source=source, transformation="TRANSFORM", metadata={})
 
         node = tracker.get_node("derived_1")
         self.assertIsNotNone(node)
@@ -949,12 +678,7 @@ class TestLineageTrackerUncoveredBranches(unittest.TestCase):
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="isolated",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="isolated", source=source, transformation="INGEST", metadata={})
 
         chain = tracker.get_lineage_chain("isolated")
         assert len(chain) == 1
@@ -964,12 +688,7 @@ class TestLineageTrackerUncoveredBranches(unittest.TestCase):
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="data_1",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="data_1", source=source, transformation="INGEST", metadata={})
 
         chain = tracker.get_lineage_chain("data_1")
         assert isinstance(chain, list)
@@ -979,12 +698,7 @@ class TestLineageTrackerUncoveredBranches(unittest.TestCase):
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="database", name="数据源")
 
-        tracker.track_provenance(
-            data_id="data_1",
-            source=source,
-            transformation="INGEST",
-            metadata={}
-        )
+        tracker.track_provenance(data_id="data_1", source=source, transformation="INGEST", metadata={})
 
         has_cycle = tracker.detect_circular_lineage()
         assert isinstance(has_cycle, bool)
@@ -1056,22 +770,13 @@ class TestLineageNodeHashEquals(unittest.TestCase):
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})
         tracker.track_provenance("data_002", source=source, transformation="FILTER", metadata={})
         edge1 = LineageEdge(
-            edge_id="edge_001",
-            source_node_id="node_data_001",
-            target_node_id="node_data_002",
-            edge_type="transform"
+            edge_id="edge_001", source_node_id="node_data_001", target_node_id="node_data_002", edge_type="transform"
         )
         edge2 = LineageEdge(
-            edge_id="edge_001",
-            source_node_id="node_data_003",
-            target_node_id="node_data_004",
-            edge_type="other"
+            edge_id="edge_001", source_node_id="node_data_003", target_node_id="node_data_004", edge_type="other"
         )
         edge3 = LineageEdge(
-            edge_id="edge_002",
-            source_node_id="node_data_001",
-            target_node_id="node_data_002",
-            edge_type="transform"
+            edge_id="edge_002", source_node_id="node_data_001", target_node_id="node_data_002", edge_type="transform"
         )
         assert hash(edge1) == hash(edge2)
         assert hash(edge1) != hash(edge3)
@@ -1134,15 +839,17 @@ class TestGoldenSampleMethods(unittest.TestCase):
         """测试GoldenSample.get方法"""
         import os
         import sys
+
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import GoldenSample
+
         sample = GoldenSample(
             sample_id="test_001",
             quality_level="high",
             expected_score=9.5,
             content={"text": "Hello world"},
             quality_metrics={"accuracy": 0.95},
-            metadata={"author": "test"}
+            metadata={"author": "test"},
         )
         assert sample.get("sample_id") == "test_001"
         assert sample.get("nonexistent", "default") == "default"
@@ -1152,15 +859,17 @@ class TestGoldenSampleMethods(unittest.TestCase):
         """测试GoldenSample.__getitem__方法"""
         import os
         import sys
+
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import GoldenSample
+
         sample = GoldenSample(
             sample_id="test_001",
             quality_level="high",
             expected_score=9.5,
             content={"text": "Hello world"},
             quality_metrics={"accuracy": 0.95},
-            metadata={"author": "test"}
+            metadata={"author": "test"},
         )
         assert sample["sample_id"] == "test_001"
         assert sample["quality_level"] == "high"
@@ -1174,6 +883,7 @@ class TestDatasetBuilderSave(unittest.TestCase):
         import os
         import sys
         import tempfile
+
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import DatasetBuilder, GoldenSample
 
@@ -1185,7 +895,7 @@ class TestDatasetBuilderSave(unittest.TestCase):
                 expected_score=9.0,
                 content={"text": "Test content"},
                 quality_metrics={"accuracy": 0.9},
-                metadata={"author": "test"}
+                metadata={"author": "test"},
             )
             filepath = os.path.join(tmpdir, "test_sample.json")
             result = builder.save_sample(sample, filepath)
@@ -1197,6 +907,7 @@ class TestDatasetBuilderSave(unittest.TestCase):
         import os
         import sys
         import tempfile
+
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import DatasetBuilder, GoldenSample
 
@@ -1208,7 +919,7 @@ class TestDatasetBuilderSave(unittest.TestCase):
                 expected_score=7.5,
                 content={"text": "Test content"},
                 quality_metrics={"accuracy": 0.75},
-                metadata={"author": "test"}
+                metadata={"author": "test"},
             )
             result = builder.save_sample(sample)
             assert result is True
@@ -1219,8 +930,10 @@ class TestDatasetBuilderSave(unittest.TestCase):
         """测试save_sample无法确定路径时返回False"""
         import os
         import sys
+
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import DatasetBuilder, GoldenSample
+
         builder = DatasetBuilder()
         sample = GoldenSample(
             sample_id="TestNoPath",
@@ -1228,7 +941,7 @@ class TestDatasetBuilderSave(unittest.TestCase):
             expected_score=5.0,
             content={"text": "Test"},
             quality_metrics={},
-            metadata={}
+            metadata={},
         )
         result = builder.save_sample(sample)
         assert result is False
@@ -1288,6 +1001,7 @@ class TestPropagationVerifierExceptionCoverage(unittest.TestCase):
     def test_verify_propagation_depth_descendants_exception(self):
         """propagation_verifier.py:71-73 - nx.descendants抛出异常"""
         from unittest.mock import patch
+
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})
@@ -1301,6 +1015,7 @@ class TestPropagationVerifierExceptionCoverage(unittest.TestCase):
     def test_get_actual_depth_descendants_exception(self):
         """propagation_verifier.py:97-98 - nx.descendants抛出异常"""
         from unittest.mock import patch
+
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})
@@ -1313,6 +1028,7 @@ class TestPropagationVerifierExceptionCoverage(unittest.TestCase):
     def test_verify_depth_limit_exceeded_descendants_exception(self):
         """propagation_verifier.py:133-134 - nx.descendants抛出异常"""
         from unittest.mock import patch
+
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})
@@ -1331,6 +1047,7 @@ class TestImpactAnalyzerExceptionCoverage(unittest.TestCase):
         from unittest.mock import patch
 
         import networkx as nx
+
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})
@@ -1346,6 +1063,7 @@ class TestImpactAnalyzerExceptionCoverage(unittest.TestCase):
         from unittest.mock import patch
 
         import networkx as nx
+
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})
@@ -1365,6 +1083,7 @@ class TestLineageTrackerExceptionCoverage(unittest.TestCase):
         from unittest.mock import patch
 
         import networkx as nx
+
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})
@@ -1379,6 +1098,7 @@ class TestLineageTrackerExceptionCoverage(unittest.TestCase):
         from unittest.mock import patch
 
         import networkx as nx
+
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})

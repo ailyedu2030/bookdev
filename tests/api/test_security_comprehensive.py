@@ -15,10 +15,13 @@ class TestContentScanMockMode:
         """Test scan_content when module import fails (mock mode)"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f23_content_security': None,
-            'f23_content_security.content_filter': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f23_content_security": None,
+                "f23_content_security.content_filter": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/scan",
                 json={"content": "Test content"},
@@ -40,10 +43,13 @@ class TestContentScanMockMode:
         """Test scan_content empty content in mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f23_content_security': None,
-            'f23_content_security.content_filter': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f23_content_security": None,
+                "f23_content_security.content_filter": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/scan",
                 json={"content": ""},
@@ -59,10 +65,13 @@ class TestContentScanMockMode:
         """Test scan_content with categories in mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f23_content_security': None,
-            'f23_content_security.content_filter': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f23_content_security": None,
+                "f23_content_security.content_filter": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/scan",
                 json={
@@ -87,10 +96,13 @@ class TestDOIVerifyMockMode:
         """Test DOI verification when module import fails"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f07_doi_verification': None,
-            'f07_doi_verification.doi_verifier': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f07_doi_verification": None,
+                "f07_doi_verification.doi_verifier": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/doi/verify",
                 json={"doi": "10.1234/test"},
@@ -112,10 +124,13 @@ class TestDOIVerifyMockMode:
         """Test DOI verification with various DOIs in mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f07_doi_verification': None,
-            'f07_doi_verification.doi_verifier': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f07_doi_verification": None,
+                "f07_doi_verification.doi_verifier": None,
+            },
+        ):
             for doi in ["10.1000/xyz", "10.1038/nature", "10.1126/science"]:
                 response = test_client.post(
                     "/api/security/doi/verify",
@@ -136,10 +151,13 @@ class TestRegulationVerifyMockMode:
         """Test regulation verification when module import fails"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f08_regulation_verification': None,
-            'f08_regulation_verification.regulation_verifier': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f08_regulation_verification": None,
+                "f08_regulation_verification.regulation_verifier": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/regulation/verify",
                 json={"content": "Test content", "law_type": "copyright"},
@@ -159,10 +177,13 @@ class TestRegulationVerifyMockMode:
         """Test regulation verification with empty content"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f08_regulation_verification': None,
-            'f08_regulation_verification.regulation_verifier': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f08_regulation_verification": None,
+                "f08_regulation_verification.regulation_verifier": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/regulation/verify",
                 json={"content": ""},
@@ -178,10 +199,13 @@ class TestRegulationVerifyMockMode:
         """Test regulation verification without law_type"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f08_regulation_verification': None,
-            'f08_regulation_verification.regulation_verifier': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f08_regulation_verification": None,
+                "f08_regulation_verification.regulation_verifier": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/regulation/verify",
                 json={"content": "Test content"},
@@ -201,10 +225,13 @@ class TestSemanticScanMockMode:
         """Test semantic scan when module import fails"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f13_global_semantic_scanner': None,
-            'f13_global_semantic_scanner.semantic_scanner': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f13_global_semantic_scanner": None,
+                "f13_global_semantic_scanner.semantic_scanner": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/semantic/scan",
                 json={"content": "Test content", "threshold": 0.8},
@@ -224,10 +251,13 @@ class TestSemanticScanMockMode:
         """Test semantic scan without threshold parameter"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f13_global_semantic_scanner': None,
-            'f13_global_semantic_scanner.semantic_scanner': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f13_global_semantic_scanner": None,
+                "f13_global_semantic_scanner.semantic_scanner": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/semantic/scan",
                 json={"content": "Content without threshold"},
@@ -247,10 +277,13 @@ class TestMaterialRegisterMockMode:
         """Test material registration when module import fails"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f09_material_security': None,
-            'f09_material_security.source_registry': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f09_material_security": None,
+                "f09_material_security.source_registry": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/material/register",
                 params={
@@ -272,10 +305,13 @@ class TestMaterialRegisterMockMode:
         """Test material registration with only content_hash"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f09_material_security': None,
-            'f09_material_security.source_registry': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f09_material_security": None,
+                "f09_material_security.source_registry": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/material/register",
                 params={"content_hash": "min_hash"},
@@ -295,10 +331,13 @@ class TestMaterialVerifyMockMode:
         """Test material verification when module import fails"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f09_material_security': None,
-            'f09_material_security.source_registry': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f09_material_security": None,
+                "f09_material_security.source_registry": None,
+            },
+        ):
             response = test_client.get(
                 "/api/security/material/verify/nonexistent_hash",
                 headers={"Authorization": f"Bearer {token}"},
@@ -318,10 +357,13 @@ class TestConceptVerifyMockMode:
         """Test concept verification when module import fails"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f10_concept_security': None,
-            'f10_concept_security.integrity_verifier': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f10_concept_security": None,
+                "f10_concept_security.integrity_verifier": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/concept/verify",
                 json={
@@ -344,10 +386,13 @@ class TestConceptVerifyMockMode:
         """Test multiple concept verifications in mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f10_concept_security': None,
-            'f10_concept_security.integrity_verifier': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f10_concept_security": None,
+                "f10_concept_security.integrity_verifier": None,
+            },
+        ):
             concepts = [
                 ("concept-1", "Definition one"),
                 ("concept-2", "Definition two"),
@@ -371,10 +416,13 @@ class TestBatchScanMockMode:
         """Test batch scan when module import fails"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f23_content_security': None,
-            'f23_content_security.content_filter': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f23_content_security": None,
+                "f23_content_security.content_filter": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/batch/scan",
                 json={"contents": ["Content 1", "Content 2", "Content 3"]},
@@ -395,10 +443,13 @@ class TestBatchScanMockMode:
         """Test batch scan with empty list"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f23_content_security': None,
-            'f23_content_security.content_filter': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f23_content_security": None,
+                "f23_content_security.content_filter": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/batch/scan",
                 json={"contents": []},
@@ -418,10 +469,13 @@ class TestBatchScanMockMode:
         """Test batch scan with content exceeding 100 chars"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f23_content_security': None,
-            'f23_content_security.content_filter': None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f23_content_security": None,
+                "f23_content_security.content_filter": None,
+            },
+        ):
             response = test_client.post(
                 "/api/security/batch/scan",
                 json={"contents": ["A" * 150]},

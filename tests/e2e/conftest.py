@@ -12,10 +12,7 @@ from playwright.sync_api import Error as PlaywrightError
 def browser():
     """Launch browser for the entire test session."""
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage"]
-        )
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
         yield browser
         browser.close()
 
@@ -26,9 +23,7 @@ def context(browser: Browser):
     ctx = browser.new_context(
         viewport={"width": 1920, "height": 1080},
         locale="zh-CN",
-        extra_http_headers={
-            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8"
-        }
+        extra_http_headers={"Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8"},
     )
     yield ctx
     ctx.close()

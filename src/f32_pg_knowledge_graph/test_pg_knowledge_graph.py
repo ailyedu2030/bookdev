@@ -64,6 +64,7 @@ def mock_adapter():
 
 # ── 节点 CRUD 测试 ──────────────────────────────────────
 
+
 class TestNodeCRUD:
     """F32-T001 ~ F32-T005: 节点 CRUD 操作"""
 
@@ -158,6 +159,7 @@ class TestNodeCRUD:
 
 # ── 边 CRUD 测试 ────────────────────────────────────────
 
+
 class TestEdgeCRUD:
     """F32-T006 ~ F32-T009: 边 CRUD 操作"""
 
@@ -182,7 +184,8 @@ class TestEdgeCRUD:
         pg_kg.create_chapter("ch-002", "第二章", 2)
 
         edge = pg_kg.add_edge(
-            "ch-001", "ch-002",
+            "ch-001",
+            "ch-002",
             "FOLLOWS",
             logical_type=LogicalType.SEQUENTIAL,
         )
@@ -204,8 +207,7 @@ class TestEdgeCRUD:
         pg_kg.add_edge("ch-001", "sec-002", "CONTAINS")
         pg_kg.add_edge("sec-001", "sec-002", "FOLLOWS", logical_type=LogicalType.SEQUENTIAL)
         pg_kg.add_edge("sec-001", "c-001", "DEFINES", definition_text="定义了AI")
-        pg_kg.add_edge("sec-002", "sec-001", "REFERENCES",
-                       reference_type=ReferenceType.APPLICATION)
+        pg_kg.add_edge("sec-002", "sec-001", "REFERENCES", reference_type=ReferenceType.APPLICATION)
 
         all_edges = pg_kg.get_edges()
         assert len(all_edges) == 5
@@ -231,6 +233,7 @@ class TestEdgeCRUD:
 
 
 # ── 图遍历测试 ──────────────────────────────────────────
+
 
 class TestGraphTraversal:
     """F32-T010 ~ F32-T012: 图遍历"""
@@ -300,6 +303,7 @@ class TestGraphTraversal:
 
 # ── 上下文查询测试 ──────────────────────────────────────
 
+
 class TestContextQueries:
     """F32-T013 ~ F32-T014: 上下文查询"""
 
@@ -339,6 +343,7 @@ class TestContextQueries:
 
 
 # ── 事务测试 ────────────────────────────────────────────
+
 
 class TestTransactions:
     """F32-T015: 事务回滚"""
@@ -382,6 +387,7 @@ class TestTransactions:
 
 # ── 批量操作测试 ────────────────────────────────────────
 
+
 class TestBatchOperations:
     """F32-T016: 批量操作"""
 
@@ -409,6 +415,7 @@ class TestBatchOperations:
 
 
 # ── 连接池测试 ──────────────────────────────────────────
+
 
 class TestConnectionPool:
     """F32-T017: 连接池管理"""
@@ -476,6 +483,7 @@ class TestConnectionPool:
 
 # ── 持久化测试 ──────────────────────────────────────────
 
+
 class TestPersistence:
     """F32-T018 ~ F32-T019: 数据持久化"""
 
@@ -496,10 +504,24 @@ class TestPersistence:
         """F32-T019: 从字典导入图谱"""
         data = {
             "nodes": [
-                {"id": "ch-001", "type": "Chapter", "title": "第一章", "order": 1,
-                 "status": "draft", "word_count": 0, "version": "1.0"},
-                {"id": "sec-001", "type": "Section", "title": "第一节", "order": 0,
-                 "status": "draft", "word_count": 0, "parent_chapter_id": "ch-001"},
+                {
+                    "id": "ch-001",
+                    "type": "Chapter",
+                    "title": "第一章",
+                    "order": 1,
+                    "status": "draft",
+                    "word_count": 0,
+                    "version": "1.0",
+                },
+                {
+                    "id": "sec-001",
+                    "type": "Section",
+                    "title": "第一节",
+                    "order": 0,
+                    "status": "draft",
+                    "word_count": 0,
+                    "parent_chapter_id": "ch-001",
+                },
             ],
             "edges": [
                 {"edge_type": "CONTAINS", "source": "ch-001", "target": "sec-001", "properties": {}},
@@ -535,6 +557,7 @@ class TestPersistence:
 
 
 # ── Mock 适配器测试 ─────────────────────────────────────
+
 
 class TestMockAdapter:
     """F32-T020 ~ F32-T021: Mock 适配器独立测试"""
@@ -617,10 +640,8 @@ class TestMockAdapter:
         pg_kg.create_section("sec-002", "应用节", parent_chapter_id="ch-001")
         pg_kg.create_section("sec-003", "对比节", parent_chapter_id="ch-001")
 
-        pg_kg.add_edge("sec-002", "sec-001", "REFERENCES",
-                       reference_type=ReferenceType.APPLICATION)
-        pg_kg.add_edge("sec-003", "sec-001", "REFERENCES",
-                       reference_type=ReferenceType.COMPARISON)
+        pg_kg.add_edge("sec-002", "sec-001", "REFERENCES", reference_type=ReferenceType.APPLICATION)
+        pg_kg.add_edge("sec-003", "sec-001", "REFERENCES", reference_type=ReferenceType.COMPARISON)
 
         referencing = pg_kg.get_referencing_sections("sec-001")
         assert len(referencing) == 2
@@ -629,6 +650,7 @@ class TestMockAdapter:
 
 
 # ── 图迁移工具测试 ──────────────────────────────────────
+
 
 class TestGraphMigrations:
     """F32-T022: 图迁移工具"""
@@ -651,6 +673,7 @@ class TestGraphMigrations:
 
 
 # ── 错误场景测试 ──────────────────────────────────────
+
 
 class TestMockAdapterErrorCases:
     """F32-T023: MockPGAdapter 错误场景测试"""

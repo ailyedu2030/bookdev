@@ -24,10 +24,12 @@ import pytest
 # Fixtures
 # ============================================================
 
+
 @pytest.fixture
 def mock_bus():
     """创建Mock事件总线"""
     from f00_kafka_eventbus.mock_bus import MockEventBus
+
     bus = MockEventBus()
     yield bus
     bus.shutdown()
@@ -43,6 +45,7 @@ def collected_events():
 # ============================================================
 # T001-T003: 事件定义
 # ============================================================
+
 
 class TestEventDefinitions:
     """事件类型定义测试"""
@@ -157,6 +160,7 @@ class TestEventDefinitions:
 # T004-T007: Mock总线 发布/订阅
 # ============================================================
 
+
 class TestMockBusPublishSubscribe:
     """Mock总线基础发布/订阅测试"""
 
@@ -260,21 +264,27 @@ class TestMockBusPublishSubscribe:
         # 订阅所有chapter.*事件
         mock_bus.subscribe("chapter.*", received.append)
 
-        mock_bus.publish(Event(
-            event_type="chapter.created",
-            timestamp=datetime.utcnow(),
-            payload={},
-        ))
-        mock_bus.publish(Event(
-            event_type="chapter.reviewed",
-            timestamp=datetime.utcnow(),
-            payload={},
-        ))
-        mock_bus.publish(Event(
-            event_type="security.violation",
-            timestamp=datetime.utcnow(),
-            payload={},
-        ))
+        mock_bus.publish(
+            Event(
+                event_type="chapter.created",
+                timestamp=datetime.utcnow(),
+                payload={},
+            )
+        )
+        mock_bus.publish(
+            Event(
+                event_type="chapter.reviewed",
+                timestamp=datetime.utcnow(),
+                payload={},
+            )
+        )
+        mock_bus.publish(
+            Event(
+                event_type="security.violation",
+                timestamp=datetime.utcnow(),
+                payload={},
+            )
+        )
 
         time.sleep(0.1)
 
@@ -308,6 +318,7 @@ class TestMockBusPublishSubscribe:
 # T006-T008: 事件顺序与并发
 # ============================================================
 
+
 class TestEventOrdering:
     """事件顺序保证测试"""
 
@@ -321,11 +332,13 @@ class TestEventOrdering:
 
         ids = ["a", "b", "c", "d", "e"]
         for i, eid in enumerate(ids):
-            mock_bus.publish(Event(
-                event_type="chapter.created",
-                timestamp=datetime.utcnow(),
-                payload={"order": i, "id": eid},
-            ))
+            mock_bus.publish(
+                Event(
+                    event_type="chapter.created",
+                    timestamp=datetime.utcnow(),
+                    payload={"order": i, "id": eid},
+                )
+            )
 
         time.sleep(0.3)
 
@@ -348,11 +361,13 @@ class TestEventOrdering:
 
         def publish_batch(count):
             for i in range(count):
-                mock_bus.publish(Event(
-                    event_type="chapter.created",
-                    timestamp=datetime.utcnow(),
-                    payload={"batch": count, "index": i},
-                ))
+                mock_bus.publish(
+                    Event(
+                        event_type="chapter.created",
+                        timestamp=datetime.utcnow(),
+                        payload={"batch": count, "index": i},
+                    )
+                )
 
         threads = []
         total = 50
@@ -373,6 +388,7 @@ class TestEventOrdering:
 # ============================================================
 # T009-T011: 死信队列
 # ============================================================
+
 
 class TestDeadLetterQueue:
     """死信队列测试"""
@@ -464,6 +480,7 @@ class TestDeadLetterQueue:
 # T012-T014: 事件溯源
 # ============================================================
 
+
 class TestEventSourcing:
     """事件溯源日志测试"""
 
@@ -497,11 +514,13 @@ class TestEventSourcing:
         """F00-T012b: 事件日志不可直接修改"""
         from f00_kafka_eventbus.event_definitions import Event
 
-        mock_bus.publish(Event(
-            event_type="chapter.created",
-            timestamp=datetime.utcnow(),
-            payload={},
-        ))
+        mock_bus.publish(
+            Event(
+                event_type="chapter.created",
+                timestamp=datetime.utcnow(),
+                payload={},
+            )
+        )
 
         time.sleep(0.1)
 
@@ -515,11 +534,13 @@ class TestEventSourcing:
         from f00_kafka_eventbus.event_definitions import Event
 
         for i in range(3):
-            mock_bus.publish(Event(
-                event_type="chapter.created",
-                timestamp=datetime.utcnow(),
-                payload={"index": i},
-            ))
+            mock_bus.publish(
+                Event(
+                    event_type="chapter.created",
+                    timestamp=datetime.utcnow(),
+                    payload={"index": i},
+                )
+            )
 
         time.sleep(0.1)
 
@@ -537,11 +558,13 @@ class TestEventSourcing:
         mock_bus.subscribe("chapter.created", lambda e: None)
 
         for i in range(3):
-            mock_bus.publish(Event(
-                event_type="chapter.created",
-                timestamp=datetime.utcnow(),
-                payload={"index": i},
-            ))
+            mock_bus.publish(
+                Event(
+                    event_type="chapter.created",
+                    timestamp=datetime.utcnow(),
+                    payload={"index": i},
+                )
+            )
 
         time.sleep(0.1)
 
@@ -556,6 +579,7 @@ class TestEventSourcing:
 # ============================================================
 # T015-T017: 错误处理与重连
 # ============================================================
+
 
 class TestErrorHandling:
     """错误处理和重试测试"""
@@ -677,6 +701,7 @@ class TestErrorHandling:
 # T018-T020: 工厂模式与Kafka集成
 # ============================================================
 
+
 class TestEventBusFactory:
     """事件总线工厂测试"""
 
@@ -688,6 +713,7 @@ class TestEventBusFactory:
         assert bus is not None
 
         from f00_kafka_eventbus.mock_bus import MockEventBus
+
         assert isinstance(bus, MockEventBus)
 
         bus.shutdown()
@@ -703,6 +729,7 @@ class TestEventBusFactory:
         bus = create_event_bus(config=config)
 
         from f00_kafka_eventbus.mock_bus import MockEventBus
+
         # 无Kafka时退化为Mock
         assert isinstance(bus, MockEventBus)
 
@@ -756,6 +783,7 @@ class TestEventBusFactory:
 # T021-T023: 错误处理边界
 # ============================================================
 
+
 class TestErrorEdgeCases:
     """错误处理边界测试"""
 
@@ -801,6 +829,7 @@ class TestErrorEdgeCases:
 # ============================================================
 # T024-T026: 覆盖率补充
 # ============================================================
+
 
 class TestCoverageGaps:
     """补充覆盖率测试"""
@@ -904,16 +933,20 @@ class TestCoverageGaps:
         """F00-T025b: 重放时处理器异常不中断"""
         from f00_kafka_eventbus.event_definitions import Event
 
-        mock_bus.publish(Event(
-            event_type="chapter.created",
-            timestamp=datetime.utcnow(),
-            payload={"index": 0},
-        ))
-        mock_bus.publish(Event(
-            event_type="chapter.created",
-            timestamp=datetime.utcnow(),
-            payload={"index": 1},
-        ))
+        mock_bus.publish(
+            Event(
+                event_type="chapter.created",
+                timestamp=datetime.utcnow(),
+                payload={"index": 0},
+            )
+        )
+        mock_bus.publish(
+            Event(
+                event_type="chapter.created",
+                timestamp=datetime.utcnow(),
+                payload={"index": 1},
+            )
+        )
 
         time.sleep(0.1)
 

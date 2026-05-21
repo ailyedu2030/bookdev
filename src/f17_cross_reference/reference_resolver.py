@@ -27,11 +27,7 @@ class ReferenceResolver:
         """
         return self.kg.get_node(target_id)
 
-    def validate_reference_chain(
-        self,
-        source_id: str,
-        referenced_target: str | None = None
-    ) -> bool:
+    def validate_reference_chain(self, source_id: str, referenced_target: str | None = None) -> bool:
         """验证引用链完整性
 
         Args:
@@ -70,14 +66,16 @@ class ReferenceResolver:
             if edge.edge_type in ("REFERENCES", "DEFINES", "USES", "FOLLOWS"):
                 target = self.kg.get_node(edge.target)
                 if target:
-                    references.append({
-                        "source": section_id,
-                        "target": edge.target,
-                        "target_title": target.title,
-                        "reference_type": edge.properties.get("reference_type"),
-                        "context": edge.properties.get("context"),
-                        "edge_type": edge.edge_type,
-                    })
+                    references.append(
+                        {
+                            "source": section_id,
+                            "target": edge.target,
+                            "target_title": target.title,
+                            "reference_type": edge.properties.get("reference_type"),
+                            "context": edge.properties.get("context"),
+                            "edge_type": edge.edge_type,
+                        }
+                    )
         return references
 
     def get_all_references_to_section(self, section_id: str) -> list:
@@ -97,13 +95,15 @@ class ReferenceResolver:
                 if edge.target == section_id:
                     source = self.kg.get_node(edge.source)
                     if source:
-                        references.append({
-                            "source": edge.source,
-                            "source_title": source.title,
-                            "target": section_id,
-                            "reference_type": edge.properties.get("reference_type"),
-                            "context": edge.properties.get("context"),
-                        })
+                        references.append(
+                            {
+                                "source": edge.source,
+                                "source_title": source.title,
+                                "target": section_id,
+                                "reference_type": edge.properties.get("reference_type"),
+                                "context": edge.properties.get("context"),
+                            }
+                        )
 
         return references
 
@@ -123,18 +123,22 @@ class ReferenceResolver:
             refs = self.get_all_references_from_section(section_id)
             for ref in refs:
                 if ref["target"] not in section_ids:
-                    issues.append({
-                        "type": "external_reference",
-                        "source": section_id,
-                        "target": ref["target"],
-                    })
+                    issues.append(
+                        {
+                            "type": "external_reference",
+                            "source": section_id,
+                            "target": ref["target"],
+                        }
+                    )
                 ref_key = (section_id, ref["target"])
                 if ref_key in all_references:
-                    issues.append({
-                        "type": "duplicate_reference",
-                        "source": section_id,
-                        "target": ref["target"],
-                    })
+                    issues.append(
+                        {
+                            "type": "duplicate_reference",
+                            "source": section_id,
+                            "target": ref["target"],
+                        }
+                    )
                 all_references.add(ref_key)
 
         return {

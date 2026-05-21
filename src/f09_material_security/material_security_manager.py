@@ -58,52 +58,51 @@ class RegistrationResult:
 
 class MaterialValidationError(Exception):
     """素材验证错误"""
+
     pass
 
 
 class MaterialSecurityManager:
     """素材安全管理器"""
 
-    TRUST_SCORE_THRESHOLDS = {
-        "WHITELIST": 1.0,
-        "VERIFIED": 0.8,
-        "UNKNOWN": 0.5,
-        "UNTRUSTED": 0.0
-    }
+    TRUST_SCORE_THRESHOLDS = {"WHITELIST": 1.0, "VERIFIED": 0.8, "UNKNOWN": 0.5, "UNTRUSTED": 0.0}
 
-    BLOCK_THRESHOLDS = {
-        "min_trust_score": 0.7,
-        "min_scan_score": 0.9
-    }
+    BLOCK_THRESHOLDS = {"min_trust_score": 0.7, "min_scan_score": 0.9}
 
     # F09-001 FIX: 使用正则模式而不是简单字符串，并添加编码变体检测
     SENSITIVE_PATTERNS = [
-        r"恶意", r"可疑链接", r"钓鱼", r"诈骗", r"病毒", r"木马",
-        r"黑客", r"攻击", r"漏洞", r"后门", r"间谍", r"监控",
-        r"窃取", r"非法", r"赌博", r"色情", r"暴力",
+        r"恶意",
+        r"可疑链接",
+        r"钓鱼",
+        r"诈骗",
+        r"病毒",
+        r"木马",
+        r"黑客",
+        r"攻击",
+        r"漏洞",
+        r"后门",
+        r"间谍",
+        r"监控",
+        r"窃取",
+        r"非法",
+        r"赌博",
+        r"色情",
+        r"暴力",
     ]
 
     # URL检测正则
-    URL_PATTERN = re.compile(
-        r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[^\s]*',
-        re.IGNORECASE
-    )
+    URL_PATTERN = re.compile(r"https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[^\s]*", re.IGNORECASE)
 
     # 可能的编码绕过变体（预编译）
     ENCODING_VARIANTS = {
         # 零宽度字符
-        '\u200b': '',  # Zero Width Space
-        '\u200c': '',  # Zero Width Non-Joiner
-        '\u200d': '',  # Zero Width Joiner
-        '\ufeff': '',  # BOM
+        "\u200b": "",  # Zero Width Space
+        "\u200c": "",  # Zero Width Non-Joiner
+        "\u200d": "",  # Zero Width Joiner
+        "\ufeff": "",  # BOM
     }
 
-    RETRIEVAL_WEIGHTS = {
-        "WHITELIST": 1.0,
-        "VERIFIED": 0.8,
-        "UNKNOWN": 0.3,
-        "UNTRUSTED": 0.0
-    }
+    RETRIEVAL_WEIGHTS = {"WHITELIST": 1.0, "VERIFIED": 0.8, "UNKNOWN": 0.3, "UNTRUSTED": 0.0}
 
     def __init__(self, source_registry: MaterialSourceRegistry | None = None):
         self.source_registry = source_registry or MaterialSourceRegistry()
@@ -122,7 +121,7 @@ class MaterialSecurityManager:
             content = content.replace(zwc, replacement)
 
         # Unicode NFKC规范化
-        content = unicodedata.normalize('NFKC', content)
+        content = unicodedata.normalize("NFKC", content)
 
         # 全角转半角
         content = self._fullwidth_to_halfwidth(content)
@@ -134,14 +133,14 @@ class MaterialSecurityManager:
         result = []
         for char in text:
             # 全角空格 (U+3000) -> 半角空格
-            if char == '\u3000':
-                result.append(' ')
+            if char == "\u3000":
+                result.append(" ")
             # 全角数字、字母、符号 -> 半角
-            elif '\uff01' <= char <= '\uff5e':
-                result.append(chr(ord(char) - 0xfee0))
+            elif "\uff01" <= char <= "\uff5e":
+                result.append(chr(ord(char) - 0xFEE0))
             else:
                 result.append(char)
-        return ''.join(result)
+        return "".join(result)
 
     async def register_material(self, material: Material) -> RegistrationResult:
         """注册素材（需审核）"""
@@ -152,9 +151,7 @@ class MaterialSecurityManager:
             existing = self._registered_materials.get(material.material_id)
             if existing:
                 return RegistrationResult(
-                    status="REJECTED",
-                    material_id=material.material_id,
-                    reason="Material already registered"
+                    status="REJECTED", material_id=material.material_id, reason="Material already registered"
                 )
 
         trust_score = self.calculate_trust_score(material)
@@ -166,7 +163,7 @@ class MaterialSecurityManager:
                 status="REJECTED",
                 material_id=material.material_id,
                 trust_score=trust_score,
-                reason="Content blocked by security scan"
+                reason="Content blocked by security scan",
             )
 
         if trust_score < self.BLOCK_THRESHOLDS["min_trust_score"]:
@@ -174,7 +171,7 @@ class MaterialSecurityManager:
                 status="REJECTED",
                 material_id=material.material_id,
                 trust_score=trust_score,
-                reason=f"Trust score {trust_score} below threshold"
+                reason=f"Trust score {trust_score} below threshold",
             )
 
         if material.source.trust_level == "WHITELIST":
@@ -188,18 +185,12 @@ class MaterialSecurityManager:
         material.security_status = status
 
         if not material.material_id:
-            material.material_id = hashlib.sha256(
-                material.content.encode()
-            ).hexdigest()[:16]
+            material.material_id = hashlib.sha256(material.content.encode()).hexdigest()[:16]
 
         self._registered_materials[material.material_id] = material
         self._material_weights[material.material_id] = self.get_retrieval_weight(material.material_id)
 
-        return RegistrationResult(
-            status=status,
-            material_id=material.material_id,
-            trust_score=trust_score
-        )
+        return RegistrationResult(status=status, material_id=material.material_id, trust_score=trust_score)
 
     async def security_scan(self, content: str) -> SecurityScanResult:
         """安全扫描
@@ -240,7 +231,7 @@ class MaterialSecurityManager:
             scan_status=scan_status,
             sensitive_word_count=sensitive_count,
             malicious_pattern_count=malicious_count,
-            details=details
+            details=details,
         )
 
     def calculate_trust_score(self, material: Material) -> float:
@@ -248,9 +239,7 @@ class MaterialSecurityManager:
         if material.source is None:
             return 0.0
 
-        base_score = self.TRUST_SCORE_THRESHOLDS.get(
-            material.source.trust_level, 0.0
-        )
+        base_score = self.TRUST_SCORE_THRESHOLDS.get(material.source.trust_level, 0.0)
 
         return base_score
 
@@ -261,17 +250,11 @@ class MaterialSecurityManager:
 
         material = self._registered_materials.get(material_id)
         if material and material.source:
-            return self.RETRIEVAL_WEIGHTS.get(
-                material.source.trust_level, 0.3
-            )
+            return self.RETRIEVAL_WEIGHTS.get(material.source.trust_level, 0.3)
 
         return 0.3
 
-    def detect_tampering(
-        self,
-        original_content: str,
-        current_content: str
-    ) -> dict[str, Any]:
+    def detect_tampering(self, original_content: str, current_content: str) -> dict[str, Any]:
         """检测篡改"""
         original_hash = hashlib.sha256(original_content.encode()).hexdigest()
         current_hash = hashlib.sha256(current_content.encode()).hexdigest()
@@ -279,5 +262,5 @@ class MaterialSecurityManager:
         return {
             "tampering_detected": original_hash != current_hash,
             "original_hash": original_hash,
-            "current_hash": current_hash
+            "current_hash": current_hash,
         }

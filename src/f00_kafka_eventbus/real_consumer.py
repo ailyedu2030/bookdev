@@ -153,8 +153,7 @@ class RealKafkaConsumer:
                     try:
                         await handler(msg.value)
                         logger.debug(
-                            f"Processed message from {msg.topic}, "
-                            f"partition={msg.partition}, offset={msg.offset}"
+                            f"Processed message from {msg.topic}, " f"partition={msg.partition}, offset={msg.offset}"
                         )
                         handler_success = True
                         break
@@ -162,16 +161,14 @@ class RealKafkaConsumer:
                         last_error = e
                         if attempt < self.max_retries:
                             # Exponential backoff
-                            delay = self.retry_backoff_ms * (2 ** attempt) / 1000.0
+                            delay = self.retry_backoff_ms * (2**attempt) / 1000.0
                             logger.warning(
                                 f"Handler attempt {attempt + 1} failed for {topic_partition}: {e}. "
                                 f"Retrying in {delay:.2f}s..."
                             )
                             await asyncio.sleep(delay)
                         else:
-                            logger.error(
-                                f"All {self.max_retries + 1} attempts failed for {topic_partition}: {e}"
-                            )
+                            logger.error(f"All {self.max_retries + 1} attempts failed for {topic_partition}: {e}")
 
                 # INF-003: Regardless of success or failure, commit offset to prevent
                 # infinite reprocessing. If handler failed, message goes to DLQ but we
@@ -190,14 +187,11 @@ class RealKafkaConsumer:
                     )
                     # Note: DLQ sending is handled by caller (event_bus.py)
                     # Here we just log and continue to next message
-
         except asyncio.CancelledError:
             logger.info("Consumer loop cancelled")
             raise
 
-    async def consume_in_background(
-        self, handler: Callable[[dict[str, Any]], None]
-    ) -> None:
+    async def consume_in_background(self, handler: Callable[[dict[str, Any]], None]) -> None:
         """
         Start consuming messages in background task
 

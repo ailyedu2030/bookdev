@@ -62,6 +62,7 @@ def clear_idempotency_cache() -> None:
 
 # ─── Data Models ──────────────────────────────────────────────────────────
 
+
 class WorkflowStatus(Enum):
     PENDING = "PENDING"
     RUNNING = "RUNNING"
@@ -88,6 +89,7 @@ class SignalType(Enum):
 @dataclass
 class RetryPolicy:
     """重试策略"""
+
     max_attempts: int = 3
     initial_interval_seconds: int = 1
     backoff_multiplier: float = 2.0
@@ -102,6 +104,7 @@ class RetryPolicy:
 @dataclass
 class ActivityOptions:
     """Activity 执行选项"""
+
     task_queue: str = "default"
     schedule_to_close_timeout_seconds: int = 300
     start_to_close_timeout_seconds: int = 120
@@ -113,6 +116,7 @@ class ActivityOptions:
 @dataclass
 class ChildWorkflowOptions:
     """Child Workflow 选项"""
+
     task_queue: str = "default"
     workflow_id_suffix: str = ""
     parent_close_policy: str = "ABANDON"
@@ -121,6 +125,7 @@ class ChildWorkflowOptions:
 @dataclass
 class WorkflowExecutionContext:
     """工作流执行上下文"""
+
     workflow_id: str
     workflow_type: str
     run_id: str
@@ -138,11 +143,13 @@ class WorkflowExecutionContext:
     workflow_state: dict[str, Any] = field(default_factory=dict)
 
     def record_event(self, event_type: str, details: dict[str, Any] = None):
-        self.history.append({
-            "timestamp": datetime.now().isoformat(),
-            "event_type": event_type,
-            "details": details or {},
-        })
+        self.history.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": event_type,
+                "details": details or {},
+            }
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -163,6 +170,7 @@ class WorkflowExecutionContext:
 @dataclass
 class ActivityExecutionContext:
     """Activity 执行上下文"""
+
     activity_id: str
     activity_type: str
     status: ActivityStatus = ActivityStatus.PENDING
@@ -226,15 +234,17 @@ class TemporalActivity:
 
             # TEMP-013 FIX: 如果有显式的idempotency_key，使用它而不是生成键
             # 这允许调用者基于内容哈希来设置幂等键
-            options = kwargs.get('options')
-            if options and hasattr(options, 'idempotency_key') and options.idempotency_key:
+            options = kwargs.get("options")
+            if options and hasattr(options, "idempotency_key") and options.idempotency_key:
                 cache_key = options.idempotency_key
 
             # TEMP-012 FIX: 使用全局外部存储
             if is_idempotent:
                 cached = await get_cached_result(cache_key)
                 if cached is not None:
-                    logger.info(f"[Activity:{activity_name}] Returning idempotent cached result for {cache_key[:16]}...")
+                    logger.info(
+                        f"[Activity:{activity_name}] Returning idempotent cached result for {cache_key[:16]}..."
+                    )
                     return cached
 
             result = fn(*args, **kwargs)
@@ -298,6 +308,7 @@ class TemporalQuery:
 
 
 # ─── Mock Temporal Client ──────────────────────────────────────────────────
+
 
 class MockTemporalClient:
     """
@@ -434,10 +445,12 @@ class MockTemporalClient:
         # TEMP-016: 心跳任务
         heartbeat_task = None
         if options.heartbeat_timeout_seconds > 0:
+
             async def heartbeat_loop():
                 while ctx.status == ActivityStatus.RUNNING:
                     await asyncio.sleep(options.heartbeat_timeout_seconds)
                     await self.send_heartbeat(activity_id, {"activity": activity_name})
+
             heartbeat_task = asyncio.create_task(heartbeat_loop())
 
         last_error = None
@@ -626,8 +639,8 @@ class MockTemporalClient:
                     "payload": {
                         "timeout_seconds": timeout_seconds,
                         "signals_expected": signal_names,
-                        "message": f"No signal received within {timeout_seconds}s"
-                    }
+                        "message": f"No signal received within {timeout_seconds}s",
+                    },
                 }
 
             # 找到触发的信号
@@ -742,6 +755,7 @@ class MockTemporalClient:
 
 class ChildWorkflowFailedError(Exception):
     """子工作流失败异常 (TEMP-008)"""
+
     def __init__(self, message: str, child_id: str, original_error: str):
         super().__init__(message)
         self.child_id = child_id
@@ -749,6 +763,7 @@ class ChildWorkflowFailedError(Exception):
 
 
 # ─── Global Client Access ─────────────────────────────────────────────────
+
 
 def get_mock_client() -> MockTemporalClient:
     """获取全局 MockTemporalClient 实例"""

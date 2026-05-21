@@ -62,7 +62,9 @@ async def scan_chapter(
     }
 
     # 汇总
-    total_checks = sum(len(v.get("findings", v if isinstance(v, list) else [])) for v in results.values() if isinstance(v, dict | list))
+    total_checks = sum(
+        len(v.get("findings", v if isinstance(v, list) else [])) for v in results.values() if isinstance(v, dict | list)
+    )
     violations = [
         finding
         for category in results.values()
@@ -70,9 +72,9 @@ async def scan_chapter(
         if isinstance(finding, dict) and finding.get("severity") in ("CRITICAL", "HIGH")
     ]
 
-    overall_status = "PASS" if not violations else "FAIL" if any(
-        v.get("severity") == "CRITICAL" for v in violations
-    ) else "WARNING"
+    overall_status = (
+        "PASS" if not violations else "FAIL" if any(v.get("severity") == "CRITICAL" for v in violations) else "WARNING"
+    )
 
     result = {
         "chapter_id": chapter_id,
@@ -86,9 +88,7 @@ async def scan_chapter(
         "recommendation": _get_scan_recommendation(overall_status, violations),
     }
 
-    logger.info(
-        f"[SecurityScan] Chapter '{chapter_id}' scan: {overall_status} ({len(violations)} violations)"
-    )
+    logger.info(f"[SecurityScan] Chapter '{chapter_id}' scan: {overall_status} ({len(violations)} violations)")
     return result
 
 
@@ -155,12 +155,14 @@ def _scan_sensitive_content(content: str) -> dict[str, Any]:
     for category, patterns in _SENSITIVE_PATTERNS.items():
         for pattern in patterns:
             if pattern.lower() in content_lower:
-                findings.append({
-                    "category": category,
-                    "pattern": pattern,
-                    "severity": "HIGH" if category in ("political", "adult") else "MEDIUM",
-                    "recommendation": f"请审核 '{pattern}' 相关内容是否适合教材使用",
-                })
+                findings.append(
+                    {
+                        "category": category,
+                        "pattern": pattern,
+                        "severity": "HIGH" if category in ("political", "adult") else "MEDIUM",
+                        "recommendation": f"请审核 '{pattern}' 相关内容是否适合教材使用",
+                    }
+                )
 
     return {
         "status": "PASS" if not findings else "WARNING",
@@ -184,12 +186,14 @@ def _scan_privacy(content: str) -> dict[str, Any]:
 
     for name, (pattern, message) in patterns.items():
         if re.search(pattern, content):
-            findings.append({
-                "type": name,
-                "message": message,
-                "severity": "HIGH",
-                "recommendation": f"请移除或脱敏{message.split('检测到')[1] if '检测到' in message else message}",
-            })
+            findings.append(
+                {
+                    "type": name,
+                    "message": message,
+                    "severity": "HIGH",
+                    "recommendation": f"请移除或脱敏{message.split('检测到')[1] if '检测到' in message else message}",
+                }
+            )
 
     return {
         "status": "PASS" if not findings else "WARNING",
@@ -205,12 +209,14 @@ def _scan_copyright(content: str) -> dict[str, Any]:
     # 检查引用标注
     has_references = "参考文献" in content or "参考" in content or "引用" in content
     if len(content) > 500 and not has_references:
-        findings.append({
-            "type": "missing_references",
-            "message": "较长内容未发现参考文献标注",
-            "severity": "MEDIUM",
-            "recommendation": "建议在章节末尾添加参考文献",
-        })
+        findings.append(
+            {
+                "type": "missing_references",
+                "message": "较长内容未发现参考文献标注",
+                "severity": "MEDIUM",
+                "recommendation": "建议在章节末尾添加参考文献",
+            }
+        )
 
     return {
         "status": "PASS" if not findings else "WARNING",
@@ -228,18 +234,21 @@ def _scan_compliance(content: str, scan_level: str) -> dict[str, Any]:
         if scan_level == "DEEP" or rule["severity"] in ("CRITICAL", "HIGH"):
             # 简单模拟：长内容可能有更多问题
             import random
+
             seed = int(hashlib.sha256((content[:100] + rule["id"]).encode()).hexdigest()[:8], 16)
             random.seed(seed)
 
             # 95% 概率通过
             if random.random() > 0.95:
-                findings.append({
-                    "rule_id": rule["id"],
-                    "rule_name": rule["name"],
-                    "severity": rule["severity"],
-                    "status": "VIOLATED",
-                    "recommendation": f"规则 {rule['id']}: {rule['name']} 需要人工审核",
-                })
+                findings.append(
+                    {
+                        "rule_id": rule["id"],
+                        "rule_name": rule["name"],
+                        "severity": rule["severity"],
+                        "status": "VIOLATED",
+                        "recommendation": f"规则 {rule['id']}: {rule['name']} 需要人工审核",
+                    }
+                )
 
             random.seed(None)
 

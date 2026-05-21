@@ -877,5 +877,3 @@ class TestBaseRepositoryFindAllWithOffsetAndLimit:
         await repo.find_all(offset=10, limit=20)
 
         mock_session.execute.assert_called_once()
-
-

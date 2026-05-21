@@ -12,6 +12,7 @@ from typing import Any
 @dataclass
 class ConfigVersion:
     """配置版本"""
+
     version: int
     key: str
     value: Any
@@ -39,11 +40,7 @@ class ConfigCenter:
         version = self._version_counters[key]
 
         config_version = ConfigVersion(
-            version=version,
-            key=key,
-            value=value,
-            previous_value=previous_value,
-            timestamp=datetime.now(UTC)
+            version=version, key=key, value=value, previous_value=previous_value, timestamp=datetime.now(UTC)
         )
 
         if key not in self._key_histories:

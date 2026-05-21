@@ -43,12 +43,7 @@ class CitationRegistry:
         self._doi_index: dict[str, list[str]] = {}
         self._fact_index: dict[str, list[str]] = {}
 
-    def register_citation(
-        self,
-        doi: str,
-        fact_hash: str,
-        position: dict[str, Any]
-    ) -> str:
+    def register_citation(self, doi: str, fact_hash: str, position: dict[str, Any]) -> str:
         """注册引用"""
         existing = self._find_existing_citation(doi, fact_hash, position)
         if existing:
@@ -56,13 +51,7 @@ class CitationRegistry:
 
         citation_id = str(uuid.uuid4())
 
-        citation = Citation(
-            citation_id=citation_id,
-            doi=doi,
-            fact_hash=fact_hash,
-            position=position,
-            is_verified=False
-        )
+        citation = Citation(citation_id=citation_id, doi=doi, fact_hash=fact_hash, position=position, is_verified=False)
 
         self._citations[citation_id] = citation
 
@@ -76,12 +65,7 @@ class CitationRegistry:
 
         return citation_id
 
-    def _find_existing_citation(
-        self,
-        doi: str,
-        fact_hash: str,
-        position: dict[str, Any]
-    ) -> str | None:
+    def _find_existing_citation(self, doi: str, fact_hash: str, position: dict[str, Any]) -> str | None:
         """查找已存在的引用"""
         citation_ids = self._doi_index.get(doi, [])
         for cid in citation_ids:

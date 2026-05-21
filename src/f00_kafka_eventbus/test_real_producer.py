@@ -13,6 +13,7 @@ import pytest
 @dataclass
 class MockProducer:
     """Mock AIOKafkaProducer"""
+
     bootstrap_servers: str = ""
     client_id: str = ""
     acks: str = ""
@@ -78,6 +79,7 @@ class TestRealKafkaProducer:
             mock_class.return_value = mock_instance
 
             import asyncio
+
             asyncio.run(producer.start())
 
             assert producer.is_connected is True

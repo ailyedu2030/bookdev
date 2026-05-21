@@ -82,104 +82,228 @@ class PipelineConfig:
     testing: bool = False
     mock: MockModeConfig = field(default_factory=MockModeConfig)
 
-    event_bus: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F00", module_name="KafkaEventBus", timeout_seconds=30,
-    ))
-    immutable_log: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F01", module_name="ImmutableLog", timeout_seconds=30,
-    ))
-    context_budget: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F02", module_name="ContextBudgetManager", timeout_seconds=30,
-        params={"max_context_tokens": 128000, "per_chapter_budget": 16000},
-    ))
-    content_addressing: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F03", module_name="ContentAddressing", timeout_seconds=30,
-    ))
-    temporal_workflow: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F04", module_name="TemporalWorkflow", timeout_seconds=600,
-    ))
-    knowledge_graph: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F05", module_name="KnowledgeGraph", timeout_seconds=120,
-        params={"max_nodes": 10000, "relationship_types": ["PREREQUISITE", "EXTENDS", "REFERENCES"]},
-    ))
-    tier1_verification: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F06", module_name="Tier1Verification", timeout_seconds=300,
-    ))
-    doi_verification: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F07", module_name="DoiVerification", timeout_seconds=180,
-    ))
-    regulation_verification: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F08", module_name="RegulationVerification", timeout_seconds=180,
-    ))
-    material_security: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F09", module_name="MaterialSecurity", timeout_seconds=120,
-    ))
-    concept_security: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F10", module_name="ConceptSecurity", timeout_seconds=120,
-    ))
-    workflow_security: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F11", module_name="WorkflowSecurity", timeout_seconds=60,
-    ))
-    approval_security: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F12", module_name="ApprovalSecurity", timeout_seconds=60,
-    ))
-    global_semantic_scanner: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F13", module_name="GlobalSemanticScanner", timeout_seconds=300,
-    ))
-    citation_integrity: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F14", module_name="CitationIntegrity", timeout_seconds=180,
-    ))
-    political_sensitivity: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F15", module_name="PoliticalSensitivity", timeout_seconds=120,
-    ))
-    statistical_sampling: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F16", module_name="StatisticalSampling", timeout_seconds=60,
-    ))
-    cross_reference: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F17", module_name="CrossReference", timeout_seconds=120,
-    ))
-    term_glossary: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F18", module_name="TermGlossary", timeout_seconds=60,
-    ))
-    logic_chain: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F19", module_name="LogicChain", timeout_seconds=120,
-    ))
-    llm_judge: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F20", module_name="LLMJudge", timeout_seconds=180,
-    ))
-    risk_classification: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F21", module_name="RiskClassification", timeout_seconds=60,
-    ))
-    material_rag: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F22", module_name="MaterialRAG", timeout_seconds=120,
-        params={"top_k": 5, "similarity_threshold": 0.7},
-    ))
-    content_security: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F23", module_name="ContentSecurity", timeout_seconds=120,
-    ))
-    config_center: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F24", module_name="ConfigCenter", timeout_seconds=30,
-    ))
-    model_router: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F25", module_name="ModelRouter", timeout_seconds=30,
-        params={"default_model": "gpt-4", "fallback_models": ["gpt-3.5-turbo", "claude-3"]},
-    ))
-    lineage_tracker: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F26", module_name="LineageTracker", timeout_seconds=60,
-    ))
-    graph_rag: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F27", module_name="GraphRAG", timeout_seconds=120,
-    ))
-    monitoring_dashboard: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F28", module_name="MonitoringDashboard", timeout_seconds=30,
-    ))
-    quality_gate: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F29", module_name="QualityGate", timeout_seconds=60,
-        params={"pass_threshold": 70.0},
-    ))
-    golden_dataset: ModuleConfig = field(default_factory=lambda: ModuleConfig(
-        module_id="F30", module_name="GoldenDataset", timeout_seconds=60,
-    ))
+    event_bus: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F00",
+            module_name="KafkaEventBus",
+            timeout_seconds=30,
+        )
+    )
+    immutable_log: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F01",
+            module_name="ImmutableLog",
+            timeout_seconds=30,
+        )
+    )
+    context_budget: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F02",
+            module_name="ContextBudgetManager",
+            timeout_seconds=30,
+            params={"max_context_tokens": 128000, "per_chapter_budget": 16000},
+        )
+    )
+    content_addressing: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F03",
+            module_name="ContentAddressing",
+            timeout_seconds=30,
+        )
+    )
+    temporal_workflow: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F04",
+            module_name="TemporalWorkflow",
+            timeout_seconds=600,
+        )
+    )
+    knowledge_graph: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F05",
+            module_name="KnowledgeGraph",
+            timeout_seconds=120,
+            params={"max_nodes": 10000, "relationship_types": ["PREREQUISITE", "EXTENDS", "REFERENCES"]},
+        )
+    )
+    tier1_verification: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F06",
+            module_name="Tier1Verification",
+            timeout_seconds=300,
+        )
+    )
+    doi_verification: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F07",
+            module_name="DoiVerification",
+            timeout_seconds=180,
+        )
+    )
+    regulation_verification: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F08",
+            module_name="RegulationVerification",
+            timeout_seconds=180,
+        )
+    )
+    material_security: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F09",
+            module_name="MaterialSecurity",
+            timeout_seconds=120,
+        )
+    )
+    concept_security: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F10",
+            module_name="ConceptSecurity",
+            timeout_seconds=120,
+        )
+    )
+    workflow_security: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F11",
+            module_name="WorkflowSecurity",
+            timeout_seconds=60,
+        )
+    )
+    approval_security: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F12",
+            module_name="ApprovalSecurity",
+            timeout_seconds=60,
+        )
+    )
+    global_semantic_scanner: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F13",
+            module_name="GlobalSemanticScanner",
+            timeout_seconds=300,
+        )
+    )
+    citation_integrity: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F14",
+            module_name="CitationIntegrity",
+            timeout_seconds=180,
+        )
+    )
+    political_sensitivity: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F15",
+            module_name="PoliticalSensitivity",
+            timeout_seconds=120,
+        )
+    )
+    statistical_sampling: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F16",
+            module_name="StatisticalSampling",
+            timeout_seconds=60,
+        )
+    )
+    cross_reference: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F17",
+            module_name="CrossReference",
+            timeout_seconds=120,
+        )
+    )
+    term_glossary: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F18",
+            module_name="TermGlossary",
+            timeout_seconds=60,
+        )
+    )
+    logic_chain: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F19",
+            module_name="LogicChain",
+            timeout_seconds=120,
+        )
+    )
+    llm_judge: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F20",
+            module_name="LLMJudge",
+            timeout_seconds=180,
+        )
+    )
+    risk_classification: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F21",
+            module_name="RiskClassification",
+            timeout_seconds=60,
+        )
+    )
+    material_rag: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F22",
+            module_name="MaterialRAG",
+            timeout_seconds=120,
+            params={"top_k": 5, "similarity_threshold": 0.7},
+        )
+    )
+    content_security: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F23",
+            module_name="ContentSecurity",
+            timeout_seconds=120,
+        )
+    )
+    config_center: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F24",
+            module_name="ConfigCenter",
+            timeout_seconds=30,
+        )
+    )
+    model_router: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F25",
+            module_name="ModelRouter",
+            timeout_seconds=30,
+            params={"default_model": "gpt-4", "fallback_models": ["gpt-3.5-turbo", "claude-3"]},
+        )
+    )
+    lineage_tracker: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F26",
+            module_name="LineageTracker",
+            timeout_seconds=60,
+        )
+    )
+    graph_rag: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F27",
+            module_name="GraphRAG",
+            timeout_seconds=120,
+        )
+    )
+    monitoring_dashboard: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F28",
+            module_name="MonitoringDashboard",
+            timeout_seconds=30,
+        )
+    )
+    quality_gate: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F29",
+            module_name="QualityGate",
+            timeout_seconds=60,
+            params={"pass_threshold": 70.0},
+        )
+    )
+    golden_dataset: ModuleConfig = field(
+        default_factory=lambda: ModuleConfig(
+            module_id="F30",
+            module_name="GoldenDataset",
+            timeout_seconds=60,
+        )
+    )
 
     stages: list[StageConfig] = field(default_factory=list)
 

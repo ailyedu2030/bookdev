@@ -10,6 +10,7 @@ from enum import Enum
 
 class TaskType(Enum):
     """任务类型枚举"""
+
     FACTUAL_VERIFICATION = "factual_verification"
     CREATIVE_WRITING = "creative_writing"
     CODE_GENERATION = "code_generation"
@@ -20,6 +21,7 @@ class TaskType(Enum):
 @dataclass
 class Task:
     """任务数据类"""
+
     task_type: TaskType
     prompt: str
     context: dict | None = None
@@ -28,6 +30,7 @@ class Task:
 @dataclass
 class ModelSelection:
     """模型选择结果"""
+
     model_id: str
     confidence: float
     reason: str
@@ -85,30 +88,17 @@ class ModelRouter:
         context_str = str(context).lower()
         combined = prompt_lower + context_str
 
-        if any(word in combined for word in ["代码", "程序", "函数", "server", "web", "python", "javascript", "code", "algorithm"]):
-            return ModelSelection(
-                model_id="gpt4o",
-                confidence=0.9,
-                reason="最佳匹配代码生成任务"
-            )
+        if any(
+            word in combined
+            for word in ["代码", "程序", "函数", "server", "web", "python", "javascript", "code", "algorithm"]
+        ):
+            return ModelSelection(model_id="gpt4o", confidence=0.9, reason="最佳匹配代码生成任务")
         elif any(word in combined for word in ["验证", "核实", "确认", "verify", "factual", "fact"]):
-            return ModelSelection(
-                model_id="claude",
-                confidence=0.9,
-                reason="最佳匹配事实核实任务"
-            )
+            return ModelSelection(model_id="claude", confidence=0.9, reason="最佳匹配事实核实任务")
         elif any(word in combined for word in ["写", "创作", "创意", "write", "creative", "story"]):
-            return ModelSelection(
-                model_id="minimax",
-                confidence=0.85,
-                reason="最佳匹配创意写作任务"
-            )
+            return ModelSelection(model_id="minimax", confidence=0.85, reason="最佳匹配创意写作任务")
         else:
-            return ModelSelection(
-                model_id="gpt4o",
-                confidence=0.7,
-                reason="默认模型选择"
-            )
+            return ModelSelection(model_id="gpt4o", confidence=0.7, reason="默认模型选择")
 
     def get_available_models(self) -> list[str]:
         """获取可用模型列表

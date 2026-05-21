@@ -13,6 +13,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 @dataclass
 class FormatCheckInput:
     """格式检查输入"""
+
     chapter_id: str
     content: str
     format_standard: str = "textbook"
@@ -22,6 +23,7 @@ class FormatCheckInput:
 @dataclass
 class FormatIssue:
     """格式问题"""
+
     issue_id: str
     severity: str
     category: str
@@ -34,6 +36,7 @@ class FormatIssue:
 @dataclass
 class FormatCheckOutput:
     """格式检查输出"""
+
     chapter_id: str
     passed: bool
     format_score: float
@@ -45,15 +48,12 @@ class FormatReviewActivity:
     """格式审查活动"""
 
     MARKDOWN_HEADING_PATTERN = re.compile(r"^#{1,6}\s+.+$", re.MULTILINE)
-    CHINESE_PUNCTUATION_PATTERN = re.compile(r"[^。，、；：？！""''【】（）、·…—]+")
+    CHINESE_PUNCTUATION_PATTERN = re.compile(r"[^。，、；：？！" "''【】（）、·…—]+")
     ENGLISH_PUNCTUATION_PATTERN = re.compile(r"[,;:.?!\"\'()\[\]·-]+")
 
     @staticmethod
     @activity.defn(name="check_format")
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=10)
-    )
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=10))
     async def check_format(input_data: FormatCheckInput) -> FormatCheckOutput:
         """
         检查格式
@@ -65,8 +65,7 @@ class FormatReviewActivity:
             FormatCheckOutput: 格式检查结果
         """
         activity.logger.info(
-            f"Checking format for chapter: {input_data.chapter_id}, "
-            f"standard: {input_data.format_standard}"
+            f"Checking format for chapter: {input_data.chapter_id}, " f"standard: {input_data.format_standard}"
         )
 
         issues = []
@@ -91,7 +90,7 @@ class FormatReviewActivity:
             passed=critical_issues == 0 and format_score >= 0.7,
             format_score=format_score,
             issues=issues,
-            statistics=statistics
+            statistics=statistics,
         )
 
     @staticmethod
@@ -101,43 +100,51 @@ class FormatReviewActivity:
         headings = FormatReviewActivity.MARKDOWN_HEADING_PATTERN.findall(content)
 
         if not headings:
-            issues.append(FormatIssue(
-                issue_id="fmt-001",
-                severity="critical",
-                category="structure",
-                description="文档缺少标题",
-                location="document"
-            ))
+            issues.append(
+                FormatIssue(
+                    issue_id="fmt-001",
+                    severity="critical",
+                    category="structure",
+                    description="文档缺少标题",
+                    location="document",
+                )
+            )
             return {"issues": issues}
 
         h1_count = sum(1 for h in headings if h.startswith("# "))
         if h1_count == 0:
-            issues.append(FormatIssue(
-                issue_id="fmt-002",
-                severity="critical",
-                category="heading",
-                description="缺少一级标题",
-                location="document"
-            ))
+            issues.append(
+                FormatIssue(
+                    issue_id="fmt-002",
+                    severity="critical",
+                    category="heading",
+                    description="缺少一级标题",
+                    location="document",
+                )
+            )
         elif h1_count > 1:
-            issues.append(FormatIssue(
-                issue_id="fmt-003",
-                severity="warning",
-                category="heading",
-                description=f"一级标题过多({h1_count}个)，建议只有一个",
-                location="document"
-            ))
+            issues.append(
+                FormatIssue(
+                    issue_id="fmt-003",
+                    severity="warning",
+                    category="heading",
+                    description=f"一级标题过多({h1_count}个)，建议只有一个",
+                    location="document",
+                )
+            )
 
         for i, heading in enumerate(headings):
             level = len(heading) - len(heading.lstrip("#"))
             if level > 6:
-                issues.append(FormatIssue(
-                    issue_id=f"fmt-h{i+1:03d}",
-                    severity="error",
-                    category="heading",
-                    description="标题级别超过6级",
-                    location=heading[:50]
-                ))
+                issues.append(
+                    FormatIssue(
+                        issue_id=f"fmt-h{i+1:03d}",
+                        severity="error",
+                        category="heading",
+                        description="标题级别超过6级",
+                        location=heading[:50],
+                    )
+                )
 
         return {"issues": issues}
 
@@ -153,13 +160,15 @@ class FormatReviewActivity:
         english_count = len(english_text)
 
         if chinese_count > 0 and english_count > 0:
-            issues.append(FormatIssue(
-                issue_id="fmt-010",
-                severity="warning",
-                category="punctuation",
-                description="中英文混排，请注意全角/半角标点",
-                location="document"
-            ))
+            issues.append(
+                FormatIssue(
+                    issue_id="fmt-010",
+                    severity="warning",
+                    category="punctuation",
+                    description="中英文混排，请注意全角/半角标点",
+                    location="document",
+                )
+            )
 
         return {"issues": issues}
 
@@ -172,13 +181,15 @@ class FormatReviewActivity:
         empty_lines = sum(1 for line in lines if not line.strip())
 
         if empty_lines < len(lines) * 0.1:
-            issues.append(FormatIssue(
-                issue_id="fmt-020",
-                severity="warning",
-                category="structure",
-                description="段落间隔不足",
-                location="document"
-            ))
+            issues.append(
+                FormatIssue(
+                    issue_id="fmt-020",
+                    severity="warning",
+                    category="structure",
+                    description="段落间隔不足",
+                    location="document",
+                )
+            )
 
         return {"issues": issues}
 
@@ -201,11 +212,7 @@ class FormatReviewActivity:
 
     @staticmethod
     @activity.defn(name="format_document")
-    async def format_document(
-        chapter_id: str,
-        content: str,
-        format_standard: str = "textbook"
-    ) -> str:
+    async def format_document(chapter_id: str, content: str, format_standard: str = "textbook") -> str:
         """
         格式化文档
 
@@ -229,11 +236,7 @@ class FormatReviewActivity:
 
     @staticmethod
     @activity.defn(name="apply_style_template")
-    async def apply_style_template(
-        chapter_id: str,
-        content: str,
-        template_name: str = "standard"
-    ) -> str:
+    async def apply_style_template(chapter_id: str, content: str, template_name: str = "standard") -> str:
         """
         应用样式模板
 
@@ -245,9 +248,7 @@ class FormatReviewActivity:
         Returns:
             str: 应用样式后的内容
         """
-        activity.logger.info(
-            f"Applying style template '{template_name}' to chapter: {chapter_id}"
-        )
+        activity.logger.info(f"Applying style template '{template_name}' to chapter: {chapter_id}")
 
         if template_name == "standard":
             content = re.sub(r"(\w)---(\w)", r"\1——\2", content)
@@ -257,11 +258,7 @@ class FormatReviewActivity:
 
     @staticmethod
     @activity.defn(name="generate_table_of_contents")
-    async def generate_table_of_contents(
-        chapter_id: str,
-        content: str,
-        max_level: int = 3
-    ) -> str:
+    async def generate_table_of_contents(chapter_id: str, content: str, max_level: int = 3) -> str:
         """
         生成目录
 

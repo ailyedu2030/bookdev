@@ -34,14 +34,28 @@ class TestListUsers:
 
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db._users = {
-            "u1": MagicMock(id="u1", username="user1", email="u1@example.com", role="editor", organization_id=None, clearance_level=1),
-            "u2": MagicMock(id="u2", username="user2", email="u2@example.com", role="viewer", organization_id=None, clearance_level=1),
+            "u1": MagicMock(
+                id="u1",
+                username="user1",
+                email="u1@example.com",
+                role="editor",
+                organization_id=None,
+                clearance_level=1,
+            ),
+            "u2": MagicMock(
+                id="u2",
+                username="user2",
+                email="u2@example.com",
+                role="viewer",
+                organization_id=None,
+                clearance_level=1,
+            ),
         }
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
-            result = run_async(list_users(
-                page=1, per_page=20, role_filter=None, search=None, user=mock_user, db=mock_db
-            ))
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
+            result = run_async(
+                list_users(page=1, per_page=20, role_filter=None, search=None, user=mock_user, db=mock_db)
+            )
 
             assert len(result) == 2
 
@@ -58,15 +72,36 @@ class TestListUsers:
 
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db._users = {
-            "u1": MagicMock(id="u1", username="user1", email="u1@example.com", role="editor", organization_id=None, clearance_level=1),
-            "u2": MagicMock(id="u2", username="user2", email="u2@example.com", role="editor", organization_id=None, clearance_level=1),
-            "u3": MagicMock(id="u3", username="user3", email="u3@example.com", role="viewer", organization_id=None, clearance_level=1),
+            "u1": MagicMock(
+                id="u1",
+                username="user1",
+                email="u1@example.com",
+                role="editor",
+                organization_id=None,
+                clearance_level=1,
+            ),
+            "u2": MagicMock(
+                id="u2",
+                username="user2",
+                email="u2@example.com",
+                role="editor",
+                organization_id=None,
+                clearance_level=1,
+            ),
+            "u3": MagicMock(
+                id="u3",
+                username="user3",
+                email="u3@example.com",
+                role="viewer",
+                organization_id=None,
+                clearance_level=1,
+            ),
         }
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
-            result = run_async(list_users(
-                page=1, per_page=20, role_filter="editor", search=None, user=mock_user, db=mock_db
-            ))
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
+            result = run_async(
+                list_users(page=1, per_page=20, role_filter="editor", search=None, user=mock_user, db=mock_db)
+            )
 
             assert len(result) == 2
 
@@ -104,8 +139,8 @@ class TestCreateUser:
             role="editor",
         )
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
-            with patch('api.routes.admin.get_password_hash', return_value="hashed"):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
+            with patch("api.routes.admin.get_password_hash", return_value="hashed"):
                 result = run_async(create_user(user_data, mock_user, mock_db))
 
                 assert result.username == "newuser"
@@ -131,7 +166,7 @@ class TestCreateUser:
             password="password123",
         )
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(create_user(user_data, mock_user, mock_db))
 
@@ -163,7 +198,7 @@ class TestGetUser:
             clearance_level=1,
         )
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
             result = run_async(get_user("target-456", mock_user, mock_db))
 
             assert result.id == "target-456"
@@ -182,7 +217,7 @@ class TestGetUser:
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.get_user_by_id.return_value = None
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(get_user("nonexistent", mock_user, mock_db))
 
@@ -216,7 +251,7 @@ class TestUpdateUser:
 
         update_data = UserUpdate(organization_id="new-org", clearance_level=2)
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
             result = run_async(update_user("target-456", update_data, mock_user, mock_db))
 
             assert result.clearance_level == 2
@@ -240,7 +275,7 @@ class TestDeleteUser:
         mock_db.get_user_by_id.return_value = MagicMock(id="target-456")
         mock_db._users = {"target-456": MagicMock()}
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
             result = run_async(delete_user("target-456", mock_user, mock_db))
 
             assert result.success is True
@@ -258,7 +293,7 @@ class TestDeleteUser:
 
         mock_db = MagicMock(spec=DatabaseSession)
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(delete_user("admin-123", mock_user, mock_db))
 
@@ -293,7 +328,7 @@ class TestUpdateUserRole:
 
         role_update = UserRoleUpdate(role="reviewer")
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
             result = run_async(update_user_role("target-456", role_update, mock_user, mock_db))
 
             assert result.role == "reviewer"
@@ -319,7 +354,7 @@ class TestGetAdminStats:
         mock_db._chapters = {"c1": {"status": "published"}, "c2": {"status": "draft"}}
         mock_db._terms = {"t1": {}, "t2": {}}
 
-        with patch('api.routes.admin.require_role', return_value=lambda u: u):
+        with patch("api.routes.admin.require_role", return_value=lambda u: u):
             result = run_async(get_admin_stats(mock_user, mock_db))
 
             assert result["data"]["total_users"] == 2

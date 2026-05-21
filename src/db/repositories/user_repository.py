@@ -33,23 +33,13 @@ class UserRepository(BaseRepository[User]):
 
     async def get_with_roles(self, user_id: uuid.UUID) -> User | None:
         """获取用户及其角色信息"""
-        stmt = (
-            select(User)
-            .options(selectinload(User.roles))
-            .where(User.id == user_id)
-        )
+        stmt = select(User).options(selectinload(User.roles)).where(User.id == user_id)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_with_permissions(self, user_id: uuid.UUID) -> User | None:
         """获取用户及其所有权限 - 使用joinedload避免N+1查询"""
-        stmt = (
-            select(User)
-            .options(
-                selectinload(User.roles).selectinload(Role.permissions)
-            )
-            .where(User.id == user_id)
-        )
+        stmt = select(User).options(selectinload(User.roles).selectinload(Role.permissions)).where(User.id == user_id)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -70,15 +60,11 @@ class UserRepository(BaseRepository[User]):
             **kwargs,
         )
 
-    async def update_password(
-        self, user_id: uuid.UUID, password_hash: str
-    ) -> User | None:
+    async def update_password(self, user_id: uuid.UUID, password_hash: str) -> User | None:
         """更新密码"""
         return await self.update(user_id, password_hash=password_hash)
 
-    async def update_email(
-        self, user_id: uuid.UUID, email: str
-    ) -> User | None:
+    async def update_email(self, user_id: uuid.UUID, email: str) -> User | None:
         """更新邮箱"""
         return await self.update(user_id, email=email)
 
@@ -91,9 +77,7 @@ class UserRepository(BaseRepository[User]):
 
     async def remove_role(self, user_id: uuid.UUID, role_id: uuid.UUID) -> bool:
         """移除用户角色"""
-        stmt = select(UserRole).where(
-            and_(UserRole.user_id == user_id, UserRole.role_id == role_id)
-        )
+        stmt = select(UserRole).where(and_(UserRole.user_id == user_id, UserRole.role_id == role_id))
         result = await self._session.execute(stmt)
         user_role = result.scalar_one_or_none()
         if user_role:
@@ -102,9 +86,7 @@ class UserRepository(BaseRepository[User]):
             return True
         return False
 
-    async def has_permission(
-        self, user_id: uuid.UUID, resource: str, action: str
-    ) -> bool:
+    async def has_permission(self, user_id: uuid.UUID, resource: str, action: str) -> bool:
         """检查用户是否具有特定权限"""
         stmt = (
             select(func.count())
@@ -124,29 +106,17 @@ class UserRepository(BaseRepository[User]):
         count = result.scalar_one()
         return count > 0
 
-    async def search_by_username(
-        self, username_query: str, *, limit: int = 20
-    ) -> Sequence[User]:
+    async def search_by_username(self, username_query: str, *, limit: int = 20) -> Sequence[User]:
         """根据用户名搜索用户"""
         stmt = (
-            select(User)
-            .where(User.username.ilike(f"%{username_query}%"))
-            .order_by(User.created_at.desc())
-            .limit(limit)
+            select(User).where(User.username.ilike(f"%{username_query}%")).order_by(User.created_at.desc()).limit(limit)
         )
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def search_by_email(
-        self, email_query: str, *, limit: int = 20
-    ) -> Sequence[User]:
+    async def search_by_email(self, email_query: str, *, limit: int = 20) -> Sequence[User]:
         """根据邮箱搜索用户"""
-        stmt = (
-            select(User)
-            .where(User.email.ilike(f"%{email_query}%"))
-            .order_by(User.created_at.desc())
-            .limit(limit)
-        )
+        stmt = select(User).where(User.email.ilike(f"%{email_query}%")).order_by(User.created_at.desc()).limit(limit)
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
@@ -163,36 +133,24 @@ class RoleRepository(BaseRepository[Role]):
 
     async def get_with_permissions(self, role_id: uuid.UUID) -> Role | None:
         """获取角色及其权限"""
-        stmt = (
-            select(Role)
-            .options(selectinload(Role.permissions))
-            .where(Role.id == role_id)
-        )
+        stmt = select(Role).options(selectinload(Role.permissions)).where(Role.id == role_id)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_all_with_user_count(self) -> Sequence[Role]:
         """获取所有角色及每个角色的用户数量"""
-        stmt = (
-            select(Role)
-            .options(selectinload(Role.users))
-            .order_by(Role.name)
-        )
+        stmt = select(Role).options(selectinload(Role.users)).order_by(Role.name)
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def assign_permission(
-        self, role_id: uuid.UUID, permission_id: uuid.UUID
-    ) -> RolePermission:
+    async def assign_permission(self, role_id: uuid.UUID, permission_id: uuid.UUID) -> RolePermission:
         """为角色分配权限"""
         role_permission = RolePermission(role_id=role_id, permission_id=permission_id)
         self._session.add(role_permission)
         await self._session.flush()
         return role_permission
 
-    async def remove_permission(
-        self, role_id: uuid.UUID, permission_id: uuid.UUID
-    ) -> bool:
+    async def remove_permission(self, role_id: uuid.UUID, permission_id: uuid.UUID) -> bool:
         """移除角色权限"""
         stmt = select(RolePermission).where(
             and_(
@@ -215,9 +173,7 @@ class PermissionRepository(BaseRepository[Permission]):
     def __init__(self, session: AsyncSession):
         super().__init__(Permission, session)
 
-    async def get_by_resource_action(
-        self, resource: str, action: str
-    ) -> Permission | None:
+    async def get_by_resource_action(self, resource: str, action: str) -> Permission | None:
         """根据资源和动作获取权限"""
         return await self.get_one(resource=resource, action=action)
 

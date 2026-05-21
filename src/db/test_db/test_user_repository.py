@@ -98,17 +98,10 @@ class TestUserRepository:
 
         repo = UserRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_user) as mock_create:
-            await repo.create_user(
-                username="newuser",
-                email="new@example.com",
-                password_hash="hashed123"
-            )
+            await repo.create_user(username="newuser", email="new@example.com", password_hash="hashed123")
 
         mock_create.assert_called_once_with(
-            username="newuser",
-            email="new@example.com",
-            password_hash="hashed123",
-            role="viewer"
+            username="newuser", email="new@example.com", password_hash="hashed123", role="viewer"
         )
 
     @pytest.mark.asyncio
@@ -252,7 +245,7 @@ class TestUserRepository:
 
         mock_user = MagicMock()
 
-        with patch.object(UserRepository, 'get_with_roles', return_value=mock_user):
+        with patch.object(UserRepository, "get_with_roles", return_value=mock_user):
             repo = UserRepository(mock_session)
             result = await repo.get_with_roles(uuid.uuid4())
 
@@ -263,7 +256,7 @@ class TestUserRepository:
         """Test get_with_roles returns None when user not found."""
         from db.repositories.user_repository import UserRepository
 
-        with patch.object(UserRepository, 'get_with_roles', return_value=None):
+        with patch.object(UserRepository, "get_with_roles", return_value=None):
             repo = UserRepository(mock_session)
             result = await repo.get_with_roles(uuid.uuid4())
 
@@ -406,7 +399,7 @@ class TestRoleRepository:
 
         mock_role = MagicMock()
 
-        with patch.object(RoleRepository, 'get_with_permissions', return_value=mock_role):
+        with patch.object(RoleRepository, "get_with_permissions", return_value=mock_role):
             repo = RoleRepository(mock_session)
             result = await repo.get_with_permissions(uuid.uuid4())
 
@@ -419,7 +412,7 @@ class TestRoleRepository:
 
         mock_roles = [MagicMock(), MagicMock()]
 
-        with patch.object(RoleRepository, 'get_all_with_user_count', return_value=mock_roles):
+        with patch.object(RoleRepository, "get_all_with_user_count", return_value=mock_roles):
             repo = RoleRepository(mock_session)
             result = await repo.get_all_with_user_count()
 

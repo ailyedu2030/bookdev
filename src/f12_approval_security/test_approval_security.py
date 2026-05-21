@@ -30,7 +30,7 @@ class TestApprovalSecurity:
                 reviewer_id="reviewer-001",
                 result="APPROVED",
                 comments="Test approval",
-                signature=None
+                signature=None,
             )
 
         assert "MISSING_SIGNATURE" in str(exc_info.value)
@@ -52,7 +52,7 @@ class TestApprovalSecurity:
             signature="software_signature",
             signature_source="SOFTWARE",
             timestamp=datetime.utcnow(),
-            reviewer_ip="127.0.0.1"
+            reviewer_ip="127.0.0.1",
         )
 
         result = manager.verify_record(record)
@@ -74,7 +74,7 @@ class TestApprovalSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             comments="Looks good",
-            signature="valid_signature"
+            signature="valid_signature",
         )
 
         stored_record = manager.get_record("content-001")
@@ -89,7 +89,7 @@ class TestApprovalSecurity:
             signature="valid_signature",
             signature_source="HSM",
             timestamp=stored_record.timestamp,
-            reviewer_ip=stored_record.reviewer_ip
+            reviewer_ip=stored_record.reviewer_ip,
         )
 
         result = manager.verify_record(tampered_record)
@@ -110,7 +110,7 @@ class TestApprovalSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             comments="First approval",
-            signature="valid_signature"
+            signature="valid_signature",
         )
 
         result1 = manager.verify_record(manager.get_record("content-replay"))
@@ -138,7 +138,7 @@ class TestApprovalSecurity:
             signature="valid_signature",
             signature_source="HSM",
             timestamp=old_timestamp,
-            reviewer_ip="127.0.0.1"
+            reviewer_ip="127.0.0.1",
         )
 
         manager._records["content-old"] = record
@@ -162,7 +162,7 @@ class TestApprovalSecurity:
             result="APPROVED",
             comments="First approval",
             signature="valid_signature",
-            is_high_risk=True
+            is_high_risk=True,
         )
 
         record = manager.get_record("content-high-risk")
@@ -186,7 +186,7 @@ class TestApprovalSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             comments="Looks good",
-            signature="valid_signature"
+            signature="valid_signature",
         )
 
         record = manager.get_record("content-valid")
@@ -210,7 +210,7 @@ class TestApprovalSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             comments="HSM verified",
-            signature="valid_signature"
+            signature="valid_signature",
         )
 
         record = manager.get_record("content-hsm")
@@ -235,7 +235,7 @@ class TestApprovalSecurity:
             signature="valid_signature",
             signature_source="HSM",
             timestamp=datetime.utcnow(),
-            reviewer_ip="127.0.0.1"
+            reviewer_ip="127.0.0.1",
         )
 
         signable_string = record.to_signable_string()
@@ -253,7 +253,7 @@ class TestApprovalSecurity:
             content_hash="abc123",
             reviewer_id="reviewer-001",
             result="APPROVED",
-            comments="Test approval"
+            comments="Test approval",
         )
 
         assert record.content_id == "content-001"
@@ -271,7 +271,7 @@ class TestApprovalSecurity:
             content_hash="abc123",
             reviewer_id="reviewer-001",
             result="APPROVED",
-            comments="Original"
+            comments="Original",
         )
 
         with pytest.raises(AttributeError):
@@ -291,7 +291,7 @@ class TestApprovalSecurity:
             reviewer_id="unknown_reviewer",
             result="APPROVED",
             comments="Suspicious",
-            signature="forged_signature"
+            signature="forged_signature",
         )
 
         record = manager.get_record("content-fraud")
@@ -314,7 +314,7 @@ class TestApprovalSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             comments="Audit test",
-            signature="audit_signature"
+            signature="audit_signature",
         )
 
         audit_trail = manager.get_audit_trail("content-audit")
@@ -392,7 +392,7 @@ class TestApprovalRecordUncovered:
             signature="sig123",
             signature_source="HSM",
             timestamp=datetime(2025, 1, 15, 10, 30, 0),
-            reviewer_ip="192.168.1.1"
+            reviewer_ip="192.168.1.1",
         )
 
         signable = record.to_signable_string()
@@ -412,7 +412,7 @@ class TestApprovalRecordUncovered:
             content_hash="hash1",
             reviewer_id="reviewer-001",
             result="APPROVED",
-            comments="Test 1"
+            comments="Test 1",
         )
 
         record2 = ApprovalRecord.create(
@@ -420,7 +420,7 @@ class TestApprovalRecordUncovered:
             content_hash="hash2",
             reviewer_id="reviewer-002",
             result="REJECTED",
-            comments="Test 2"
+            comments="Test 2",
         )
 
         assert record1.record_id != record2.record_id

@@ -17,6 +17,7 @@ DOMAIN_MAX_LENGTH = 100
 
 class TermCreate(BaseModel):
     """Term creation schema"""
+
     term: str = Field(..., min_length=TERM_MIN_LENGTH, max_length=TERM_MAX_LENGTH)
     definition: str = Field(..., min_length=DEFINITION_MIN_LENGTH)
     domain: str | None = Field(default=None, max_length=DOMAIN_MAX_LENGTH)
@@ -26,6 +27,7 @@ class TermCreate(BaseModel):
 
 class TermUpdate(BaseModel):
     """Term update schema"""
+
     term: str | None = Field(default=None, min_length=TERM_MIN_LENGTH, max_length=TERM_MAX_LENGTH)
     definition: str | None = Field(default=None, min_length=DEFINITION_MIN_LENGTH)
     domain: str | None = Field(default=None, max_length=DOMAIN_MAX_LENGTH)
@@ -34,11 +36,13 @@ class TermUpdate(BaseModel):
 
 class TermLockRequest(BaseModel):
     """Term lock request schema"""
+
     reason: str | None = Field(default=None, max_length=500)
 
 
 class TermResponse(BaseModel):
     """Term response schema"""
+
     id: str
     term: str
     definition: str
@@ -54,6 +58,7 @@ class TermResponse(BaseModel):
 
 class TermSearchRequest(BaseModel):
     """Term search request schema"""
+
     query: str = Field(..., min_length=1, max_length=200)
     domain: str | None = Field(default=None, max_length=DOMAIN_MAX_LENGTH)
     limit: int = Field(default=DEFAULT_SEARCH_LIMIT, ge=1, le=MAX_SEARCH_LIMIT)
@@ -61,6 +66,7 @@ class TermSearchRequest(BaseModel):
 
 class TermSearchResponse(BaseModel):
     """Term search response schema"""
+
     success: bool = True
     data: list[TermResponse]
     total: int = Field(default=0, ge=0)
@@ -68,6 +74,7 @@ class TermSearchResponse(BaseModel):
 
 class ConceptCreate(BaseModel):
     """Concept creation schema"""
+
     name: str = Field(..., min_length=TERM_MIN_LENGTH, max_length=TERM_MAX_LENGTH)
     definition: str = Field(..., min_length=DEFINITION_MIN_LENGTH)
     domain: str | None = Field(default=None, max_length=DOMAIN_MAX_LENGTH)
@@ -77,11 +84,13 @@ class ConceptCreate(BaseModel):
 
 class LockTermRequest(BaseModel):
     """Request schema for locking a term"""
+
     reason: str | None = Field(default=None, max_length=500)
 
 
 class ConceptUpdate(BaseModel):
     """Concept update schema"""
+
     name: str | None = Field(default=None, min_length=TERM_MIN_LENGTH, max_length=TERM_MAX_LENGTH)
     definition: str | None = Field(default=None, min_length=DEFINITION_MIN_LENGTH)
     domain: str | None = Field(default=None, max_length=DOMAIN_MAX_LENGTH)
@@ -91,6 +100,7 @@ class ConceptUpdate(BaseModel):
 
 class ConceptResponse(BaseModel):
     """Concept response schema"""
+
     id: str
     name: str
     definition: str
@@ -103,6 +113,7 @@ class ConceptResponse(BaseModel):
 
 class CitationCreate(BaseModel):
     """Citation creation schema"""
+
     chapter_id: str
     doi: str | None = Field(default=None, max_length=255)
     title: str = Field(..., min_length=1, max_length=500)
@@ -114,6 +125,7 @@ class CitationCreate(BaseModel):
 
 class CitationResponse(BaseModel):
     """Citation response schema"""
+
     id: str
     chapter_id: str
     doi: str | None = None

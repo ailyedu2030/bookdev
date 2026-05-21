@@ -9,6 +9,7 @@ from typing import Any
 @dataclass
 class Material:
     """素材数据类"""
+
     id: str
     content: str
     chapter_id: str

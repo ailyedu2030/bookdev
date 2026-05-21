@@ -13,9 +13,7 @@ from tests.api.conftest import create_test_term
 class TestTermsAdditional:
     """Additional tests for terms endpoints"""
 
-    def test_list_terms_second_page(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_terms_second_page(self, test_client, test_db, test_user_authenticated):
         """Test listing terms with pagination page 2"""
         token = test_user_authenticated["access_token"]
 
@@ -31,9 +29,7 @@ class TestTermsAdditional:
         data = response.json()
         assert len(data["data"]) == 2
 
-    def test_list_terms_filter_by_locked_false(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_terms_filter_by_locked_false(self, test_client, test_db, test_user_authenticated):
         """Test listing terms filtered by locked=false"""
         token = test_user_authenticated["access_token"]
 
@@ -48,9 +44,7 @@ class TestTermsAdditional:
         data = response.json()
         assert all(t["locked"] is False for t in data["data"])
 
-    def test_list_terms_filter_by_domain_and_locked(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_terms_filter_by_domain_and_locked(self, test_client, test_db, test_user_authenticated):
         """Test listing terms filtered by domain and lock status"""
         token = test_user_authenticated["access_token"]
 
@@ -68,9 +62,7 @@ class TestTermsAdditional:
         assert data["data"][0]["domain"] == "math"
         assert data["data"][0]["locked"] is False
 
-    def test_create_term_full(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_term_full(self, test_client, test_db, editor_authenticated):
         """Test creating term with all fields"""
         token = editor_authenticated["access_token"]
 
@@ -95,9 +87,7 @@ class TestTermsAdditional:
         assert data["domain"] == "testing"
         assert data["synonyms"] == ["syn1", "syn2"]
 
-    def test_create_term_minimal(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_term_minimal(self, test_client, test_db, editor_authenticated):
         """Test creating term with minimal fields"""
         token = editor_authenticated["access_token"]
 
@@ -117,9 +107,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["term"] == "Minimal Term"
 
-    def test_get_term(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_get_term(self, test_client, test_db, test_user_authenticated):
         """Test getting a term by ID"""
         token = test_user_authenticated["access_token"]
 
@@ -134,9 +122,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["term"] == "Get Test"
 
-    def test_get_term_not_found(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_get_term_not_found(self, test_client, test_db, test_user_authenticated):
         """Test getting a non-existent term"""
         token = test_user_authenticated["access_token"]
 
@@ -147,9 +133,7 @@ class TestTermsAdditional:
 
         assert response.status_code == 404
 
-    def test_update_term_synonyms(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_update_term_synonyms(self, test_client, test_db, editor_authenticated):
         """Test updating term synonyms"""
         token = editor_authenticated["access_token"]
 
@@ -168,9 +152,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["synonyms"] == ["PY", "Pythonista"]
 
-    def test_update_term_domain(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_update_term_domain(self, test_client, test_db, editor_authenticated):
         """Test updating term domain"""
         token = editor_authenticated["access_token"]
 
@@ -189,9 +171,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["domain"] == "programming"
 
-    def test_unlock_term_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_unlock_term_not_found(self, test_client, test_db, editor_authenticated):
         """Test unlocking non-existent term"""
         token = editor_authenticated["access_token"]
 
@@ -205,9 +185,7 @@ class TestTermsAdditional:
 
         assert response.status_code == 404
 
-    def test_delete_term_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_delete_term_not_found(self, test_client, test_db, editor_authenticated):
         """Test deleting non-existent term"""
         token = editor_authenticated["access_token"]
 
@@ -221,9 +199,7 @@ class TestTermsAdditional:
 
         assert response.status_code == 404
 
-    def test_lock_term_viewer_forbidden(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_lock_term_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot lock terms"""
         token = test_user_authenticated["access_token"]
 
@@ -239,9 +215,7 @@ class TestTermsAdditional:
 
         assert response.status_code == 403
 
-    def test_search_terms_limit(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_search_terms_limit(self, test_client, test_db, test_user_authenticated):
         """Test search with limit parameter"""
         token = test_user_authenticated["access_token"]
 
@@ -258,9 +232,7 @@ class TestTermsAdditional:
         data = response.json()
         assert len(data["data"]) <= 3
 
-    def test_update_term_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_update_term_not_found(self, test_client, test_db, editor_authenticated):
         """Test updating a non-existent term returns 404"""
         token = editor_authenticated["access_token"]
 
@@ -277,9 +249,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["detail"]["error"]["code"] == "TERM_NOT_FOUND"
 
-    def test_update_term_locked(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_update_term_locked(self, test_client, test_db, editor_authenticated):
         """Test updating a locked term returns 400"""
         token = editor_authenticated["access_token"]
 
@@ -298,9 +268,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["detail"]["error"]["code"] == "TERM_LOCKED"
 
-    def test_update_term_no_data(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_update_term_no_data(self, test_client, test_db, editor_authenticated):
         """Test updating a term with no data returns 400"""
         token = editor_authenticated["access_token"]
 
@@ -319,9 +287,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["detail"]["error"]["code"] == "NO_UPDATE_DATA"
 
-    def test_lock_term_success(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_lock_term_success(self, test_client, test_db, editor_authenticated):
         """Test successfully locking a term"""
         token = editor_authenticated["access_token"]
 
@@ -340,9 +306,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["locked"] is True
 
-    def test_lock_term_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_lock_term_not_found(self, test_client, test_db, editor_authenticated):
         """Test locking a non-existent term returns 404"""
         token = editor_authenticated["access_token"]
 
@@ -359,9 +323,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["detail"]["error"]["code"] == "TERM_NOT_FOUND"
 
-    def test_unlock_term_success(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_unlock_term_success(self, test_client, test_db, editor_authenticated):
         """Test successfully unlocking a term"""
         token = editor_authenticated["access_token"]
 
@@ -379,9 +341,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["locked"] is False
 
-    def test_delete_term_locked(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_delete_term_locked(self, test_client, test_db, editor_authenticated):
         """Test deleting a locked term returns 400"""
         token = editor_authenticated["access_token"]
 
@@ -399,9 +359,7 @@ class TestTermsAdditional:
         data = response.json()
         assert data["detail"]["error"]["code"] == "TERM_LOCKED"
 
-    def test_delete_term_success(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_delete_term_success(self, test_client, test_db, editor_authenticated):
         """Test successfully deleting an unlocked term"""
         token = editor_authenticated["access_token"]
 
@@ -420,9 +378,7 @@ class TestTermsAdditional:
         assert data["success"] is True
         assert "deleted" in data["message"].lower()
 
-    def test_list_domains(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_domains(self, test_client, test_db, test_user_authenticated):
         """Test listing all unique domains"""
         token = test_user_authenticated["access_token"]
 
@@ -446,9 +402,7 @@ class TestTermsAdditional:
 class TestConceptsAdditional:
     """Additional tests for concepts endpoints"""
 
-    def test_list_concepts_with_domain(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_concepts_with_domain(self, test_client, test_db, test_user_authenticated):
         """Test listing concepts filtered by domain"""
         token = test_user_authenticated["access_token"]
 
@@ -461,9 +415,7 @@ class TestConceptsAdditional:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_list_concepts_with_locked(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_concepts_with_locked(self, test_client, test_db, test_user_authenticated):
         """Test listing concepts filtered by locked status"""
         token = test_user_authenticated["access_token"]
 
@@ -476,9 +428,7 @@ class TestConceptsAdditional:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_list_concepts_pagination(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_concepts_pagination(self, test_client, test_db, test_user_authenticated):
         """Test listing concepts with pagination"""
         token = test_user_authenticated["access_token"]
 
@@ -492,9 +442,7 @@ class TestConceptsAdditional:
         assert isinstance(data, list)
 
     @pytest.mark.skip(reason="concepts:create permission not assigned to any role")
-    def test_create_concept_full(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_concept_full(self, test_client, test_db, editor_authenticated):
         """Test creating concept with all fields"""
         token = editor_authenticated["access_token"]
 
@@ -519,9 +467,7 @@ class TestConceptsAdditional:
         assert data["related_terms"] == ["term-1", "term-2"]
 
     @pytest.mark.skip(reason="concepts:create permission not assigned to any role")
-    def test_create_concept_minimal(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_concept_minimal(self, test_client, test_db, editor_authenticated):
         """Test creating concept with minimal fields"""
         token = editor_authenticated["access_token"]
 
@@ -546,9 +492,7 @@ class TestCitationsAdditional:
     """Additional tests for citations endpoints"""
 
     @pytest.mark.skip(reason="citations:create permission not assigned to any role")
-    def test_create_citation_full(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_citation_full(self, test_client, test_db, editor_authenticated):
         """Test creating citation with all fields"""
         token = editor_authenticated["access_token"]
 
@@ -575,9 +519,7 @@ class TestCitationsAdditional:
         assert data["doi"] == "10.1234/test"
 
     @pytest.mark.skip(reason="citations:create permission not assigned to any role")
-    def test_create_citation_minimal(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_citation_minimal(self, test_client, test_db, editor_authenticated):
         """Test creating citation with minimal fields"""
         token = editor_authenticated["access_token"]
 
@@ -597,9 +539,7 @@ class TestCitationsAdditional:
         data = response.json()
         assert data["title"] == "Minimal Citation"
 
-    def test_list_citations_by_chapter(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_citations_by_chapter(self, test_client, test_db, test_user_authenticated):
         """Test listing citations by chapter"""
         token = test_user_authenticated["access_token"]
 
@@ -613,9 +553,7 @@ class TestCitationsAdditional:
         assert isinstance(data, list)
 
     @pytest.mark.skip(reason="citations:verify permission not assigned to any role")
-    def test_verify_citation(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_verify_citation(self, test_client, test_db, editor_authenticated):
         """Test verifying a citation"""
         token = editor_authenticated["access_token"]
 

@@ -19,7 +19,7 @@ class TestModelRouter:
         from f25_model_router.model_router import ModelRouter
 
         router = ModelRouter()
-        assert hasattr(router, 'ROUTING_RULES')
+        assert hasattr(router, "ROUTING_RULES")
         assert isinstance(router.ROUTING_RULES, dict)
         assert len(router.ROUTING_RULES) > 0
 
@@ -75,9 +75,9 @@ class TestModelRouter:
         router = ModelRouter()
         result = router.select_model_for_prompt("写一段代码", {})
         assert isinstance(result, ModelSelection)
-        assert hasattr(result, 'model_id')
-        assert hasattr(result, 'confidence')
-        assert hasattr(result, 'reason')
+        assert hasattr(result, "model_id")
+        assert hasattr(result, "confidence")
+        assert hasattr(result, "reason")
 
     def test_select_model_for_prompt_analyzes_context(self):
         """F25-T008: select_model_for_prompt应分析上下文"""
@@ -93,9 +93,7 @@ class TestModelRouter:
         """F25-T009: 支持自定义路由规则"""
         from f25_model_router.model_router import ModelRouter, TaskType
 
-        custom_rules = {
-            "factual_verification": "gpt4o"
-        }
+        custom_rules = {"factual_verification": "gpt4o"}
         router = ModelRouter(routing_rules=custom_rules)
         task = Task(task_type=TaskType.FACTUAL_VERIFICATION, prompt="验证")
         result = router.route(task)
@@ -106,7 +104,7 @@ class TestModelRouter:
         from f25_model_router.model_router import ModelRouter
 
         router = ModelRouter()
-        assert hasattr(router, 'model_registry')
+        assert hasattr(router, "model_registry")
         assert isinstance(router.model_registry, dict)
 
     def test_get_available_models(self):
@@ -129,11 +127,7 @@ class TestModelSelection:
         """F25-T012: ModelSelection包含所有必要字段"""
         from f25_model_router.model_router import ModelSelection
 
-        selection = ModelSelection(
-            model_id="claude",
-            confidence=0.95,
-            reason="最佳匹配事实核实任务"
-        )
+        selection = ModelSelection(model_id="claude", confidence=0.95, reason="最佳匹配事实核实任务")
         assert selection.model_id == "claude"
         assert selection.confidence == 0.95
         assert selection.reason == "最佳匹配事实核实任务"
@@ -142,18 +136,10 @@ class TestModelSelection:
         """F25-T013: 置信度应在0-1之间"""
         from f25_model_router.model_router import ModelSelection
 
-        selection = ModelSelection(
-            model_id="claude",
-            confidence=1.0,
-            reason="test"
-        )
+        selection = ModelSelection(model_id="claude", confidence=1.0, reason="test")
         assert 0.0 <= selection.confidence <= 1.0
 
-        selection2 = ModelSelection(
-            model_id="claude",
-            confidence=0.0,
-            reason="test"
-        )
+        selection2 = ModelSelection(model_id="claude", confidence=0.0, reason="test")
         assert 0.0 <= selection2.confidence <= 1.0
 
 
@@ -178,11 +164,7 @@ class TestTaskTypeRouting:
 
         router = ModelRouter()
         original_context = {"key": "value"}
-        task = Task(
-            task_type=TaskType.FACTUAL_VERIFICATION,
-            prompt="验证",
-            context=original_context
-        )
+        task = Task(task_type=TaskType.FACTUAL_VERIFICATION, prompt="验证", context=original_context)
         router.route(task)
         assert task.context == original_context
 

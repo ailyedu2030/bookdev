@@ -12,6 +12,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 @dataclass
 class SecurityScanInput:
     """安全扫描输入"""
+
     chapter_id: str
     content: str
     scan_types: list[str]
@@ -20,6 +21,7 @@ class SecurityScanInput:
 @dataclass
 class SecurityIssue:
     """安全问题"""
+
     issue_id: str
     severity: str
     category: str
@@ -31,6 +33,7 @@ class SecurityIssue:
 @dataclass
 class SecurityScanOutput:
     """安全扫描输出"""
+
     chapter_id: str
     passed: bool
     risk_score: float
@@ -60,10 +63,7 @@ class SecurityScanActivity:
 
     @staticmethod
     @activity.defn(name="scan_security")
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=10)
-    )
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=1, max=10))
     async def scan_security(input_data: SecurityScanInput) -> SecurityScanOutput:
         """
         执行安全扫描
@@ -75,8 +75,7 @@ class SecurityScanActivity:
             SecurityScanOutput: 扫描结果
         """
         activity.logger.info(
-            f"Scanning security for chapter: {input_data.chapter_id}, "
-            f"types: {input_data.scan_types}"
+            f"Scanning security for chapter: {input_data.chapter_id}, " f"types: {input_data.scan_types}"
         )
 
         issues = []
@@ -108,7 +107,7 @@ class SecurityScanActivity:
             passed=len([i for i in issues if i.severity == "critical"]) == 0,
             risk_score=risk_score,
             issues=issues,
-            scan_types_performed=scan_types_performed
+            scan_types_performed=scan_types_performed,
         )
 
     @staticmethod
@@ -118,15 +117,17 @@ class SecurityScanActivity:
         for pattern, category, description in SecurityScanActivity.DANGEROUS_PATTERNS[:3]:
             matches = re.finditer(pattern, content, re.IGNORECASE)
             for match in matches:
-                line_num = content[:match.start()].count("\n") + 1
-                issues.append(SecurityIssue(
-                    issue_id=f"xss-{len(issues)+1:03d}",
-                    severity="critical",
-                    category=category,
-                    description=f"发现{description}",
-                    location=f"line {line_num}",
-                    remediation="请移除或转义此内容"
-                ))
+                line_num = content[: match.start()].count("\n") + 1
+                issues.append(
+                    SecurityIssue(
+                        issue_id=f"xss-{len(issues)+1:03d}",
+                        severity="critical",
+                        category=category,
+                        description=f"发现{description}",
+                        location=f"line {line_num}",
+                        remediation="请移除或转义此内容",
+                    )
+                )
         return issues
 
     @staticmethod
@@ -136,15 +137,17 @@ class SecurityScanActivity:
         for pattern, category, description in SecurityScanActivity.DANGEROUS_PATTERNS[2:]:
             matches = re.finditer(pattern, content, re.IGNORECASE)
             for match in matches:
-                line_num = content[:match.start()].count("\n") + 1
-                issues.append(SecurityIssue(
-                    issue_id=f"inj-{len(issues)+1:03d}",
-                    severity="high",
-                    category=category,
-                    description=f"发现{description}",
-                    location=f"line {line_num}",
-                    remediation="避免使用动态代码执行"
-                ))
+                line_num = content[: match.start()].count("\n") + 1
+                issues.append(
+                    SecurityIssue(
+                        issue_id=f"inj-{len(issues)+1:03d}",
+                        severity="high",
+                        category=category,
+                        description=f"发现{description}",
+                        location=f"line {line_num}",
+                        remediation="避免使用动态代码执行",
+                    )
+                )
         return issues
 
     @staticmethod
@@ -154,15 +157,17 @@ class SecurityScanActivity:
         for pattern, category, description in SecurityScanActivity.SENSITIVE_PATTERNS:
             matches = re.finditer(pattern, content, re.IGNORECASE)
             for match in matches:
-                line_num = content[:match.start()].count("\n") + 1
-                issues.append(SecurityIssue(
-                    issue_id=f"cred-{len(issues)+1:03d}",
-                    severity="critical",
-                    category=category,
-                    description=f"发现{description}",
-                    location=f"line {line_num}",
-                    remediation="使用环境变量替代硬编码凭证"
-                ))
+                line_num = content[: match.start()].count("\n") + 1
+                issues.append(
+                    SecurityIssue(
+                        issue_id=f"cred-{len(issues)+1:03d}",
+                        severity="critical",
+                        category=category,
+                        description=f"发现{description}",
+                        location=f"line {line_num}",
+                        remediation="使用环境变量替代硬编码凭证",
+                    )
+                )
         return issues
 
     @staticmethod
@@ -178,13 +183,15 @@ class SecurityScanActivity:
         for pattern, _category, description in pii_patterns:
             matches = re.finditer(pattern, content)
             if matches:
-                issues.append(SecurityIssue(
-                    issue_id=f"pii-{len(issues)+1:03d}",
-                    severity="medium",
-                    category="PII",
-                    description=f"可能的{description}模式",
-                    remediation="移除或脱敏个人身份信息"
-                ))
+                issues.append(
+                    SecurityIssue(
+                        issue_id=f"pii-{len(issues)+1:03d}",
+                        severity="medium",
+                        category="PII",
+                        description=f"可能的{description}模式",
+                        remediation="移除或脱敏个人身份信息",
+                    )
+                )
                 break
 
         return issues

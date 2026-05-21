@@ -29,11 +29,7 @@ class CoherenceAnalyzer:
         chain = self.graph.get_dependencies(node_id)
         complete = len(chain) > 0
 
-        return {
-            "complete": complete,
-            "chain": [node_id] + chain if complete else [node_id],
-            "missing": []
-        }
+        return {"complete": complete, "chain": [node_id] + chain if complete else [node_id], "missing": []}
 
     def detect_logical_gaps(self) -> list[dict]:
         """检测逻辑缺口
@@ -48,11 +44,7 @@ class CoherenceAnalyzer:
             deps = self.graph.get_dependencies(node)
 
             if not deps:
-                gaps.append({
-                    "type": "orphan_node",
-                    "node": node,
-                    "issue": f"节点 {node} 没有前置依赖"
-                })
+                gaps.append({"type": "orphan_node", "node": node, "issue": f"节点 {node} 没有前置依赖"})
 
         return gaps
 
@@ -63,18 +55,11 @@ class CoherenceAnalyzer:
             分析结果
         """
         if self.graph.has_cycle():
-            return {
-                "is_logical": False,
-                "reason": "检测到循环依赖"
-            }
+            return {"is_logical": False, "reason": "检测到循环依赖"}
 
         sorted_nodes = self.graph.topological_sort()
 
-        return {
-            "is_logical": True,
-            "sorted_nodes": sorted_nodes,
-            "depth": len(sorted_nodes)
-        }
+        return {"is_logical": True, "sorted_nodes": sorted_nodes, "depth": len(sorted_nodes)}
 
     def find_missing_prerequisites(self, node_id: str) -> list[str]:
         """查找节点的缺失前提
@@ -134,10 +119,7 @@ class CoherenceAnalyzer:
         issues = self.detect_logical_gaps()
 
         if self.graph.has_cycle():
-            issues.append({
-                "type": "circular_dependency",
-                "issue": "检测到循环依赖"
-            })
+            issues.append({"type": "circular_dependency", "issue": "检测到循环依赖"})
 
         score = self.calculate_coherence_score()
 

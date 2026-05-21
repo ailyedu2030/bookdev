@@ -7,7 +7,6 @@ Tests for monitoring endpoints with proper admin authentication:
 """
 
 
-
 class TestHealthCheck:
     """Tests for health check endpoint"""
 
@@ -23,7 +22,8 @@ class TestHealthCheck:
         assert "version" in data
 
     def test_health_check_components(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check includes component statuses"""
         response = test_client.get("/api/monitor/health")

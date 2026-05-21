@@ -23,16 +23,19 @@ logger = logging.getLogger(__name__)
 
 class ValidationError(Exception):
     """Validation error for invalid input"""
+
     pass
 
 
 class NotFoundError(Exception):
     """Resource not found error"""
+
     pass
 
 
 class DatabaseError(Exception):
     """Database operation error"""
+
     pass
 
 
@@ -51,6 +54,7 @@ class PGAdapter:
             return
         if self._connection_string:
             from sqlalchemy.ext.asyncio import create_async_engine
+
             engine = create_async_engine(self._connection_string, echo=False)
             self._session = AsyncSession(engine)
             self._own_session = True
@@ -71,7 +75,9 @@ class PGAdapter:
         """创建图谱所需的数据库表"""
         session = await self._ensure_session()
 
-        await session.execute(text("""
+        await session.execute(
+            text(
+                """
             CREATE TABLE IF NOT EXISTS graph_nodes (
                 id TEXT PRIMARY KEY,
                 node_type TEXT NOT NULL,
@@ -79,9 +85,13 @@ class PGAdapter:
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 updated_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """))
+        """
+            )
+        )
 
-        await session.execute(text("""
+        await session.execute(
+            text(
+                """
             CREATE TABLE IF NOT EXISTS graph_edges (
                 id SERIAL PRIMARY KEY,
                 source_id TEXT NOT NULL,
@@ -94,20 +104,14 @@ class PGAdapter:
                 CONSTRAINT fk_edges_target FOREIGN KEY (target_id)
                     REFERENCES graph_nodes(id) ON DELETE CASCADE
             )
-        """))
+        """
+            )
+        )
 
-        await session.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_nodes_type ON graph_nodes(node_type)")
-        )
-        await session.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_edges_source ON graph_edges(source_id)")
-        )
-        await session.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_edges_target ON graph_edges(target_id)")
-        )
-        await session.execute(
-            text("CREATE INDEX IF NOT EXISTS idx_edges_type ON graph_edges(edge_type)")
-        )
+        await session.execute(text("CREATE INDEX IF NOT EXISTS idx_nodes_type ON graph_nodes(node_type)"))
+        await session.execute(text("CREATE INDEX IF NOT EXISTS idx_edges_source ON graph_edges(source_id)"))
+        await session.execute(text("CREATE INDEX IF NOT EXISTS idx_edges_target ON graph_edges(target_id)"))
+        await session.execute(text("CREATE INDEX IF NOT EXISTS idx_edges_type ON graph_edges(edge_type)"))
 
         await session.commit()
 
@@ -118,9 +122,7 @@ class PGAdapter:
         await session.execute(text("DROP TABLE IF EXISTS graph_nodes CASCADE"))
         await session.commit()
 
-    async def insert_node(
-        self, node_id: str, node_type: str, properties: dict = None
-    ) -> None:
+    async def insert_node(self, node_id: str, node_type: str, properties: dict = None) -> None:
         """插入节点"""
         if not node_id:
             raise ValidationError("node_id cannot be empty")
@@ -132,15 +134,17 @@ class PGAdapter:
 
         try:
             await session.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO graph_nodes (id, node_type, properties)
                     VALUES (:id, :node_type, :properties::jsonb)
                     ON CONFLICT (id) DO UPDATE SET
                         node_type = EXCLUDED.node_type,
                         properties = EXCLUDED.properties,
                         updated_at = NOW()
-                """),
-                {"id": node_id, "node_type": node_type, "properties": props}
+                """
+                ),
+                {"id": node_id, "node_type": node_type, "properties": props},
             )
             await session.commit()
         except Exception as e:
@@ -154,11 +158,13 @@ class PGAdapter:
 
         session = await self._ensure_session()
         result = await session.execute(
-            text("""
+            text(
+                """
                 SELECT id, node_type, properties, created_at, updated_at
                 FROM graph_nodes WHERE id = :id
-            """),
-            {"id": node_id}
+            """
+            ),
+            {"id": node_id},
         )
         row = result.fetchone()
         if row is None:
@@ -277,10 +283,7 @@ class PGAdapter:
 
         session = await self._ensure_session()
 
-        result = await session.execute(
-            text("SELECT properties FROM graph_nodes WHERE id = :id"),
-            {"id": node_id}
-        )
+        result = await session.execute(text("SELECT properties FROM graph_nodes WHERE id = :id"), {"id": node_id})
         row = result.fetchone()
         if row is None:
             return False
@@ -291,11 +294,13 @@ class PGAdapter:
         updated = {**existing, **properties}
 
         await session.execute(
-            text("""
+            text(
+                """
                 UPDATE graph_nodes SET properties = :properties::jsonb, updated_at = NOW()
                 WHERE id = :id
-            """),
-            {"id": node_id, "properties": json.dumps(updated)}
+            """
+            ),
+            {"id": node_id, "properties": json.dumps(updated)},
         )
         await session.commit()
         return True
@@ -306,17 +311,12 @@ class PGAdapter:
             raise ValidationError("node_id cannot be empty")
 
         session = await self._ensure_session()
-        result = await session.execute(
-            text("DELETE FROM graph_nodes WHERE id = :id"),
-            {"id": node_id}
-        )
+        result = await session.execute(text("DELETE FROM graph_nodes WHERE id = :id"), {"id": node_id})
         deleted = result.rowcount > 0
         await session.commit()
         return deleted
 
-    async def insert_edge(
-        self, source_id: str, target_id: str, edge_type: str, properties: dict = None
-    ) -> int | None:
+    async def insert_edge(self, source_id: str, target_id: str, edge_type: str, properties: dict = None) -> int | None:
         """插入边"""
         if not source_id or not target_id:
             raise ValidationError("source_id and target_id cannot be empty")
@@ -328,17 +328,19 @@ class PGAdapter:
 
         try:
             result = await session.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO graph_edges (source_id, target_id, edge_type, properties)
                     VALUES (:source_id, :target_id, :edge_type, :properties::jsonb)
                     RETURNING id
-                """),
+                """
+                ),
                 {
                     "source_id": source_id,
                     "target_id": target_id,
                     "edge_type": edge_type,
                     "properties": props,
-                }
+                },
             )
             edge_id = result.fetchone()[0]
             await session.commit()
@@ -361,11 +363,13 @@ class PGAdapter:
 
         session = await self._ensure_session()
         result = await session.execute(
-            text("""
+            text(
+                """
                 SELECT id, source_id, target_id, edge_type, properties, created_at
                 FROM graph_edges WHERE id = :id
-            """),
-            {"id": edge_id}
+            """
+            ),
+            {"id": edge_id},
         )
         row = result.fetchone()
         if row is None:
@@ -445,10 +449,7 @@ class PGAdapter:
             raise ValidationError("edge_id cannot be None")
 
         session = await self._ensure_session()
-        result = await session.execute(
-            text("DELETE FROM graph_edges WHERE id = :id"),
-            {"id": edge_id}
-        )
+        result = await session.execute(text("DELETE FROM graph_edges WHERE id = :id"), {"id": edge_id})
         deleted = result.rowcount > 0
         await session.commit()
         return deleted
@@ -464,7 +465,8 @@ class PGAdapter:
 
         session = await self._ensure_session()
         result = await session.execute(
-            text("""
+            text(
+                """
                 WITH RECURSIVE neighbors AS (
                     SELECT
                         CASE WHEN e.source_id = :node_id THEN e.target_id ELSE e.source_id END AS neighbor_id,
@@ -490,8 +492,9 @@ class PGAdapter:
                 SELECT DISTINCT neighbor_id, edge_type, properties, depth
                 FROM neighbors
                 ORDER BY depth, neighbor_id
-            """),
-            {"node_id": node_id, "depth": depth}
+            """
+            ),
+            {"node_id": node_id, "depth": depth},
         )
         return [
             {
@@ -503,9 +506,7 @@ class PGAdapter:
             for r in result.fetchall()
         ]
 
-    async def find_path(
-        self, start_id: str, end_id: str, max_depth: int = 10
-    ) -> list[str] | None:
+    async def find_path(self, start_id: str, end_id: str, max_depth: int = 10) -> list[str] | None:
         """使用 BFS 在图中查找路径"""
         if not start_id or not end_id:
             raise ValidationError("start_id and end_id cannot be empty")
@@ -516,7 +517,8 @@ class PGAdapter:
 
         session = await self._ensure_session()
         result = await session.execute(
-            text("""
+            text(
+                """
                 WITH RECURSIVE path_search AS (
                     SELECT
                         source_id AS node_id,
@@ -540,8 +542,9 @@ class PGAdapter:
                 WHERE node_id = :end_id
                 ORDER BY depth
                 LIMIT 1
-            """),
-            {"start_id": start_id, "end_id": end_id, "max_depth": max_depth}
+            """
+            ),
+            {"start_id": start_id, "end_id": end_id, "max_depth": max_depth},
         )
         row = result.fetchone()
         if row is None:
@@ -559,7 +562,8 @@ class PGAdapter:
 
         session = await self._ensure_session()
         result = await session.execute(
-            text("""
+            text(
+                """
                 WITH RECURSIVE bfs AS (
                     SELECT source_id AS node_id, 1 AS depth
                     FROM graph_edges WHERE source_id = :start_id
@@ -577,8 +581,9 @@ class PGAdapter:
                     WHERE b.depth < :max_depth
                 )
                 SELECT DISTINCT node_id, depth FROM bfs WHERE node_id != :start_id ORDER BY depth
-            """),
-            {"start_id": start_id, "max_depth": max_depth}
+            """
+            ),
+            {"start_id": start_id, "max_depth": max_depth},
         )
         result_list = [start_id]
         for row in result.fetchall():
@@ -601,7 +606,8 @@ class PGAdapter:
 
         session = await self._ensure_session()
         result = await session.execute(
-            text("""
+            text(
+                """
                 WITH RECURSIVE dfs AS (
                     SELECT source_id AS node_id,
                            ARRAY[source_id] AS visited,
@@ -625,8 +631,9 @@ class PGAdapter:
                     )
                 )
                 SELECT DISTINCT node_id FROM dfs WHERE node_id != :start_id ORDER BY depth
-            """),
-            {"start_id": start_id, "max_depth": max_depth}
+            """
+            ),
+            {"start_id": start_id, "max_depth": max_depth},
         )
         result_list = [start_id]
         for row in result.fetchall():
@@ -650,19 +657,21 @@ class PGAdapter:
         for node in nodes:
             props = json.dumps(node.get("properties", {}))
             await session.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO graph_nodes (id, node_type, properties)
                     VALUES (:id, :node_type, :properties::jsonb)
                     ON CONFLICT (id) DO UPDATE SET
                         node_type = EXCLUDED.node_type,
                         properties = EXCLUDED.properties,
                         updated_at = NOW()
-                """),
+                """
+                ),
                 {
                     "id": node["id"],
                     "node_type": node["node_type"],
                     "properties": props,
-                }
+                },
             )
             count += 1
         await session.commit()
@@ -693,22 +702,25 @@ class PGAdapter:
             props = json.dumps(edge.get("properties", {}))
             try:
                 await session.execute(
-                    text("""
+                    text(
+                        """
                         INSERT INTO graph_edges (source_id, target_id, edge_type, properties)
                         VALUES (:source_id, :target_id, :edge_type, :properties::jsonb)
-                    """),
+                    """
+                    ),
                     {
                         "source_id": edge["source_id"],
                         "target_id": edge["target_id"],
                         "edge_type": edge["edge_type"],
                         "properties": props,
-                    }
+                    },
                 )
                 count += 1
             except Exception as e:
                 # KG-015: Log specific error but continue processing
-                logger.warning("Batch edge insert failed for edge %s->%s: %s",
-                             edge.get("source_id"), edge.get("target_id"), e)
+                logger.warning(
+                    "Batch edge insert failed for edge %s->%s: %s", edge.get("source_id"), edge.get("target_id"), e
+                )
                 # Continue with next edge instead of aborting entire batch
         await session.commit()
         return count
@@ -722,13 +734,10 @@ class PGAdapter:
         session = await self._ensure_session()
         if node_type:
             result = await session.execute(
-                text("SELECT COUNT(*) FROM graph_nodes WHERE node_type = :node_type"),
-                {"node_type": node_type}
+                text("SELECT COUNT(*) FROM graph_nodes WHERE node_type = :node_type"), {"node_type": node_type}
             )
         else:
-            result = await session.execute(
-                text("SELECT COUNT(*) FROM graph_nodes")
-            )
+            result = await session.execute(text("SELECT COUNT(*) FROM graph_nodes"))
         return result.fetchone()[0]
 
     async def count_edges(self, edge_type: str | None = None) -> int:
@@ -736,13 +745,10 @@ class PGAdapter:
         session = await self._ensure_session()
         if edge_type:
             result = await session.execute(
-                text("SELECT COUNT(*) FROM graph_edges WHERE edge_type = :edge_type"),
-                {"edge_type": edge_type}
+                text("SELECT COUNT(*) FROM graph_edges WHERE edge_type = :edge_type"), {"edge_type": edge_type}
             )
         else:
-            result = await session.execute(
-                text("SELECT COUNT(*) FROM graph_edges")
-            )
+            result = await session.execute(text("SELECT COUNT(*) FROM graph_edges"))
         return result.fetchone()[0]
 
 
@@ -787,9 +793,7 @@ class MockPGAdapter:
     def drop_tables(self) -> None:
         self.create_tables()
 
-    def insert_node(
-        self, node_id: str, node_type: str, properties: dict = None
-    ) -> None:
+    def insert_node(self, node_id: str, node_type: str, properties: dict = None) -> None:
         props = dict(properties or {})
         if node_id in self._nodes:
             self._nodes[node_id]["node_type"] = node_type
@@ -816,9 +820,7 @@ class MockPGAdapter:
             nodes = nodes[:limit]
         return nodes
 
-    def query_nodes(
-        self, node_type: str | None = None, limit: int = None, offset: int = None, **filters
-    ) -> list[dict]:
+    def query_nodes(self, node_type: str | None = None, limit: int = None, offset: int = None, **filters) -> list[dict]:
         results = list(self._nodes.values())
         if node_type:
             results = [n for n in results if n["node_type"] == node_type]
@@ -852,15 +854,12 @@ class MockPGAdapter:
         if node_id in self._nodes:
             del self._nodes[node_id]
             self._edges = {
-                eid: e for eid, e in self._edges.items()
-                if e["source_id"] != node_id and e["target_id"] != node_id
+                eid: e for eid, e in self._edges.items() if e["source_id"] != node_id and e["target_id"] != node_id
             }
             return True
         return False
 
-    def insert_edge(
-        self, source_id: str, target_id: str, edge_type: str, properties: dict = None
-    ) -> int | None:
+    def insert_edge(self, source_id: str, target_id: str, edge_type: str, properties: dict = None) -> int | None:
         edge_id = self._next_edge_id
         self._next_edge_id += 1
         self._edges[edge_id] = {
@@ -886,10 +885,7 @@ class MockPGAdapter:
     ) -> list[dict]:
         results = list(self._edges.values())
         if source_id:
-            results = [
-                e for e in results
-                if e["source_id"] == source_id or e["target_id"] == source_id
-            ]
+            results = [e for e in results if e["source_id"] == source_id or e["target_id"] == source_id]
         if target_id:
             results = [e for e in results if e["target_id"] == target_id]
         if edge_type:
@@ -929,18 +925,18 @@ class MockPGAdapter:
                 else:
                     continue
                 if neighbor not in visited and d < max_depth:
-                    result.append({
-                        "neighbor_id": neighbor,
-                        "edge_type": edge["edge_type"],
-                        "properties": edge["properties"],
-                        "depth": d + 1,
-                    })
+                    result.append(
+                        {
+                            "neighbor_id": neighbor,
+                            "edge_type": edge["edge_type"],
+                            "properties": edge["properties"],
+                            "depth": d + 1,
+                        }
+                    )
                     queue.append((neighbor, d + 1))
         return result
 
-    def find_path(
-        self, start_id: str, end_id: str, max_depth: int = 10
-    ) -> list[str] | None:
+    def find_path(self, start_id: str, end_id: str, max_depth: int = 10) -> list[str] | None:
         if start_id not in self._nodes:
             return None
         visited = {start_id}
@@ -1018,16 +1014,16 @@ class MockPGAdapter:
 
     def batch_insert_nodes(self, nodes: list[dict]) -> int:
         for node in nodes:
-            self.insert_node(
-                node["id"], node["node_type"], node.get("properties", {})
-            )
+            self.insert_node(node["id"], node["node_type"], node.get("properties", {}))
         return len(nodes)
 
     def batch_insert_edges(self, edges: list[dict]) -> int:
         for edge in edges:
             self.insert_edge(
-                edge["source_id"], edge["target_id"],
-                edge["edge_type"], edge.get("properties", {}),
+                edge["source_id"],
+                edge["target_id"],
+                edge["edge_type"],
+                edge.get("properties", {}),
             )
         return len(edges)
 

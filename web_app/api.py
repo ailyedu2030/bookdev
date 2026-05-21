@@ -107,7 +107,7 @@ async def create_project(req: ProjectCreate):
         "chapter_count": req.chapter_count,
         "status": "draft",
         "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "chapters": []
+        "chapters": [],
     }
     chapters[pid] = []
     log.append("project_created", {"id": pid, "name": req.name})
@@ -129,10 +129,7 @@ async def generate_content(req: GenerateRequest):
 
     start = time.time()
     resp = await minimax.generate(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        max_tokens=req.max_tokens,
-        temperature=0.6
+        system_prompt=system_prompt, user_prompt=user_prompt, max_tokens=req.max_tokens, temperature=0.6
     )
     latency = time.time() - start
 
@@ -140,7 +137,19 @@ async def generate_content(req: GenerateRequest):
     sec_result = security.filter_content(resp.content)
 
     # Quality assessment
-    mock = json.dumps({"scores": {"terminology_consistency": 8, "knowledge_accuracy": 9, "citation_validity": 7, "logical_coherence": 8, "format_compliance": 9}, "overall_score": 8.2, "reasoning": "auto"})
+    mock = json.dumps(
+        {
+            "scores": {
+                "terminology_consistency": 8,
+                "knowledge_accuracy": 9,
+                "citation_validity": 7,
+                "logical_coherence": 8,
+                "format_compliance": 9,
+            },
+            "overall_score": 8.2,
+            "reasoning": "auto",
+        }
+    )
     ml = MockLLMClient(response=mock)
     js = JudgeService(llm_client=ml)
     quality = await js.judge_content(resp.content[:500], f"{req.project_id}/{req.chapter_id}")
@@ -170,7 +179,9 @@ async def generate_content(req: GenerateRequest):
         chapters[req.project_id] = []
     chapters[req.project_id].append(chapter_data)
 
-    log.append("content_generated", {"project": req.project_id, "chapter": req.chapter_id, "tokens": resp.usage.total_tokens})
+    log.append(
+        "content_generated", {"project": req.project_id, "chapter": req.chapter_id, "tokens": resp.usage.total_tokens}
+    )
     monitor.record_metric("api.generate_tokens", resp.usage.total_tokens)
     monitor.record_metric("api.generate_latency", latency * 1000)
 

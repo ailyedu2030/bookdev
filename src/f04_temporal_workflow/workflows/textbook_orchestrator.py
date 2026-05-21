@@ -91,9 +91,7 @@ class TextbookOrchestratorWorkflow:
         """状态转换"""
         allowed = TextbookOrchestratorState.TRANSITIONS.get(self._state, [])
         if new_state not in allowed:
-            raise RuntimeError(
-                f"Invalid state transition: {self._state} → {new_state}. Allowed: {allowed}"
-            )
+            raise RuntimeError(f"Invalid state transition: {self._state} → {new_state}. Allowed: {allowed}")
         logger.info(f"[Orchestrator] State: {self._state} → {new_state}")
         self._state = new_state
         # TEMP-019: 保存状态
@@ -154,8 +152,7 @@ class TextbookOrchestratorWorkflow:
         parallel_limit = config.get("parallel_chapter_limit", 5)
 
         logger.info(
-            f"[Orchestrator:{textbook_id}] Starting textbook workflow: {title} "
-            f"({len(chapters_config)} chapters)"
+            f"[Orchestrator:{textbook_id}] Starting textbook workflow: {title} " f"({len(chapters_config)} chapters)"
         )
 
         # TEMP-019: 从持久化存储恢复状态
@@ -267,26 +264,29 @@ class TextbookOrchestratorWorkflow:
                 ch_config = batch[i]
                 if isinstance(result, Exception):
                     logger.error(
-                        f"[Orchestrator:{textbook_id}] Chapter "
-                        f"'{ch_config.get('chapter_id')}' failed: {result}"
+                        f"[Orchestrator:{textbook_id}] Chapter " f"'{ch_config.get('chapter_id')}' failed: {result}"
                     )
                     # TEMP-008: 补偿逻辑 - 记录失败并继续
-                    chapter_results.append({
-                        "chapter_id": ch_config.get("chapter_id", "unknown"),
-                        "status": "FAILED",
-                        "error": str(result),
-                        # 补偿：标记需要人工处理
-                        "compensation_needed": True,
-                    })
+                    chapter_results.append(
+                        {
+                            "chapter_id": ch_config.get("chapter_id", "unknown"),
+                            "status": "FAILED",
+                            "error": str(result),
+                            # 补偿：标记需要人工处理
+                            "compensation_needed": True,
+                        }
+                    )
                     # 可能需要清理已部分完成的工作
                 elif isinstance(result, ChildWorkflowFailedError):
                     logger.error(f"[Orchestrator:{textbook_id}] Child workflow failed: {result}")
-                    chapter_results.append({
-                        "chapter_id": result.child_id,
-                        "status": "FAILED",
-                        "error": result.original_error,
-                        "compensation_needed": True,
-                    })
+                    chapter_results.append(
+                        {
+                            "chapter_id": result.child_id,
+                            "status": "FAILED",
+                            "error": result.original_error,
+                            "compensation_needed": True,
+                        }
+                    )
                 else:
                     chapter_results.append(result)
 
@@ -443,7 +443,7 @@ class TextbookOrchestratorWorkflow:
                         "heartbeat_count": self._heartbeat_count,
                         "workflow_id": workflow_id,
                         "state": self._state,
-                    }
+                    },
                 )
                 logger.debug(f"[Orchestrator:{textbook_id}] Heartbeat #{self._heartbeat_count}")
             except Exception as e:
@@ -462,21 +462,25 @@ class TextbookOrchestratorWorkflow:
         if quality_results:
             for qr in quality_results:
                 if qr.get("grade") in ("C", "D"):
-                    risks.append({
-                        "chapter_id": qr["chapter_id"],
-                        "type": "LOW_QUALITY",
-                        "severity": "HIGH" if qr.get("grade") == "D" else "MEDIUM",
-                        "detail": f"Chapter scored grade {qr['grade']} ({qr['overall_score']})",
-                    })
+                    risks.append(
+                        {
+                            "chapter_id": qr["chapter_id"],
+                            "type": "LOW_QUALITY",
+                            "severity": "HIGH" if qr.get("grade") == "D" else "MEDIUM",
+                            "detail": f"Chapter scored grade {qr['grade']} ({qr['overall_score']})",
+                        }
+                    )
 
         if self._batch_scan_result:
             for v in self._batch_scan_result.get("violations", []):
-                risks.append({
-                    "chapter_id": v.get("chapter_id", ""),
-                    "type": "SECURITY_VIOLATION",
-                    "severity": v.get("severity", "MEDIUM"),
-                    "detail": v.get("rule_name", "Security violation found"),
-                })
+                risks.append(
+                    {
+                        "chapter_id": v.get("chapter_id", ""),
+                        "type": "SECURITY_VIOLATION",
+                        "severity": v.get("severity", "MEDIUM"),
+                        "detail": v.get("rule_name", "Security violation found"),
+                    }
+                )
 
         # 计算整体风险级别
         severity_scores = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
@@ -564,7 +568,9 @@ class TextbookOrchestratorWorkflow:
             "textbook_id": self._workflow_state.get("textbook_id", "unknown"),
             "state": self._state,
             "total_chapters": len(self._chapter_results),
-            "completed_chapters": len([c for c in self._chapter_results if c.get("status") in ("COMPLETED", "NEEDS_REVIEW")]),
+            "completed_chapters": len(
+                [c for c in self._chapter_results if c.get("status") in ("COMPLETED", "NEEDS_REVIEW")]
+            ),
             "failed_chapters": len([c for c in self._chapter_results if c.get("status") == "FAILED"]),
             "heartbeat_count": self._heartbeat_count,
         }
@@ -574,7 +580,9 @@ class TextbookOrchestratorWorkflow:
         """查询工作流进度"""
         progress = {
             "outline_generated": "outline" in self._workflow_state,
-            "chapters_completed": len([c for c in self._chapter_results if c.get("status") in ("COMPLETED", "NEEDS_REVIEW")]),
+            "chapters_completed": len(
+                [c for c in self._chapter_results if c.get("status") in ("COMPLETED", "NEEDS_REVIEW")]
+            ),
             "total_chapters": len(self._chapter_results),
             "batch_scan_done": self._batch_scan_result is not None,
             "quality_scoring_done": self._batch_quality_result is not None,

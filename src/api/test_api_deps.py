@@ -70,8 +70,7 @@ class TestJWTTokens:
         from api.deps import create_access_token
 
         token = create_access_token(
-            {"sub": "user123", "email": "test@example.com", "role": "viewer"},
-            expires_delta=timedelta(hours=1)
+            {"sub": "user123", "email": "test@example.com", "role": "viewer"}, expires_delta=timedelta(hours=1)
         )
         assert isinstance(token, str)
 
@@ -136,8 +135,7 @@ class TestJWTTokens:
         from api.deps import create_access_token, decode_token
 
         token = create_access_token(
-            {"sub": "user123", "email": "test@example.com", "role": "viewer"},
-            expires_delta=timedelta(minutes=-1)
+            {"sub": "user123", "email": "test@example.com", "role": "viewer"}, expires_delta=timedelta(minutes=-1)
         )
 
         with pytest.raises(HTTPException) as exc_info:
@@ -203,7 +201,7 @@ class TestUserModel:
             email="test@example.com",
             role="editor",
             organization_id="org456",
-            clearance_level=3
+            clearance_level=3,
         )
 
         assert user.id == "user123"
@@ -217,12 +215,7 @@ class TestUserModel:
         """Test User creation with default values."""
         from api.deps import User
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="viewer"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="viewer")
 
         assert user.organization_id is None
         assert user.clearance_level == 1
@@ -237,12 +230,7 @@ class TestTokenDataModel:
 
         now = int(datetime.now(UTC).timestamp())
         token_data = TokenData(
-            sub="user123",
-            email="test@example.com",
-            role="admin",
-            exp=now + 3600,
-            iat=now,
-            type="access"
+            sub="user123", email="test@example.com", role="admin", exp=now + 3600, iat=now, type="access"
         )
 
         assert token_data.sub == "user123"
@@ -307,12 +295,7 @@ class TestRBACChecker:
         """Test RBACChecker allows access with valid permission."""
         from api.deps import RBACChecker, User
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="editor"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="editor")
 
         checker = RBACChecker(["chapters:read"])
         result = checker(user)
@@ -322,12 +305,7 @@ class TestRBACChecker:
         """Test RBACChecker allows wildcard permission."""
         from api.deps import RBACChecker, User
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="content_admin"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="content_admin")
 
         checker = RBACChecker(["projects:create"])
         result = checker(user)
@@ -337,12 +315,7 @@ class TestRBACChecker:
         """Test RBACChecker denies access without permission."""
         from api.deps import RBACChecker, User
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="viewer"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="viewer")
 
         checker = RBACChecker(["chapters:create"])
 
@@ -356,12 +329,7 @@ class TestRBACChecker:
         """Test system_admin bypasses permission check."""
         from api.deps import RBACChecker, User
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="system_admin"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="system_admin")
 
         checker = RBACChecker(["anything:delete"])
         result = checker(user)
@@ -389,12 +357,7 @@ class TestRequireRole:
 
         role_check = require_role("admin", "editor")
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="editor"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="editor")
 
         result = await role_check(user)
         assert result == user
@@ -406,12 +369,7 @@ class TestRequireRole:
 
         role_check = require_role("admin")
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="viewer"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="viewer")
 
         with pytest.raises(HTTPException) as exc_info:
             await role_check(user)
@@ -429,12 +387,7 @@ class TestRequireMinRole:
 
         min_role_check = require_min_role("editor")
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="editor"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="editor")
 
         result = await min_role_check(user)
         assert result == user
@@ -446,12 +399,7 @@ class TestRequireMinRole:
 
         min_role_check = require_min_role("editor")
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="viewer"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="viewer")
 
         with pytest.raises(HTTPException) as exc_info:
             await min_role_check(user)
@@ -466,12 +414,7 @@ class TestRequireMinRole:
 
         min_role_check = require_min_role("editor")
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="editor"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="editor")
 
         result = await min_role_check(user)
         assert result == user
@@ -485,11 +428,7 @@ class TestGetCurrentUser:
         """Test get_current_user returns user for valid token."""
         from api.deps import create_access_token, get_current_user
 
-        token = create_access_token({
-            "sub": "user123",
-            "email": "test@example.com",
-            "role": "editor"
-        })
+        token = create_access_token({"sub": "user123", "email": "test@example.com", "role": "editor"})
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         mock_request = MagicMock()
@@ -517,12 +456,7 @@ class TestGetCurrentUser:
         """Test get_current_user returns user from request.state if available."""
         from api.deps import User, get_current_user
 
-        user = User(
-            id="state_user",
-            username="stateuser",
-            email="state@example.com",
-            role="viewer"
-        )
+        user = User(id="state_user", username="stateuser", email="state@example.com", role="viewer")
 
         mock_request = MagicMock()
         mock_request.state = MagicMock()
@@ -554,12 +488,7 @@ class TestGetCurrentActiveUser:
         """Test get_current_active_user returns user when authenticated."""
         from api.deps import User, get_current_active_user
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="editor"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="editor")
 
         result = await get_current_active_user(user)
         assert result == user
@@ -584,11 +513,7 @@ class TestGetOptionalUser:
         """Test get_optional_user returns user when token provided."""
         from api.deps import create_access_token, get_optional_user
 
-        token = create_access_token({
-            "sub": "user123",
-            "email": "test@example.com",
-            "role": "editor"
-        })
+        token = create_access_token({"sub": "user123", "email": "test@example.com", "role": "editor"})
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         mock_request = MagicMock()
@@ -632,7 +557,7 @@ class TestDatabaseSession:
             "username": "testuser",
             "email": "test@example.com",
             "role": "editor",
-            "password_hash": "hashed_password_123"
+            "password_hash": "hashed_password_123",
         }
 
         created_user = session.create_user(user_data)
@@ -654,7 +579,7 @@ class TestDatabaseSession:
             "username": "testuser",
             "email": "test@example.com",
             "role": "editor",
-            "password_hash": "hashed_password_123"
+            "password_hash": "hashed_password_123",
         }
 
         created = session.create_user(user_data)
@@ -675,11 +600,7 @@ class TestDatabaseSession:
         from api.deps import DatabaseSession
 
         session = DatabaseSession()
-        project_data = {
-            "name": "Test Project",
-            "description": "A test project",
-            "owner_id": "owner123"
-        }
+        project_data = {"name": "Test Project", "description": "A test project", "owner_id": "owner123"}
 
         created = session.create_project(project_data)
         assert created["id"] is not None
@@ -737,11 +658,7 @@ class TestDatabaseSession:
         session = DatabaseSession()
         project = session.create_project({"name": "Test Project", "owner_id": "owner1"})
 
-        chapter_data = {
-            "project_id": project["id"],
-            "title": "Chapter 1",
-            "order_num": 1
-        }
+        chapter_data = {"project_id": project["id"], "title": "Chapter 1", "order_num": 1}
 
         created = session.create_chapter(chapter_data)
         assert created["id"] is not None
@@ -798,11 +715,7 @@ class TestDatabaseSession:
         from api.deps import DatabaseSession
 
         session = DatabaseSession()
-        term_data = {
-            "term": "TestTerm",
-            "definition": "A test term definition",
-            "domain": "testing"
-        }
+        term_data = {"term": "TestTerm", "definition": "A test term definition", "domain": "testing"}
 
         created = session.create_term(term_data)
         assert created["id"] is not None
@@ -968,12 +881,7 @@ class TestRequireMinRoleEdgeCases:
 
         min_role_check = require_min_role("editor")
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="viewer"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="viewer")
 
         with pytest.raises(HTTPException) as exc_info:
             await min_role_check(user)
@@ -1073,12 +981,9 @@ class TestDatabaseSessionEdgeCases:
         project = session.create_project({"name": "Test Project", "owner_id": "owner1"})
         parent = session.create_chapter({"project_id": project["id"], "title": "Parent", "order_num": 1})
 
-        child = session.create_chapter({
-            "project_id": project["id"],
-            "title": "Child Chapter",
-            "order_num": 2,
-            "parent_chapter_id": parent["id"]
-        })
+        child = session.create_chapter(
+            {"project_id": project["id"], "title": "Child Chapter", "order_num": 2, "parent_chapter_id": parent["id"]}
+        )
 
         assert child["parent_chapter_id"] == parent["id"]
 
@@ -1125,12 +1030,7 @@ class TestRBACCheckerEdgeCases:
         """Test RBACChecker allows access when called directly with valid user."""
         from api.deps import RBACChecker, User
 
-        user = User(
-            id="user123",
-            username="testuser",
-            email="test@example.com",
-            role="editor"
-        )
+        user = User(id="user123", username="testuser", email="test@example.com", role="editor")
 
         checker = RBACChecker(["chapters:create"])
         result = checker(user)
@@ -1176,11 +1076,7 @@ class TestDecodeTokenTypeMismatch:
         """Test decode_token raises when access token used as refresh."""
         from api.deps import create_access_token, decode_token
 
-        access_token = create_access_token({
-            "sub": "user123",
-            "email": "test@example.com",
-            "role": "viewer"
-        })
+        access_token = create_access_token({"sub": "user123", "email": "test@example.com", "role": "viewer"})
 
         with pytest.raises(HTTPException) as exc_info:
             decode_token(access_token, "refresh")
@@ -1192,11 +1088,7 @@ class TestDecodeTokenTypeMismatch:
         """Test decode_token raises when refresh token used as access."""
         from api.deps import create_refresh_token, decode_token
 
-        refresh_token = create_refresh_token({
-            "sub": "user123",
-            "email": "test@example.com",
-            "role": "viewer"
-        })
+        refresh_token = create_refresh_token({"sub": "user123", "email": "test@example.com", "role": "viewer"})
 
         with pytest.raises(HTTPException) as exc_info:
             decode_token(refresh_token, "access")
@@ -1212,17 +1104,13 @@ class TestDecodeTokenTypeMismatch:
 
         from api.deps import create_access_token, get_current_user
 
-        token = create_access_token({
-            "sub": "user123",
-            "email": "test@example.com",
-            "role": "viewer"
-        })
+        token = create_access_token({"sub": "user123", "email": "test@example.com", "role": "viewer"})
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         mock_request = MagicMock()
         mock_request.state = MagicMock()
 
-        with patch('api.deps.jwt.decode') as mock_decode:
+        with patch("api.deps.jwt.decode") as mock_decode:
             mock_decode.side_effect = ValueError("Unexpected error during decode")
 
             with pytest.raises(HTTPException) as exc_info:
@@ -1246,7 +1134,7 @@ class TestDecodeTokenInvalidType:
             "email": "test@example.com",
             "role": "viewer",
             "exp": 9999999999,
-            "iat": 1234567890
+            "iat": 1234567890,
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 

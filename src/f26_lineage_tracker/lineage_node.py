@@ -10,6 +10,7 @@ from typing import Any
 
 class NodeType(Enum):
     """节点类型枚举"""
+
     SOURCE = "source"
     TRANSFORM = "transform"
     AGGREGATE = "aggregate"
@@ -21,6 +22,7 @@ class NodeType(Enum):
 @dataclass
 class DataSource:
     """数据源定义"""
+
     source_id: str
     source_type: str
     name: str
@@ -38,6 +40,7 @@ class DataSource:
 @dataclass
 class LineageNode:
     """血缘节点"""
+
     node_id: str
     data_id: str
     node_type: NodeType
@@ -61,6 +64,7 @@ class LineageNode:
 @dataclass
 class LineageEdge:
     """血缘边"""
+
     edge_id: str
     source_node_id: str
     target_node_id: str
@@ -74,6 +78,7 @@ class LineageEdge:
 @dataclass
 class ImpactReport:
     """影响分析报告"""
+
     source_id: str
     affected_nodes: list[str]
     total_affected: int

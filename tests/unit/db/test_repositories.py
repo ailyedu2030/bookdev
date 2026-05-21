@@ -30,6 +30,7 @@ from db.repositories.user_repository import (
 
 class MockAsyncSession:
     """模拟 AsyncSession"""
+
     def __init__(self):
         self.add = MagicMock()
         self._flush_mock = AsyncMock()
@@ -128,7 +129,7 @@ class TestBaseRepository:
     @pytest.fixture
     def base_repo(self, mock_session, sample_uuid):
         model_class = create_mock_model_class()
-        with patch.object(BaseRepository, '__init__', lambda self, model, session: None):
+        with patch.object(BaseRepository, "__init__", lambda self, model, session: None):
             repo = BaseRepository(MagicMock(), mock_session)
             repo._model = model_class
             repo._session = mock_session
@@ -151,7 +152,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value={"id": sample_uuid, "name": "test"})
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.get_by_id(sample_uuid)
             assert result is not None
 
@@ -160,7 +161,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.get_by_id(sample_uuid)
             assert result is None
 
@@ -169,7 +170,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value={"id": sample_uuid})
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.get_one(name="test")
             assert result is not None
 
@@ -179,7 +180,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.find_all()
             assert len(result) == 2
 
@@ -189,7 +190,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.find_all(filters={"status": "active"})
             assert len(result) == 1
 
@@ -199,7 +200,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.find_all(order_by="created_at", order_desc=True)
             assert len(result) == 1
 
@@ -209,7 +210,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.find_all(limit=10, offset=5)
             assert len(result) == 1
 
@@ -218,7 +219,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=5)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.count()
             assert result == 5
 
@@ -227,7 +228,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=3)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.count(filters={"status": "active"})
             assert result == 3
 
@@ -239,13 +240,13 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=mock_instance)
         mock_session.execute.return_value = mock_result
 
-        with patch.object(base_repo, 'get_by_id', return_value=mock_instance):
+        with patch.object(base_repo, "get_by_id", return_value=mock_instance):
             result = await base_repo.update(sample_uuid, name="new_name")
             assert result is not None
 
     @pytest.mark.asyncio
     async def test_update_not_found(self, base_repo, mock_session, sample_uuid):
-        with patch.object(base_repo, 'get_by_id', return_value=None):
+        with patch.object(base_repo, "get_by_id", return_value=None):
             result = await base_repo.update(sample_uuid, name="new_name")
             assert result is None
 
@@ -253,13 +254,13 @@ class TestBaseRepository:
     async def test_delete_found(self, base_repo, mock_session, sample_uuid):
         mock_instance = MagicMock()
         mock_instance.id = sample_uuid
-        with patch.object(base_repo, 'get_by_id', return_value=mock_instance):
+        with patch.object(base_repo, "get_by_id", return_value=mock_instance):
             result = await base_repo.delete(sample_uuid)
             assert result is True
 
     @pytest.mark.asyncio
     async def test_delete_not_found(self, base_repo, mock_session, sample_uuid):
-        with patch.object(base_repo, 'get_by_id', return_value=None):
+        with patch.object(base_repo, "get_by_id", return_value=None):
             result = await base_repo.delete(sample_uuid)
             assert result is False
 
@@ -268,7 +269,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.exists(name="test")
             assert result is True
 
@@ -277,7 +278,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=0)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.exists(name="nonexistent")
             assert result is False
 
@@ -299,7 +300,7 @@ class TestBaseRepository:
         mock_result = MockExecuteResult(rowcount=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.update'):
+        with patch("db.repositories.base_repository.update"):
             result = await base_repo.bulk_update(ids, name="updated")
             assert result == 1
 
@@ -314,7 +315,7 @@ class TestBaseRepository:
         mock_result = MockExecuteResult(rowcount=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.delete'):
+        with patch("db.repositories.base_repository.delete"):
             result = await base_repo.bulk_delete(ids)
             assert result == 1
 
@@ -329,7 +330,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.get_by_ids([sample_uuid])
             assert len(result) == 1
 
@@ -344,7 +345,7 @@ class TestUserRepository:
 
     @pytest.fixture
     def user_repo(self, mock_session):
-        with patch.object(UserRepository, '__init__', lambda self, session: None):
+        with patch.object(UserRepository, "__init__", lambda self, session: None):
             repo = UserRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -353,14 +354,14 @@ class TestUserRepository:
     @pytest.mark.asyncio
     async def test_get_by_username(self, user_repo, mock_session):
         mock_user = MagicMock()
-        with patch.object(user_repo, 'get_one', return_value=mock_user):
+        with patch.object(user_repo, "get_one", return_value=mock_user):
             result = await user_repo.get_by_username("testuser")
             assert result == mock_user
 
     @pytest.mark.asyncio
     async def test_get_by_email(self, user_repo, mock_session):
         mock_user = MagicMock()
-        with patch.object(user_repo, 'get_one', return_value=mock_user):
+        with patch.object(user_repo, "get_one", return_value=mock_user):
             result = await user_repo.get_by_email("test@example.com")
             assert result == mock_user
 
@@ -370,32 +371,28 @@ class TestUserRepository:
         mock_user.id = sample_uuid
         mock_user.roles = []
 
-        with patch.object(user_repo, 'get_with_permissions', return_value=mock_user):
+        with patch.object(user_repo, "get_with_permissions", return_value=mock_user):
             result = await user_repo.get_with_permissions(sample_uuid)
             assert result == mock_user
 
     @pytest.mark.asyncio
     async def test_create_user(self, user_repo, mock_session):
         mock_user = MagicMock()
-        with patch.object(user_repo, 'create', return_value=mock_user):
-            result = await user_repo.create_user(
-                username="test",
-                email="test@example.com",
-                password_hash="hash"
-            )
+        with patch.object(user_repo, "create", return_value=mock_user):
+            result = await user_repo.create_user(username="test", email="test@example.com", password_hash="hash")
             assert result == mock_user
 
     @pytest.mark.asyncio
     async def test_update_password(self, user_repo, mock_session, sample_uuid):
         mock_user = MagicMock()
-        with patch.object(user_repo, 'update', return_value=mock_user):
+        with patch.object(user_repo, "update", return_value=mock_user):
             result = await user_repo.update_password(sample_uuid, "new_hash")
             assert result == mock_user
 
     @pytest.mark.asyncio
     async def test_update_email(self, user_repo, mock_session, sample_uuid):
         mock_user = MagicMock()
-        with patch.object(user_repo, 'update', return_value=mock_user):
+        with patch.object(user_repo, "update", return_value=mock_user):
             result = await user_repo.update_email(sample_uuid, "new@example.com")
             assert result == mock_user
 
@@ -404,8 +401,8 @@ class TestUserRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
-            with patch('db.repositories.user_repository.and_'):
+        with patch("db.repositories.user_repository.select"):
+            with patch("db.repositories.user_repository.and_"):
                 result = await user_repo.remove_role(sample_uuid, sample_uuid)
                 assert result is False
 
@@ -414,7 +411,7 @@ class TestUserRepository:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
+        with patch("db.repositories.user_repository.select"):
             result = await user_repo.has_permission(sample_uuid, "projects", "read")
             assert result is True
 
@@ -424,7 +421,7 @@ class TestUserRepository:
         mock_result = MockSelectResult(scalars_value=mock_users)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
+        with patch("db.repositories.user_repository.select"):
             result = await user_repo.search_by_username("test")
             assert len(result) == 1
 
@@ -434,7 +431,7 @@ class TestUserRepository:
         mock_result = MockSelectResult(scalars_value=mock_users)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
+        with patch("db.repositories.user_repository.select"):
             result = await user_repo.search_by_email("test")
             assert len(result) == 1
 
@@ -444,7 +441,7 @@ class TestRoleRepository:
 
     @pytest.fixture
     def role_repo(self, mock_session):
-        with patch.object(RoleRepository, '__init__', lambda self, session: None):
+        with patch.object(RoleRepository, "__init__", lambda self, session: None):
             repo = RoleRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -453,7 +450,7 @@ class TestRoleRepository:
     @pytest.mark.asyncio
     async def test_get_by_name(self, role_repo, mock_session):
         mock_role = MagicMock()
-        with patch.object(role_repo, 'get_one', return_value=mock_role):
+        with patch.object(role_repo, "get_one", return_value=mock_role):
             result = await role_repo.get_by_name("admin")
             assert result == mock_role
 
@@ -462,8 +459,8 @@ class TestRoleRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
-            with patch('db.repositories.user_repository.and_'):
+        with patch("db.repositories.user_repository.select"):
+            with patch("db.repositories.user_repository.and_"):
                 result = await role_repo.remove_permission(sample_uuid, sample_uuid)
                 assert result is False
 
@@ -473,7 +470,7 @@ class TestPermissionRepository:
 
     @pytest.fixture
     def perm_repo(self, mock_session):
-        with patch.object(PermissionRepository, '__init__', lambda self, session: None):
+        with patch.object(PermissionRepository, "__init__", lambda self, session: None):
             repo = PermissionRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -482,14 +479,14 @@ class TestPermissionRepository:
     @pytest.mark.asyncio
     async def test_get_by_resource_action(self, perm_repo, mock_session):
         mock_perm = MagicMock()
-        with patch.object(perm_repo, 'get_one', return_value=mock_perm):
+        with patch.object(perm_repo, "get_one", return_value=mock_perm):
             result = await perm_repo.get_by_resource_action("projects", "read")
             assert result == mock_perm
 
     @pytest.mark.asyncio
     async def test_get_by_resource(self, perm_repo, mock_session):
         mock_perms = [MagicMock()]
-        with patch.object(perm_repo, 'find_all', return_value=mock_perms):
+        with patch.object(perm_repo, "find_all", return_value=mock_perms):
             result = await perm_repo.get_by_resource("projects")
             assert result == mock_perms
 
@@ -502,7 +499,7 @@ class TestPermissionRepository:
         mock_result = MockSelectResult(scalars_value=mock_perms)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
+        with patch("db.repositories.user_repository.select"):
             result = await perm_repo.get_all_grouped_by_resource()
             assert "projects" in result
 
@@ -512,7 +509,7 @@ class TestProjectRepository:
 
     @pytest.fixture
     def project_repo(self, mock_session):
-        with patch.object(ProjectRepository, '__init__', lambda self, session: None):
+        with patch.object(ProjectRepository, "__init__", lambda self, session: None):
             repo = ProjectRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -521,38 +518,35 @@ class TestProjectRepository:
     @pytest.mark.asyncio
     async def test_get_by_owner(self, project_repo, mock_session, sample_uuid):
         mock_projects = [MagicMock()]
-        with patch.object(project_repo, 'find_all', return_value=mock_projects):
+        with patch.object(project_repo, "find_all", return_value=mock_projects):
             result = await project_repo.get_by_owner(sample_uuid)
             assert result == mock_projects
 
     @pytest.mark.asyncio
     async def test_get_by_status(self, project_repo, mock_session):
         mock_projects = [MagicMock()]
-        with patch.object(project_repo, 'find_all', return_value=mock_projects):
+        with patch.object(project_repo, "find_all", return_value=mock_projects):
             result = await project_repo.get_by_status("active")
             assert result == mock_projects
 
     @pytest.mark.asyncio
     async def test_create_project(self, project_repo, mock_session, sample_uuid):
         mock_project = MagicMock()
-        with patch.object(project_repo, 'create', return_value=mock_project):
-            result = await project_repo.create_project(
-                name="Test Project",
-                owner_id=sample_uuid
-            )
+        with patch.object(project_repo, "create", return_value=mock_project):
+            result = await project_repo.create_project(name="Test Project", owner_id=sample_uuid)
             assert result == mock_project
 
     @pytest.mark.asyncio
     async def test_update_progress(self, project_repo, mock_session, sample_uuid):
         mock_project = MagicMock()
-        with patch.object(project_repo, 'update', return_value=mock_project):
+        with patch.object(project_repo, "update", return_value=mock_project):
             result = await project_repo.update_progress(sample_uuid, 50)
             assert result == mock_project
 
     @pytest.mark.asyncio
     async def test_update_status(self, project_repo, mock_session, sample_uuid):
         mock_project = MagicMock()
-        with patch.object(project_repo, 'update', return_value=mock_project):
+        with patch.object(project_repo, "update", return_value=mock_project):
             result = await project_repo.update_status(sample_uuid, "completed")
             assert result == mock_project
 
@@ -560,8 +554,8 @@ class TestProjectRepository:
     async def test_increment_chapter_count(self, project_repo, mock_session, sample_uuid):
         mock_project = MagicMock()
         mock_project.total_chapters = 5
-        with patch.object(project_repo, 'get_by_id', return_value=mock_project):
-            with patch.object(project_repo, 'update', return_value=mock_project):
+        with patch.object(project_repo, "get_by_id", return_value=mock_project):
+            with patch.object(project_repo, "update", return_value=mock_project):
                 result = await project_repo.increment_chapter_count(sample_uuid)
                 assert result is not None
 
@@ -569,8 +563,8 @@ class TestProjectRepository:
     async def test_decrement_chapter_count(self, project_repo, mock_session, sample_uuid):
         mock_project = MagicMock()
         mock_project.total_chapters = 5
-        with patch.object(project_repo, 'get_by_id', return_value=mock_project):
-            with patch.object(project_repo, 'update', return_value=mock_project):
+        with patch.object(project_repo, "get_by_id", return_value=mock_project):
+            with patch.object(project_repo, "update", return_value=mock_project):
                 result = await project_repo.decrement_chapter_count(sample_uuid)
                 assert result is not None
 
@@ -580,7 +574,7 @@ class TestProjectRepository:
         mock_result = MockSelectResult(scalars_value=mock_projects)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
+        with patch("db.repositories.project_repository.select"):
             result = await project_repo.search_by_name("test")
             assert len(result) == 1
 
@@ -590,7 +584,7 @@ class TestProjectMemberRepository:
 
     @pytest.fixture
     def member_repo(self, mock_session):
-        with patch.object(ProjectMemberRepository, '__init__', lambda self, session: None):
+        with patch.object(ProjectMemberRepository, "__init__", lambda self, session: None):
             repo = ProjectMemberRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -599,19 +593,19 @@ class TestProjectMemberRepository:
     @pytest.mark.asyncio
     async def test_add_member(self, member_repo, mock_session, sample_uuid):
         mock_member = MagicMock()
-        with patch.object(member_repo, 'create', return_value=mock_member):
+        with patch.object(member_repo, "create", return_value=mock_member):
             result = await member_repo.add_member(sample_uuid, sample_uuid, "editor")
             assert result == mock_member
 
     @pytest.mark.asyncio
     async def test_is_member_true(self, member_repo, mock_session, sample_uuid):
-        with patch.object(member_repo, 'exists', return_value=True):
+        with patch.object(member_repo, "exists", return_value=True):
             result = await member_repo.is_member(sample_uuid, sample_uuid)
             assert result is True
 
     @pytest.mark.asyncio
     async def test_is_member_false(self, member_repo, mock_session, sample_uuid):
-        with patch.object(member_repo, 'exists', return_value=False):
+        with patch.object(member_repo, "exists", return_value=False):
             result = await member_repo.is_member(sample_uuid, sample_uuid)
             assert result is False
 
@@ -620,8 +614,8 @@ class TestProjectMemberRepository:
         mock_result = MockSelectResult(scalar_value="editor")
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.and_'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.and_"):
                 result = await member_repo.get_member_role(sample_uuid, sample_uuid)
                 assert result == "editor"
 
@@ -631,7 +625,7 @@ class TestProjectMemberRepository:
         mock_result = MockSelectResult(scalar_value=mock_member)
         mock_session.execute.return_value = mock_result
 
-        with patch.object(member_repo, 'get_one', return_value=mock_member):
+        with patch.object(member_repo, "get_one", return_value=mock_member):
             result = await member_repo.update_member_role(sample_uuid, sample_uuid, "admin")
             assert result is not None
 
@@ -640,8 +634,8 @@ class TestProjectMemberRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.and_'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.and_"):
                 result = await member_repo.remove_member(sample_uuid, sample_uuid)
                 assert result is False
 
@@ -651,7 +645,7 @@ class TestChapterRepository:
 
     @pytest.fixture
     def chapter_repo(self, mock_session):
-        with patch.object(ChapterRepository, '__init__', lambda self, session: None):
+        with patch.object(ChapterRepository, "__init__", lambda self, session: None):
             repo = ChapterRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -660,47 +654,44 @@ class TestChapterRepository:
     @pytest.mark.asyncio
     async def test_get_by_project(self, chapter_repo, mock_session, sample_uuid):
         mock_chapters = [MagicMock()]
-        with patch.object(chapter_repo, 'find_all', return_value=mock_chapters):
+        with patch.object(chapter_repo, "find_all", return_value=mock_chapters):
             result = await chapter_repo.get_by_project(sample_uuid)
             assert result == mock_chapters
 
     @pytest.mark.asyncio
     async def test_create_chapter(self, chapter_repo, mock_session, sample_uuid):
         mock_chapter = MagicMock()
-        with patch.object(chapter_repo, 'create', return_value=mock_chapter):
+        with patch.object(chapter_repo, "create", return_value=mock_chapter):
             result = await chapter_repo.create_chapter(
-                project_id=sample_uuid,
-                title="Test Chapter",
-                order_num=1,
-                version="1.0"
+                project_id=sample_uuid, title="Test Chapter", order_num=1, version="1.0"
             )
             assert result == mock_chapter
 
     @pytest.mark.asyncio
     async def test_update_status(self, chapter_repo, mock_session, sample_uuid):
         mock_chapter = MagicMock()
-        with patch.object(chapter_repo, 'update', return_value=mock_chapter):
+        with patch.object(chapter_repo, "update", return_value=mock_chapter):
             result = await chapter_repo.update_status(sample_uuid, "published")
             assert result == mock_chapter
 
     @pytest.mark.asyncio
     async def test_update_content_hash(self, chapter_repo, mock_session, sample_uuid):
         mock_chapter = MagicMock()
-        with patch.object(chapter_repo, 'update', return_value=mock_chapter):
+        with patch.object(chapter_repo, "update", return_value=mock_chapter):
             result = await chapter_repo.update_content_hash(sample_uuid, "abc123")
             assert result == mock_chapter
 
     @pytest.mark.asyncio
     async def test_update_word_count(self, chapter_repo, mock_session, sample_uuid):
         mock_chapter = MagicMock()
-        with patch.object(chapter_repo, 'update', return_value=mock_chapter):
+        with patch.object(chapter_repo, "update", return_value=mock_chapter):
             result = await chapter_repo.update_word_count(sample_uuid, 1000)
             assert result == mock_chapter
 
     @pytest.mark.asyncio
     async def test_get_by_parent(self, chapter_repo, mock_session, sample_uuid):
         mock_chapters = [MagicMock()]
-        with patch.object(chapter_repo, 'find_all', return_value=mock_chapters):
+        with patch.object(chapter_repo, "find_all", return_value=mock_chapters):
             result = await chapter_repo.get_by_parent(sample_uuid)
             assert result == mock_chapters
 
@@ -709,7 +700,7 @@ class TestChapterRepository:
         mock_result = MockSelectResult(scalar_value=5)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select'):
+        with patch("db.repositories.chapter_repository.select"):
             result = await chapter_repo.get_next_order_num(sample_uuid)
             assert result == 6
 
@@ -724,7 +715,7 @@ class TestChapterRepository:
         mock_begin_ctx.__aexit__ = AsyncMock(return_value=None)
         mock_session.begin = MagicMock(return_value=mock_begin_ctx)
 
-        with patch.object(chapter_repo, 'update', return_value=mock_chapter):
+        with patch.object(chapter_repo, "update", return_value=mock_chapter):
             await chapter_repo.reorder_chapters(sample_uuid, chapter_orders)
 
 
@@ -733,7 +724,7 @@ class TestChapterContentRepository:
 
     @pytest.fixture
     def content_repo(self, mock_session):
-        with patch.object(ChapterContentRepository, '__init__', lambda self, session: None):
+        with patch.object(ChapterContentRepository, "__init__", lambda self, session: None):
             repo = ChapterContentRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -742,7 +733,7 @@ class TestChapterContentRepository:
     @pytest.mark.asyncio
     async def test_get_by_chapter(self, content_repo, mock_session, sample_uuid):
         mock_contents = [MagicMock()]
-        with patch.object(content_repo, 'find_all', return_value=mock_contents):
+        with patch.object(content_repo, "find_all", return_value=mock_contents):
             result = await content_repo.get_by_chapter(sample_uuid)
             assert result == mock_contents
 
@@ -752,26 +743,23 @@ class TestChapterContentRepository:
         mock_result = MockSelectResult(scalar_value=mock_content)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select'):
+        with patch("db.repositories.chapter_repository.select"):
             result = await content_repo.get_latest(sample_uuid)
             assert result == mock_content
 
     @pytest.mark.asyncio
     async def test_create_content(self, content_repo, mock_session, sample_uuid):
         mock_content = MagicMock()
-        with patch.object(content_repo, 'create', return_value=mock_content):
+        with patch.object(content_repo, "create", return_value=mock_content):
             result = await content_repo.create_content(
-                chapter_id=sample_uuid,
-                content="Test content",
-                version="1.0",
-                content_hash="abc123"
+                chapter_id=sample_uuid, content="Test content", version="1.0", content_hash="abc123"
             )
             assert result == mock_content
 
     @pytest.mark.asyncio
     async def test_get_by_hash(self, content_repo, mock_session, sample_uuid):
         mock_content = MagicMock()
-        with patch.object(content_repo, 'get_one', return_value=mock_content):
+        with patch.object(content_repo, "get_one", return_value=mock_content):
             result = await content_repo.get_by_hash(sample_uuid, "abc123")
             assert result == mock_content
 
@@ -781,7 +769,7 @@ class TestSectionRepository:
 
     @pytest.fixture
     def section_repo(self, mock_session):
-        with patch.object(SectionRepository, '__init__', lambda self, session: None):
+        with patch.object(SectionRepository, "__init__", lambda self, session: None):
             repo = SectionRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -790,26 +778,22 @@ class TestSectionRepository:
     @pytest.mark.asyncio
     async def test_get_by_chapter(self, section_repo, mock_session, sample_uuid):
         mock_sections = [MagicMock()]
-        with patch.object(section_repo, 'find_all', return_value=mock_sections):
+        with patch.object(section_repo, "find_all", return_value=mock_sections):
             result = await section_repo.get_by_chapter(sample_uuid)
             assert result == mock_sections
 
     @pytest.mark.asyncio
     async def test_get_child_sections(self, section_repo, mock_session, sample_uuid):
         mock_sections = [MagicMock()]
-        with patch.object(section_repo, 'find_all', return_value=mock_sections):
+        with patch.object(section_repo, "find_all", return_value=mock_sections):
             result = await section_repo.get_child_sections(sample_uuid)
             assert result == mock_sections
 
     @pytest.mark.asyncio
     async def test_create_section(self, section_repo, mock_session, sample_uuid):
         mock_section = MagicMock()
-        with patch.object(section_repo, 'create', return_value=mock_section):
-            result = await section_repo.create_section(
-                chapter_id=sample_uuid,
-                title="Test Section",
-                order_num=1
-            )
+        with patch.object(section_repo, "create", return_value=mock_section):
+            result = await section_repo.create_section(chapter_id=sample_uuid, title="Test Section", order_num=1)
             assert result == mock_section
 
     @pytest.mark.asyncio
@@ -817,7 +801,7 @@ class TestSectionRepository:
         mock_result = MockSelectResult(scalar_value=3)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select'):
+        with patch("db.repositories.chapter_repository.select"):
             result = await section_repo.get_next_order_num(sample_uuid)
             assert result == 4
 
@@ -827,7 +811,7 @@ class TestAuditLogRepository:
 
     @pytest.fixture
     def audit_repo(self, mock_session):
-        with patch.object(AuditLogRepository, '__init__', lambda self, session: None):
+        with patch.object(AuditLogRepository, "__init__", lambda self, session: None):
             repo = AuditLogRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -836,21 +820,21 @@ class TestAuditLogRepository:
     @pytest.mark.asyncio
     async def test_get_by_user(self, audit_repo, mock_session, sample_uuid):
         mock_logs = [MagicMock()]
-        with patch.object(audit_repo, 'find_all', return_value=mock_logs):
+        with patch.object(audit_repo, "find_all", return_value=mock_logs):
             result = await audit_repo.get_by_user(sample_uuid)
             assert result == mock_logs
 
     @pytest.mark.asyncio
     async def test_get_by_resource(self, audit_repo, mock_session, sample_uuid):
         mock_logs = [MagicMock()]
-        with patch.object(audit_repo, 'find_all', return_value=mock_logs):
+        with patch.object(audit_repo, "find_all", return_value=mock_logs):
             result = await audit_repo.get_by_resource("project", sample_uuid)
             assert result == mock_logs
 
     @pytest.mark.asyncio
     async def test_get_by_event_type(self, audit_repo, mock_session):
         mock_logs = [MagicMock()]
-        with patch.object(audit_repo, 'find_all', return_value=mock_logs):
+        with patch.object(audit_repo, "find_all", return_value=mock_logs):
             result = await audit_repo.get_by_event_type("login")
             assert result == mock_logs
 
@@ -860,7 +844,7 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
+        with patch("db.repositories.audit_log_repository.select"):
             result = await audit_repo.get_recent_logs(hours=24)
             assert len(result) == 1
 
@@ -870,33 +854,27 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
-                result = await audit_repo.search_logs(
-                    event_type="login",
-                    user_id=sample_uuid
-                )
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
+                result = await audit_repo.search_logs(event_type="login", user_id=sample_uuid)
                 assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_create_log(self, audit_repo, mock_session, sample_uuid):
         mock_log = MagicMock()
-        with patch.object(audit_repo, 'create', return_value=mock_log):
-            result = await audit_repo.create_log(
-                event_type="login",
-                user_id=sample_uuid
-            )
+        with patch.object(audit_repo, "create", return_value=mock_log):
+            result = await audit_repo.create_log(event_type="login", user_id=sample_uuid)
             assert result == mock_log
 
     @pytest.mark.asyncio
     async def test_count_by_event_type(self, audit_repo, mock_session):
-        with patch.object(audit_repo, 'count', return_value=5):
+        with patch.object(audit_repo, "count", return_value=5):
             result = await audit_repo.count_by_event_type("login")
             assert result == 5
 
     @pytest.mark.asyncio
     async def test_count_by_user(self, audit_repo, mock_session, sample_uuid):
-        with patch.object(audit_repo, 'count', return_value=10):
+        with patch.object(audit_repo, "count", return_value=10):
             result = await audit_repo.count_by_user(sample_uuid)
             assert result == 10
 
@@ -906,8 +884,8 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.get_failed_actions()
                 assert len(result) == 1
 
@@ -917,8 +895,8 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.get_by_ip_address("192.168.1.1")
                 assert len(result) == 1
 
@@ -927,7 +905,7 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalar_value="valid_signature")
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
+        with patch("db.repositories.audit_log_repository.select"):
             result = await audit_repo.verify_signature(sample_uuid, "valid_signature")
             assert result is True
 
@@ -936,7 +914,7 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalar_value="other_signature")
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
+        with patch("db.repositories.audit_log_repository.select"):
             result = await audit_repo.verify_signature(sample_uuid, "wrong_signature")
             assert result is False
 
@@ -945,7 +923,7 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
+        with patch("db.repositories.audit_log_repository.select"):
             result = await audit_repo.verify_signature(sample_uuid, "any_signature")
             assert result is False
 
@@ -955,7 +933,7 @@ class TestTermRepository:
 
     @pytest.fixture
     def term_repo(self, mock_session):
-        with patch.object(TermRepository, '__init__', lambda self, session: None):
+        with patch.object(TermRepository, "__init__", lambda self, session: None):
             repo = TermRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -964,28 +942,28 @@ class TestTermRepository:
     @pytest.mark.asyncio
     async def test_get_by_term(self, term_repo, mock_session):
         mock_term = MagicMock()
-        with patch.object(term_repo, 'get_one', return_value=mock_term):
+        with patch.object(term_repo, "get_one", return_value=mock_term):
             result = await term_repo.get_by_term("test")
             assert result == mock_term
 
     @pytest.mark.asyncio
     async def test_get_by_domain(self, term_repo, mock_session):
         mock_terms = [MagicMock()]
-        with patch.object(term_repo, 'find_all', return_value=mock_terms):
+        with patch.object(term_repo, "find_all", return_value=mock_terms):
             result = await term_repo.get_by_domain("science")
             assert result == mock_terms
 
     @pytest.mark.asyncio
     async def test_get_locked_terms(self, term_repo, mock_session):
         mock_terms = [MagicMock()]
-        with patch.object(term_repo, 'find_all', return_value=mock_terms):
+        with patch.object(term_repo, "find_all", return_value=mock_terms):
             result = await term_repo.get_locked_terms()
             assert result == mock_terms
 
     @pytest.mark.asyncio
     async def test_get_unlocked_terms(self, term_repo, mock_session):
         mock_terms = [MagicMock()]
-        with patch.object(term_repo, 'find_all', return_value=mock_terms):
+        with patch.object(term_repo, "find_all", return_value=mock_terms):
             result = await term_repo.get_unlocked_terms()
             assert result == mock_terms
 
@@ -995,8 +973,8 @@ class TestTermRepository:
         mock_result = MockSelectResult(scalars_value=mock_terms)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.term_repository.select'):
-            with patch('db.repositories.term_repository.or_'):
+        with patch("db.repositories.term_repository.select"):
+            with patch("db.repositories.term_repository.or_"):
                 result = await term_repo.search_by_term("test")
                 assert len(result) == 1
 
@@ -1006,31 +984,28 @@ class TestTermRepository:
         mock_result = MockSelectResult(scalars_value=mock_terms)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.term_repository.select'):
+        with patch("db.repositories.term_repository.select"):
             result = await term_repo.search_by_definition("definition query")
             assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_create_term(self, term_repo, mock_session):
         mock_term = MagicMock()
-        with patch.object(term_repo, 'create', return_value=mock_term):
-            result = await term_repo.create_term(
-                term="test",
-                definition="test definition"
-            )
+        with patch.object(term_repo, "create", return_value=mock_term):
+            result = await term_repo.create_term(term="test", definition="test definition")
             assert result == mock_term
 
     @pytest.mark.asyncio
     async def test_lock_term(self, term_repo, mock_session, sample_uuid):
         mock_term = MagicMock()
-        with patch.object(term_repo, 'update', return_value=mock_term):
+        with patch.object(term_repo, "update", return_value=mock_term):
             result = await term_repo.lock_term(sample_uuid)
             assert result == mock_term
 
     @pytest.mark.asyncio
     async def test_unlock_term(self, term_repo, mock_session, sample_uuid):
         mock_term = MagicMock()
-        with patch.object(term_repo, 'update', return_value=mock_term):
+        with patch.object(term_repo, "update", return_value=mock_term):
             result = await term_repo.unlock_term(sample_uuid)
             assert result == mock_term
 
@@ -1038,13 +1013,13 @@ class TestTermRepository:
     async def test_add_synonym(self, term_repo, mock_session, sample_uuid):
         mock_term = MagicMock()
         mock_term.synonyms = []
-        with patch.object(term_repo, 'get_by_id', return_value=mock_term):
+        with patch.object(term_repo, "get_by_id", return_value=mock_term):
             result = await term_repo.add_synonym(sample_uuid, "new_synonym")
             assert result is not None
 
     @pytest.mark.asyncio
     async def test_add_synonym_not_found(self, term_repo, mock_session, sample_uuid):
-        with patch.object(term_repo, 'get_by_id', return_value=None):
+        with patch.object(term_repo, "get_by_id", return_value=None):
             result = await term_repo.add_synonym(sample_uuid, "new_synonym")
             assert result is None
 
@@ -1052,7 +1027,7 @@ class TestTermRepository:
     async def test_remove_synonym(self, term_repo, mock_session, sample_uuid):
         mock_term = MagicMock()
         mock_term.synonyms = ["existing"]
-        with patch.object(term_repo, 'get_by_id', return_value=mock_term):
+        with patch.object(term_repo, "get_by_id", return_value=mock_term):
             result = await term_repo.remove_synonym(sample_uuid, "existing")
             assert result is not None
 
@@ -1072,7 +1047,7 @@ class TestTermRepository:
         mock_result = MockSelectResult(scalars_value=[mock_similar])
         mock_session.execute = AsyncMock(return_value=mock_result)
 
-        with patch.object(term_repo, 'get_by_id', return_value=mock_term):
+        with patch.object(term_repo, "get_by_id", return_value=mock_term):
             result = await term_repo.find_similar_terms(sample_uuid)
             assert len(result) == 1
 
@@ -1082,7 +1057,7 @@ class TestConceptRepository:
 
     @pytest.fixture
     def concept_repo(self, mock_session):
-        with patch.object(ConceptRepository, '__init__', lambda self, session: None):
+        with patch.object(ConceptRepository, "__init__", lambda self, session: None):
             repo = ConceptRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -1091,28 +1066,28 @@ class TestConceptRepository:
     @pytest.mark.asyncio
     async def test_get_by_name(self, concept_repo, mock_session):
         mock_concept = MagicMock()
-        with patch.object(concept_repo, 'get_one', return_value=mock_concept):
+        with patch.object(concept_repo, "get_one", return_value=mock_concept):
             result = await concept_repo.get_by_name("test")
             assert result == mock_concept
 
     @pytest.mark.asyncio
     async def test_get_by_domain(self, concept_repo, mock_session):
         mock_concepts = [MagicMock()]
-        with patch.object(concept_repo, 'find_all', return_value=mock_concepts):
+        with patch.object(concept_repo, "find_all", return_value=mock_concepts):
             result = await concept_repo.get_by_domain("science")
             assert result == mock_concepts
 
     @pytest.mark.asyncio
     async def test_get_locked_concepts(self, concept_repo, mock_session):
         mock_concepts = [MagicMock()]
-        with patch.object(concept_repo, 'find_all', return_value=mock_concepts):
+        with patch.object(concept_repo, "find_all", return_value=mock_concepts):
             result = await concept_repo.get_locked_concepts()
             assert result == mock_concepts
 
     @pytest.mark.asyncio
     async def test_get_unlocked_concepts(self, concept_repo, mock_session):
         mock_concepts = [MagicMock()]
-        with patch.object(concept_repo, 'find_all', return_value=mock_concepts):
+        with patch.object(concept_repo, "find_all", return_value=mock_concepts):
             result = await concept_repo.get_unlocked_concepts()
             assert result == mock_concepts
 
@@ -1122,8 +1097,8 @@ class TestConceptRepository:
         mock_result = MockSelectResult(scalars_value=mock_concepts)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.term_repository.select'):
-            with patch('db.repositories.term_repository.or_'):
+        with patch("db.repositories.term_repository.select"):
+            with patch("db.repositories.term_repository.or_"):
                 result = await concept_repo.search_by_name("test")
                 assert len(result) == 1
 
@@ -1133,38 +1108,35 @@ class TestConceptRepository:
         mock_result = MockSelectResult(scalars_value=mock_concepts)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.term_repository.select'):
+        with patch("db.repositories.term_repository.select"):
             result = await concept_repo.search_by_definition("definition query")
             assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_create_concept(self, concept_repo, mock_session):
         mock_concept = MagicMock()
-        with patch.object(concept_repo, 'create', return_value=mock_concept):
-            result = await concept_repo.create_concept(
-                name="test",
-                definition="test definition"
-            )
+        with patch.object(concept_repo, "create", return_value=mock_concept):
+            result = await concept_repo.create_concept(name="test", definition="test definition")
             assert result == mock_concept
 
     @pytest.mark.asyncio
     async def test_lock_concept(self, concept_repo, mock_session, sample_uuid):
         mock_concept = MagicMock()
-        with patch.object(concept_repo, 'update', return_value=mock_concept):
+        with patch.object(concept_repo, "update", return_value=mock_concept):
             result = await concept_repo.lock_concept(sample_uuid)
             assert result == mock_concept
 
     @pytest.mark.asyncio
     async def test_unlock_concept(self, concept_repo, mock_session, sample_uuid):
         mock_concept = MagicMock()
-        with patch.object(concept_repo, 'update', return_value=mock_concept):
+        with patch.object(concept_repo, "update", return_value=mock_concept):
             result = await concept_repo.unlock_concept(sample_uuid)
             assert result == mock_concept
 
     @pytest.mark.asyncio
     async def test_get_by_source_chapter(self, concept_repo, mock_session, sample_uuid):
         mock_concepts = [MagicMock()]
-        with patch.object(concept_repo, 'find_all', return_value=mock_concepts):
+        with patch.object(concept_repo, "find_all", return_value=mock_concepts):
             result = await concept_repo.get_by_source_chapter(sample_uuid)
             assert result == mock_concepts
 
@@ -1172,7 +1144,7 @@ class TestConceptRepository:
     async def test_add_related_term(self, concept_repo, mock_session, sample_uuid):
         mock_concept = MagicMock()
         mock_concept.related_terms = []
-        with patch.object(concept_repo, 'get_by_id', return_value=mock_concept):
+        with patch.object(concept_repo, "get_by_id", return_value=mock_concept):
             result = await concept_repo.add_related_term(sample_uuid, "new_term")
             assert result is not None
 
@@ -1180,7 +1152,7 @@ class TestConceptRepository:
     async def test_remove_related_term(self, concept_repo, mock_session, sample_uuid):
         mock_concept = MagicMock()
         mock_concept.related_terms = ["existing"]
-        with patch.object(concept_repo, 'get_by_id', return_value=mock_concept):
+        with patch.object(concept_repo, "get_by_id", return_value=mock_concept):
             result = await concept_repo.remove_related_term(sample_uuid, "existing")
             assert result is not None
 
@@ -1190,7 +1162,7 @@ class TestKnowledgeGraphRepositoryMethods:
 
     @pytest.fixture
     def kg_repo(self, mock_session):
-        with patch.object(KnowledgeGraphRepository, '__init__', lambda self, session: None):
+        with patch.object(KnowledgeGraphRepository, "__init__", lambda self, session: None):
             repo = KnowledgeGraphRepository(mock_session)
             repo._session = mock_session
             return repo
@@ -1198,14 +1170,14 @@ class TestKnowledgeGraphRepositoryMethods:
     @pytest.mark.asyncio
     async def test_get_outgoing_edges(self, kg_repo, mock_session):
         mock_edges = [MagicMock()]
-        with patch.object(kg_repo, 'get_edges', return_value=mock_edges):
+        with patch.object(kg_repo, "get_edges", return_value=mock_edges):
             result = await kg_repo.get_outgoing_edges("node1")
             assert result == mock_edges
 
     @pytest.mark.asyncio
     async def test_get_incoming_edges(self, kg_repo, mock_session):
         mock_edges = [MagicMock()]
-        with patch.object(kg_repo, 'get_edges', return_value=mock_edges):
+        with patch.object(kg_repo, "get_edges", return_value=mock_edges):
             result = await kg_repo.get_incoming_edges("node1")
             assert result == mock_edges
 
@@ -1216,7 +1188,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_edge.edge_type = "KNOWS"
         mock_edge.properties = {}
 
-        with patch.object(kg_repo, 'get_edges', return_value=[mock_edge]):
+        with patch.object(kg_repo, "get_edges", return_value=[mock_edge]):
             result = await kg_repo.get_neighbors("node1", depth=1)
             assert len(result) == 1
             assert result[0]["neighbor_id"] == "node2"
@@ -1226,7 +1198,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=10)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.count_nodes()
             assert result == 10
 
@@ -1235,7 +1207,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=5)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.count_nodes(node_type="person")
             assert result == 5
 
@@ -1244,7 +1216,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=20)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.count_edges()
             assert result == 20
 
@@ -1253,7 +1225,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.node_exists("node1")
             assert result is True
 
@@ -1262,7 +1234,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=0)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.node_exists("nonexistent")
             assert result is False
 
@@ -1271,8 +1243,8 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
-            with patch('db.repositories.knowledge_graph_repository.and_'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
+            with patch("db.repositories.knowledge_graph_repository.and_"):
                 result = await kg_repo.edge_exists("node1", "node2", "KNOWS")
                 assert result is True
 
@@ -1281,8 +1253,8 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=0)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
-            with patch('db.repositories.knowledge_graph_repository.and_'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
+            with patch("db.repositories.knowledge_graph_repository.and_"):
                 result = await kg_repo.edge_exists("node1", "node2", "KNOWS")
                 assert result is False
 
@@ -1291,13 +1263,9 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_node = MagicMock()
         mock_session.refresh = AsyncMock(return_value=mock_node)
 
-        with patch('db.repositories.knowledge_graph_repository.GraphNode') as MockGraphNode:
+        with patch("db.repositories.knowledge_graph_repository.GraphNode") as MockGraphNode:
             MockGraphNode.return_value = mock_node
-            result = await kg_repo.create_node(
-                node_id="node1",
-                node_type="person",
-                properties={"name": "John"}
-            )
+            result = await kg_repo.create_node(node_id="node1", node_type="person", properties={"name": "John"})
             assert result == mock_node
             mock_session.add.assert_called_once_with(mock_node)
             await mock_session.flush()
@@ -1308,7 +1276,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=mock_node)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.get_node("node1")
             assert result == mock_node
 
@@ -1317,7 +1285,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.get_node("nonexistent")
             assert result is None
 
@@ -1327,7 +1295,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_nodes)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.get_all_nodes()
             assert len(result) == 2
 
@@ -1337,7 +1305,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_nodes)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.get_all_nodes(node_type="person")
             assert len(result) == 1
 
@@ -1348,27 +1316,27 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=mock_node)
         mock_session.execute.return_value = mock_result
 
-        with patch.object(kg_repo, 'get_node', return_value=mock_node):
+        with patch.object(kg_repo, "get_node", return_value=mock_node):
             result = await kg_repo.update_node("node1", {"name": "Updated"})
             assert result == mock_node
             assert mock_node.properties == {"name": "Updated"}
 
     @pytest.mark.asyncio
     async def test_update_node_not_found(self, kg_repo, mock_session):
-        with patch.object(kg_repo, 'get_node', return_value=None):
+        with patch.object(kg_repo, "get_node", return_value=None):
             result = await kg_repo.update_node("nonexistent", {"name": "Updated"})
             assert result is None
 
     @pytest.mark.asyncio
     async def test_delete_node_found(self, kg_repo, mock_session):
         mock_node = MagicMock()
-        with patch.object(kg_repo, 'get_node', return_value=mock_node):
+        with patch.object(kg_repo, "get_node", return_value=mock_node):
             result = await kg_repo.delete_node("node1")
             assert result is True
 
     @pytest.mark.asyncio
     async def test_delete_node_not_found(self, kg_repo, mock_session):
-        with patch.object(kg_repo, 'get_node', return_value=None):
+        with patch.object(kg_repo, "get_node", return_value=None):
             result = await kg_repo.delete_node("nonexistent")
             assert result is False
 
@@ -1378,23 +1346,15 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_target = MagicMock()
         mock_edge = MagicMock()
 
-        with patch.object(kg_repo, 'get_node', side_effect=[mock_source, mock_target]):
-            with patch('db.repositories.knowledge_graph_repository.GraphEdge', return_value=mock_edge):
-                result = await kg_repo.create_edge(
-                    source_id="node1",
-                    target_id="node2",
-                    edge_type="KNOWS"
-                )
+        with patch.object(kg_repo, "get_node", side_effect=[mock_source, mock_target]):
+            with patch("db.repositories.knowledge_graph_repository.GraphEdge", return_value=mock_edge):
+                result = await kg_repo.create_edge(source_id="node1", target_id="node2", edge_type="KNOWS")
                 assert result == mock_edge
 
     @pytest.mark.asyncio
     async def test_create_edge_source_not_found(self, kg_repo, mock_session):
-        with patch.object(kg_repo, 'get_node', return_value=None):
-            result = await kg_repo.create_edge(
-                source_id="nonexistent",
-                target_id="node2",
-                edge_type="KNOWS"
-            )
+        with patch.object(kg_repo, "get_node", return_value=None):
+            result = await kg_repo.create_edge(source_id="nonexistent", target_id="node2", edge_type="KNOWS")
             assert result is None
 
     @pytest.mark.asyncio
@@ -1403,7 +1363,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=mock_edge)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.get_edge(1)
             assert result == mock_edge
 
@@ -1412,7 +1372,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.get_edge(999)
             assert result is None
 
@@ -1422,21 +1382,21 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_edges)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
-            with patch('db.repositories.knowledge_graph_repository.and_'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
+            with patch("db.repositories.knowledge_graph_repository.and_"):
                 result = await kg_repo.get_edges(source_id="node1", edge_type="KNOWS")
                 assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_delete_edge_found(self, kg_repo, mock_session):
         mock_edge = MagicMock()
-        with patch.object(kg_repo, 'get_edge', return_value=mock_edge):
+        with patch.object(kg_repo, "get_edge", return_value=mock_edge):
             result = await kg_repo.delete_edge(1)
             assert result is True
 
     @pytest.mark.asyncio
     async def test_delete_edge_not_found(self, kg_repo, mock_session):
-        with patch.object(kg_repo, 'get_edge', return_value=None):
+        with patch.object(kg_repo, "get_edge", return_value=None):
             result = await kg_repo.delete_edge(999)
             assert result is False
 
@@ -1447,7 +1407,7 @@ class TestKnowledgeGraphRepositoryMethods:
             {"id": "node2", "node_type": "org", "properties": {"name": "Test"}},
         ]
 
-        with patch('db.repositories.knowledge_graph_repository.GraphNode') as MockGraphNode:
+        with patch("db.repositories.knowledge_graph_repository.GraphNode") as MockGraphNode:
             MockGraphNode.side_effect = lambda **kw: MagicMock(**kw)
             result = await kg_repo.batch_insert_nodes(nodes)
             assert result == 2
@@ -1458,7 +1418,7 @@ class TestKnowledgeGraphRepositoryMethods:
             {"source_id": "node1", "target_id": "node2", "edge_type": "KNOWS", "properties": {}},
         ]
 
-        with patch('db.repositories.knowledge_graph_repository.GraphEdge') as MockGraphEdge:
+        with patch("db.repositories.knowledge_graph_repository.GraphEdge") as MockGraphEdge:
             MockGraphEdge.side_effect = lambda **kw: MagicMock(**kw)
             result = await kg_repo.batch_insert_edges(edges)
             assert result == 1
@@ -1469,9 +1429,9 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_nodes)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
-            with patch('db.repositories.knowledge_graph_repository.and_'):
-                with patch('db.repositories.knowledge_graph_repository.text'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
+            with patch("db.repositories.knowledge_graph_repository.and_"):
+                with patch("db.repositories.knowledge_graph_repository.text"):
                     result = await kg_repo.query_nodes(node_type="person", name="John")
                     assert len(result) == 1
 
@@ -1481,7 +1441,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_nodes)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.query_nodes()
             assert len(result) == 1
 
@@ -1495,7 +1455,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result.fetchall.return_value = mock_rows
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.text'):
+        with patch("db.repositories.knowledge_graph_repository.text"):
             result = await kg_repo.get_neighbors("node1", depth=2)
             assert len(result) == 2
 
@@ -1506,7 +1466,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result.fetchone.return_value = mock_row
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.text'):
+        with patch("db.repositories.knowledge_graph_repository.text"):
             result = await kg_repo.find_path("node1", "node3")
             assert result == ["node1", "node2", "node3"]
 
@@ -1516,7 +1476,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result.fetchone.return_value = None
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.text'):
+        with patch("db.repositories.knowledge_graph_repository.text"):
             result = await kg_repo.find_path("node1", "node999")
             assert result is None
 
@@ -1535,7 +1495,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result.fetchall.return_value = mock_rows
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.text'):
+        with patch("db.repositories.knowledge_graph_repository.text"):
             result = await kg_repo.bfs_traverse("node1")
             assert "node1" in result
 
@@ -1548,13 +1508,14 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_incoming.source_id = "node3"
 
         call_count = [0]
+
         async def get_edges_side_effect(**kwargs):
             call_count[0] += 1
             if call_count[0] == 1:
                 return [mock_edge]
             return [mock_incoming]
 
-        with patch.object(kg_repo, 'get_edges', side_effect=get_edges_side_effect):
+        with patch.object(kg_repo, "get_edges", side_effect=get_edges_side_effect):
             result = await kg_repo.dfs_traverse("node1")
             assert "node1" in result
 
@@ -1563,8 +1524,8 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=[])
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
-            with patch('db.repositories.knowledge_graph_repository.and_'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
+            with patch("db.repositories.knowledge_graph_repository.and_"):
                 result = await kg_repo.get_edges(source_id="nonexistent")
                 assert len(result) == 0
 
@@ -1574,7 +1535,7 @@ class TestUserRepositoryMore:
 
     @pytest.fixture
     def user_repo(self, mock_session):
-        with patch.object(UserRepository, '__init__', lambda self, session: None):
+        with patch.object(UserRepository, "__init__", lambda self, session: None):
             repo = UserRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -1587,8 +1548,8 @@ class TestUserRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_user)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
-            with patch('db.repositories.user_repository.selectinload'):
+        with patch("db.repositories.user_repository.select"):
+            with patch("db.repositories.user_repository.selectinload"):
                 result = await user_repo.get_with_roles(sample_uuid)
                 assert result == mock_user
 
@@ -1597,7 +1558,7 @@ class TestUserRepositoryMore:
         mock_user_role = MagicMock()
         mock_session.refresh = AsyncMock(return_value=mock_user_role)
 
-        with patch('db.repositories.user_repository.UserRole') as MockUserRole:
+        with patch("db.repositories.user_repository.UserRole") as MockUserRole:
             MockUserRole.return_value = mock_user_role
             result = await user_repo.assign_role(sample_uuid, sample_uuid)
             assert result == mock_user_role
@@ -1608,7 +1569,7 @@ class TestRoleRepositoryMore:
 
     @pytest.fixture
     def role_repo(self, mock_session):
-        with patch.object(RoleRepository, '__init__', lambda self, session: None):
+        with patch.object(RoleRepository, "__init__", lambda self, session: None):
             repo = RoleRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -1621,8 +1582,8 @@ class TestRoleRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_role)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
-            with patch('db.repositories.user_repository.selectinload'):
+        with patch("db.repositories.user_repository.select"):
+            with patch("db.repositories.user_repository.selectinload"):
                 result = await role_repo.get_with_permissions(sample_uuid)
                 assert result == mock_role
 
@@ -1632,8 +1593,8 @@ class TestRoleRepositoryMore:
         mock_result = MockSelectResult(scalars_value=mock_roles)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
-            with patch('db.repositories.user_repository.selectinload'):
+        with patch("db.repositories.user_repository.select"):
+            with patch("db.repositories.user_repository.selectinload"):
                 result = await role_repo.get_all_with_user_count()
                 assert len(result) == 1
 
@@ -1642,7 +1603,7 @@ class TestRoleRepositoryMore:
         mock_role_perm = MagicMock()
         mock_session.refresh = AsyncMock(return_value=mock_role_perm)
 
-        with patch('db.repositories.user_repository.RolePermission') as MockRolePermission:
+        with patch("db.repositories.user_repository.RolePermission") as MockRolePermission:
             MockRolePermission.return_value = mock_role_perm
             result = await role_repo.assign_permission(sample_uuid, sample_uuid)
             assert result == mock_role_perm
@@ -1653,7 +1614,7 @@ class TestProjectRepositoryMore:
 
     @pytest.fixture
     def project_repo(self, mock_session):
-        with patch.object(ProjectRepository, '__init__', lambda self, session: None):
+        with patch.object(ProjectRepository, "__init__", lambda self, session: None):
             repo = ProjectRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -1665,8 +1626,8 @@ class TestProjectRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_project)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.joinedload'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.joinedload"):
                 result = await project_repo.get_with_owner(sample_uuid)
                 assert result == mock_project
 
@@ -1676,8 +1637,8 @@ class TestProjectRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_project)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.selectinload'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.selectinload"):
                 result = await project_repo.get_with_members(sample_uuid)
                 assert result == mock_project
 
@@ -1687,8 +1648,8 @@ class TestProjectRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_project)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.selectinload'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.selectinload"):
                 result = await project_repo.get_with_chapters(sample_uuid)
                 assert result == mock_project
 
@@ -1698,9 +1659,9 @@ class TestProjectRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_project)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.joinedload'):
-                with patch('db.repositories.project_repository.selectinload'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.joinedload"):
+                with patch("db.repositories.project_repository.selectinload"):
                     result = await project_repo.get_full_project(sample_uuid)
                     assert result == mock_project
 
@@ -1710,7 +1671,7 @@ class TestChapterRepositoryMore:
 
     @pytest.fixture
     def chapter_repo(self, mock_session):
-        with patch.object(ChapterRepository, '__init__', lambda self, session: None):
+        with patch.object(ChapterRepository, "__init__", lambda self, session: None):
             repo = ChapterRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -1722,8 +1683,8 @@ class TestChapterRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_chapter)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select'):
-            with patch('db.repositories.chapter_repository.selectinload'):
+        with patch("db.repositories.chapter_repository.select"):
+            with patch("db.repositories.chapter_repository.selectinload"):
                 result = await chapter_repo.get_with_contents(sample_uuid)
                 assert result == mock_chapter
 
@@ -1733,8 +1694,8 @@ class TestChapterRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_chapter)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select'):
-            with patch('db.repositories.chapter_repository.selectinload'):
+        with patch("db.repositories.chapter_repository.select"):
+            with patch("db.repositories.chapter_repository.selectinload"):
                 result = await chapter_repo.get_with_sections(sample_uuid)
                 assert result == mock_chapter
 
@@ -1744,8 +1705,8 @@ class TestChapterRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_chapter)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select'):
-            with patch('db.repositories.chapter_repository.selectinload'):
+        with patch("db.repositories.chapter_repository.select"):
+            with patch("db.repositories.chapter_repository.selectinload"):
                 result = await chapter_repo.get_with_reviews(sample_uuid)
                 assert result == mock_chapter
 
@@ -1755,8 +1716,8 @@ class TestChapterRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_chapter)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select'):
-            with patch('db.repositories.chapter_repository.selectinload'):
+        with patch("db.repositories.chapter_repository.select"):
+            with patch("db.repositories.chapter_repository.selectinload"):
                 result = await chapter_repo.get_full_chapter(sample_uuid)
                 assert result == mock_chapter
 
@@ -1766,7 +1727,7 @@ class TestAuditLogRepositoryMore:
 
     @pytest.fixture
     def audit_repo(self, mock_session):
-        with patch.object(AuditLogRepository, '__init__', lambda self, session: None):
+        with patch.object(AuditLogRepository, "__init__", lambda self, session: None):
             repo = AuditLogRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -1779,10 +1740,11 @@ class TestAuditLogRepositoryMore:
         mock_session.execute.return_value = mock_result
 
         from datetime import datetime, timedelta
+
         since = datetime.utcnow() - timedelta(hours=1)
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.get_by_event_type("login", since=since)
                 assert len(result) == 1
 
@@ -1792,10 +1754,11 @@ class TestAuditLogRepositoryMore:
         mock_session.execute.return_value = mock_result
 
         from datetime import datetime, timedelta
+
         since = datetime.utcnow() - timedelta(hours=1)
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.count_by_event_type("login", since=since)
                 assert result == 10
 
@@ -1805,10 +1768,11 @@ class TestAuditLogRepositoryMore:
         mock_session.execute.return_value = mock_result
 
         from datetime import datetime, timedelta
+
         since = datetime.utcnow() - timedelta(hours=1)
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.count_by_user(sample_uuid, since=since)
                 assert result == 5
 
@@ -1819,16 +1783,13 @@ class TestAuditLogRepositoryMore:
         mock_session.execute.return_value = mock_result
 
         from datetime import datetime, timedelta
+
         since = datetime.utcnow() - timedelta(hours=24)
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.search_logs(
-                    event_type="login",
-                    user_id=sample_uuid,
-                    action="create",
-                    since=since,
-                    limit=50
+                    event_type="login", user_id=sample_uuid, action="create", since=since, limit=50
                 )
                 assert len(result) == 1
 
@@ -1838,7 +1799,7 @@ class TestAuditLogRepositoryMore:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
+        with patch("db.repositories.audit_log_repository.select"):
             result = await audit_repo.search_logs(limit=10)
             assert len(result) == 1
 
@@ -1848,7 +1809,7 @@ class TestSectionRepositoryMore:
 
     @pytest.fixture
     def section_repo(self, mock_session):
-        with patch.object(SectionRepository, '__init__', lambda self, session: None):
+        with patch.object(SectionRepository, "__init__", lambda self, session: None):
             repo = SectionRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -1860,8 +1821,8 @@ class TestSectionRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_section)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select'):
-            with patch('db.repositories.chapter_repository.joinedload'):
+        with patch("db.repositories.chapter_repository.select"):
+            with patch("db.repositories.chapter_repository.joinedload"):
                 result = await section_repo.get_with_parent(sample_uuid)
                 assert result == mock_section
 
@@ -1872,7 +1833,7 @@ class TestBaseRepositoryEdgeCases:
     @pytest.fixture
     def base_repo(self, mock_session, sample_uuid):
         model_class = create_mock_model_class()
-        with patch.object(BaseRepository, '__init__', lambda self, model, session: None):
+        with patch.object(BaseRepository, "__init__", lambda self, model, session: None):
             repo = BaseRepository(MagicMock(), mock_session)
             repo._model = model_class
             repo._session = mock_session
@@ -1884,7 +1845,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.find_all(offset_with_row_number=True)
             assert len(result) == 1
 
@@ -1893,7 +1854,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.exists(status=None)
             assert result is True
 
@@ -1902,7 +1863,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=2)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.count(filters={"status": None})
             assert result == 2
 
@@ -1912,7 +1873,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.find_all(filters={"status": None})
             assert len(result) == 1
 
@@ -1922,7 +1883,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select'):
+        with patch("db.repositories.base_repository.select"):
             result = await base_repo.find_all(order_by="created_at", order_desc=False)
             assert len(result) == 1
 
@@ -1945,7 +1906,7 @@ class TestUserRepositoryEdgeCases:
 
     @pytest.fixture
     def user_repo(self, mock_session):
-        with patch.object(UserRepository, '__init__', lambda self, session: None):
+        with patch.object(UserRepository, "__init__", lambda self, session: None):
             repo = UserRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -1953,7 +1914,7 @@ class TestUserRepositoryEdgeCases:
 
     @pytest.mark.asyncio
     async def test_get_with_permissions_user_not_found(self, user_repo, mock_session, sample_uuid):
-        with patch.object(user_repo, 'get_with_permissions', return_value=None):
+        with patch.object(user_repo, "get_with_permissions", return_value=None):
             result = await user_repo.get_with_permissions(sample_uuid)
             assert result is None
 
@@ -1965,7 +1926,7 @@ class TestUserRepositoryEdgeCases:
         mock_role.id = sample_uuid
         mock_user.roles = [mock_role]
 
-        with patch.object(user_repo, 'get_with_permissions', return_value=mock_user):
+        with patch.object(user_repo, "get_with_permissions", return_value=mock_user):
             result = await user_repo.get_with_permissions(sample_uuid)
             assert result == mock_user
 
@@ -1975,8 +1936,8 @@ class TestUserRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=mock_user_role)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
-            with patch('db.repositories.user_repository.and_'):
+        with patch("db.repositories.user_repository.select"):
+            with patch("db.repositories.user_repository.and_"):
                 result = await user_repo.remove_role(sample_uuid, sample_uuid)
                 assert result is True
 
@@ -1985,7 +1946,7 @@ class TestUserRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
+        with patch("db.repositories.user_repository.select"):
             result = await user_repo.has_permission(sample_uuid, "projects", "read")
             assert result is True
 
@@ -1994,7 +1955,7 @@ class TestUserRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=0)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
+        with patch("db.repositories.user_repository.select"):
             result = await user_repo.has_permission(sample_uuid, "projects", "delete")
             assert result is False
 
@@ -2004,7 +1965,7 @@ class TestRoleRepositoryEdgeCases:
 
     @pytest.fixture
     def role_repo(self, mock_session):
-        with patch.object(RoleRepository, '__init__', lambda self, session: None):
+        with patch.object(RoleRepository, "__init__", lambda self, session: None):
             repo = RoleRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2016,8 +1977,8 @@ class TestRoleRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=mock_role_perm)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select'):
-            with patch('db.repositories.user_repository.and_'):
+        with patch("db.repositories.user_repository.select"):
+            with patch("db.repositories.user_repository.and_"):
                 result = await role_repo.remove_permission(sample_uuid, sample_uuid)
                 assert result is True
 
@@ -2027,7 +1988,7 @@ class TestPermissionRepositoryEdgeCases:
 
     @pytest.fixture
     def perm_repo(self, mock_session):
-        with patch.object(PermissionRepository, '__init__', lambda self, session: None):
+        with patch.object(PermissionRepository, "__init__", lambda self, session: None):
             repo = PermissionRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2039,7 +2000,7 @@ class TestProjectRepositoryEdgeCases:
 
     @pytest.fixture
     def project_repo(self, mock_session):
-        with patch.object(ProjectRepository, '__init__', lambda self, session: None):
+        with patch.object(ProjectRepository, "__init__", lambda self, session: None):
             repo = ProjectRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2047,7 +2008,7 @@ class TestProjectRepositoryEdgeCases:
 
     @pytest.fixture
     def member_repo(self, mock_session):
-        with patch.object(ProjectMemberRepository, '__init__', lambda self, session: None):
+        with patch.object(ProjectMemberRepository, "__init__", lambda self, session: None):
             repo = ProjectMemberRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2056,13 +2017,13 @@ class TestProjectRepositoryEdgeCases:
     @pytest.mark.asyncio
     async def test_get_by_owner_with_status(self, project_repo, mock_session, sample_uuid):
         mock_projects = [MagicMock()]
-        with patch.object(project_repo, 'find_all', return_value=mock_projects):
+        with patch.object(project_repo, "find_all", return_value=mock_projects):
             result = await project_repo.get_by_owner(sample_uuid, status="active")
             assert result == mock_projects
 
     @pytest.mark.asyncio
     async def test_increment_chapter_count_not_found(self, project_repo, mock_session, sample_uuid):
-        with patch.object(project_repo, 'get_by_id', return_value=None):
+        with patch.object(project_repo, "get_by_id", return_value=None):
             result = await project_repo.increment_chapter_count(sample_uuid)
             assert result is None
 
@@ -2070,7 +2031,7 @@ class TestProjectRepositoryEdgeCases:
     async def test_decrement_chapter_count_zero(self, project_repo, mock_session, sample_uuid):
         mock_project = MagicMock()
         mock_project.total_chapters = 0
-        with patch.object(project_repo, 'get_by_id', return_value=mock_project):
+        with patch.object(project_repo, "get_by_id", return_value=mock_project):
             result = await project_repo.decrement_chapter_count(sample_uuid)
             assert result is None
 
@@ -2080,8 +2041,8 @@ class TestProjectRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_members)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.joinedload'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.joinedload"):
                 result = await member_repo.get_members_of_project(sample_uuid)
                 assert len(result) == 1
 
@@ -2091,8 +2052,8 @@ class TestProjectRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_members)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.joinedload'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.joinedload"):
                 result = await member_repo.get_projects_of_user(sample_uuid)
                 assert len(result) == 1
 
@@ -2101,7 +2062,7 @@ class TestProjectRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch.object(member_repo, 'get_one', return_value=None):
+        with patch.object(member_repo, "get_one", return_value=None):
             result = await member_repo.update_member_role(sample_uuid, sample_uuid, "admin")
             assert result is None
 
@@ -2111,8 +2072,8 @@ class TestProjectRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=mock_member)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select'):
-            with patch('db.repositories.project_repository.and_'):
+        with patch("db.repositories.project_repository.select"):
+            with patch("db.repositories.project_repository.and_"):
                 result = await member_repo.remove_member(sample_uuid, sample_uuid)
                 assert result is True
 
@@ -2122,7 +2083,7 @@ class TestChapterRepositoryEdgeCases:
 
     @pytest.fixture
     def chapter_repo(self, mock_session):
-        with patch.object(ChapterRepository, '__init__', lambda self, session: None):
+        with patch.object(ChapterRepository, "__init__", lambda self, session: None):
             repo = ChapterRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2131,7 +2092,7 @@ class TestChapterRepositoryEdgeCases:
     @pytest.mark.asyncio
     async def test_get_by_project_with_status(self, chapter_repo, mock_session, sample_uuid):
         mock_chapters = [MagicMock()]
-        with patch.object(chapter_repo, 'find_all', return_value=mock_chapters):
+        with patch.object(chapter_repo, "find_all", return_value=mock_chapters):
             result = await chapter_repo.get_by_project(sample_uuid, status="published")
             assert result == mock_chapters
 
@@ -2141,7 +2102,7 @@ class TestTermRepositoryEdgeCases:
 
     @pytest.fixture
     def term_repo(self, mock_session):
-        with patch.object(TermRepository, '__init__', lambda self, session: None):
+        with patch.object(TermRepository, "__init__", lambda self, session: None):
             repo = TermRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2149,7 +2110,7 @@ class TestTermRepositoryEdgeCases:
 
     @pytest.fixture
     def concept_repo(self, mock_session):
-        with patch.object(ConceptRepository, '__init__', lambda self, session: None):
+        with patch.object(ConceptRepository, "__init__", lambda self, session: None):
             repo = ConceptRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2158,7 +2119,7 @@ class TestTermRepositoryEdgeCases:
     @pytest.mark.asyncio
     async def test_get_by_domain_with_locked(self, term_repo, mock_session):
         mock_terms = [MagicMock()]
-        with patch.object(term_repo, 'find_all', return_value=mock_terms):
+        with patch.object(term_repo, "find_all", return_value=mock_terms):
             result = await term_repo.get_by_domain("science", locked=True)
             assert result == mock_terms
 
@@ -2169,7 +2130,7 @@ class TestTermRepositoryEdgeCases:
         mock_term.synonyms = None
         mock_term.domain = "science"
 
-        with patch.object(term_repo, 'get_by_id', return_value=mock_term):
+        with patch.object(term_repo, "get_by_id", return_value=mock_term):
             result = await term_repo.find_similar_terms(sample_uuid)
             assert result == []
 
@@ -2189,20 +2150,20 @@ class TestTermRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=[mock_similar])
         mock_session.execute = AsyncMock(return_value=mock_result)
 
-        with patch.object(term_repo, 'get_by_id', return_value=mock_term):
+        with patch.object(term_repo, "get_by_id", return_value=mock_term):
             result = await term_repo.find_similar_terms(sample_uuid)
             assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_remove_synonym_not_found(self, term_repo, mock_session, sample_uuid):
-        with patch.object(term_repo, 'get_by_id', return_value=None):
+        with patch.object(term_repo, "get_by_id", return_value=None):
             result = await term_repo.remove_synonym(sample_uuid, "synonym")
             assert result is None
 
     @pytest.mark.asyncio
     async def test_get_by_domain_with_locked_concept(self, concept_repo, mock_session):
         mock_concepts = [MagicMock()]
-        with patch.object(concept_repo, 'find_all', return_value=mock_concepts):
+        with patch.object(concept_repo, "find_all", return_value=mock_concepts):
             result = await concept_repo.get_by_domain("science", locked=True)
             assert result == mock_concepts
 
@@ -2212,7 +2173,7 @@ class TestAuditLogRepositoryEdgeCases:
 
     @pytest.fixture
     def audit_repo(self, mock_session):
-        with patch.object(AuditLogRepository, '__init__', lambda self, session: None):
+        with patch.object(AuditLogRepository, "__init__", lambda self, session: None):
             repo = AuditLogRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2224,8 +2185,8 @@ class TestAuditLogRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.search_logs(resource_type="project")
                 assert len(result) == 1
 
@@ -2235,8 +2196,8 @@ class TestAuditLogRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.search_logs(result="success")
                 assert len(result) == 1
 
@@ -2247,10 +2208,11 @@ class TestAuditLogRepositoryEdgeCases:
         mock_session.execute.return_value = mock_result
 
         from datetime import datetime
+
         until = datetime.utcnow()
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.search_logs(until=until)
                 assert len(result) == 1
 
@@ -2261,10 +2223,11 @@ class TestAuditLogRepositoryEdgeCases:
         mock_session.execute.return_value = mock_result
 
         from datetime import datetime, timedelta
+
         since = datetime.utcnow() - timedelta(hours=1)
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.get_failed_actions(since=since)
                 assert len(result) == 1
 
@@ -2275,10 +2238,11 @@ class TestAuditLogRepositoryEdgeCases:
         mock_session.execute.return_value = mock_result
 
         from datetime import datetime, timedelta
+
         since = datetime.utcnow() - timedelta(hours=24)
 
-        with patch('db.repositories.audit_log_repository.select'):
-            with patch('db.repositories.audit_log_repository.and_'):
+        with patch("db.repositories.audit_log_repository.select"):
+            with patch("db.repositories.audit_log_repository.and_"):
                 result = await audit_repo.get_by_ip_address("192.168.1.1", since=since)
                 assert len(result) == 1
 
@@ -2288,7 +2252,7 @@ class TestKnowledgeGraphRepositoryEdgeCases:
 
     @pytest.fixture
     def kg_repo(self, mock_session):
-        with patch.object(KnowledgeGraphRepository, '__init__', lambda self, session: None):
+        with patch.object(KnowledgeGraphRepository, "__init__", lambda self, session: None):
             repo = KnowledgeGraphRepository(mock_session)
             repo._session = mock_session
             return repo
@@ -2299,8 +2263,8 @@ class TestKnowledgeGraphRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_edges)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
-            with patch('db.repositories.knowledge_graph_repository.and_'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
+            with patch("db.repositories.knowledge_graph_repository.and_"):
                 result = await kg_repo.get_edges(target_id="node2")
                 assert len(result) == 1
 
@@ -2309,13 +2273,13 @@ class TestKnowledgeGraphRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=15)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select'):
+        with patch("db.repositories.knowledge_graph_repository.select"):
             result = await kg_repo.count_edges(edge_type="KNOWS")
             assert result == 15
 
     @pytest.mark.asyncio
     async def test_dfs_traverse_empty(self, kg_repo, mock_session):
-        with patch.object(kg_repo, 'get_edges', return_value=[]):
+        with patch.object(kg_repo, "get_edges", return_value=[]):
             result = await kg_repo.dfs_traverse("node1")
             assert result == ["node1"]
 
@@ -2327,6 +2291,7 @@ class TestKnowledgeGraphRepositoryEdgeCases:
         mock_edge2.source_id = "node3"
 
         call_count = [0]
+
         async def get_edges_side_effect(**kwargs):
             call_count[0] += 1
             if call_count[0] == 1:
@@ -2337,7 +2302,7 @@ class TestKnowledgeGraphRepositoryEdgeCases:
                 return [mock_edge2]
             return []
 
-        with patch.object(kg_repo, 'get_edges', side_effect=get_edges_side_effect):
+        with patch.object(kg_repo, "get_edges", side_effect=get_edges_side_effect):
             result = await kg_repo.dfs_traverse("node1")
             assert "node1" in result
 
@@ -2347,7 +2312,7 @@ class TestChapterContentRepositoryEdgeCases:
 
     @pytest.fixture
     def content_repo(self, mock_session):
-        with patch.object(ChapterContentRepository, '__init__', lambda self, session: None):
+        with patch.object(ChapterContentRepository, "__init__", lambda self, session: None):
             repo = ChapterContentRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2359,7 +2324,7 @@ class TestSectionRepositoryEdgeCases:
 
     @pytest.fixture
     def section_repo(self, mock_session):
-        with patch.object(SectionRepository, '__init__', lambda self, session: None):
+        with patch.object(SectionRepository, "__init__", lambda self, session: None):
             repo = SectionRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2368,7 +2333,7 @@ class TestSectionRepositoryEdgeCases:
     @pytest.mark.asyncio
     async def test_get_by_chapter_with_status(self, section_repo, mock_session, sample_uuid):
         mock_sections = [MagicMock()]
-        with patch.object(section_repo, 'find_all', return_value=mock_sections):
+        with patch.object(section_repo, "find_all", return_value=mock_sections):
             result = await section_repo.get_by_chapter(sample_uuid, status="published")
             assert result == mock_sections
 
@@ -2378,7 +2343,7 @@ class TestConceptRepositoryEdgeCases:
 
     @pytest.fixture
     def concept_repo(self, mock_session):
-        with patch.object(ConceptRepository, '__init__', lambda self, session: None):
+        with patch.object(ConceptRepository, "__init__", lambda self, session: None):
             repo = ConceptRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2386,7 +2351,7 @@ class TestConceptRepositoryEdgeCases:
 
     @pytest.mark.asyncio
     async def test_add_related_term_not_found(self, concept_repo, mock_session, sample_uuid):
-        with patch.object(concept_repo, 'get_by_id', return_value=None):
+        with patch.object(concept_repo, "get_by_id", return_value=None):
             result = await concept_repo.add_related_term(sample_uuid, "new_term")
             assert result is None
 
@@ -2394,13 +2359,13 @@ class TestConceptRepositoryEdgeCases:
     async def test_add_related_term_already_exists(self, concept_repo, mock_session, sample_uuid):
         mock_concept = MagicMock()
         mock_concept.related_terms = ["existing_term"]
-        with patch.object(concept_repo, 'get_by_id', return_value=mock_concept):
+        with patch.object(concept_repo, "get_by_id", return_value=mock_concept):
             result = await concept_repo.add_related_term(sample_uuid, "existing_term")
             assert result == mock_concept
 
     @pytest.mark.asyncio
     async def test_remove_related_term_not_found(self, concept_repo, mock_session, sample_uuid):
-        with patch.object(concept_repo, 'get_by_id', return_value=None):
+        with patch.object(concept_repo, "get_by_id", return_value=None):
             result = await concept_repo.remove_related_term(sample_uuid, "term")
             assert result is None
 
@@ -2408,7 +2373,7 @@ class TestConceptRepositoryEdgeCases:
     async def test_remove_related_term_not_in_list(self, concept_repo, mock_session, sample_uuid):
         mock_concept = MagicMock()
         mock_concept.related_terms = ["existing"]
-        with patch.object(concept_repo, 'get_by_id', return_value=mock_concept):
+        with patch.object(concept_repo, "get_by_id", return_value=mock_concept):
             result = await concept_repo.remove_related_term(sample_uuid, "not_existing")
             assert result == mock_concept
 
@@ -2496,7 +2461,7 @@ class TestTermRepositoryFindSimilarTerms:
 
     @pytest.fixture
     def term_repo(self, mock_session):
-        with patch.object(TermRepository, '__init__', lambda self, session: None):
+        with patch.object(TermRepository, "__init__", lambda self, session: None):
             repo = TermRepository(mock_session)
             repo._model = MagicMock()
             repo._session = mock_session
@@ -2504,7 +2469,7 @@ class TestTermRepositoryFindSimilarTerms:
 
     @pytest.mark.asyncio
     async def test_find_similar_terms_term_not_found(self, term_repo, sample_uuid):
-        with patch.object(term_repo, 'get_by_id', return_value=None):
+        with patch.object(term_repo, "get_by_id", return_value=None):
             result = await term_repo.find_similar_terms(sample_uuid)
             assert result == []
 
@@ -2514,8 +2479,8 @@ class TestTermRepositoryFindSimilarTerms:
         mock_term.id = sample_uuid
         mock_term.synonyms = []
         mock_term.domain = "test_domain"
-        with patch.object(term_repo, 'get_by_id', return_value=mock_term):
-            with patch.object(term_repo, 'find_all', return_value=[]):
+        with patch.object(term_repo, "get_by_id", return_value=mock_term):
+            with patch.object(term_repo, "find_all", return_value=[]):
                 result = await term_repo.find_similar_terms(sample_uuid)
                 assert result == []
 
@@ -2534,7 +2499,7 @@ class TestTermRepositoryFindSimilarTerms:
         mock_result = MockSelectResult(scalars_value=[other_term])
         mock_session.execute = AsyncMock(return_value=mock_result)
 
-        with patch.object(term_repo, 'get_by_id', return_value=mock_term):
+        with patch.object(term_repo, "get_by_id", return_value=mock_term):
             result = await term_repo.find_similar_terms(sample_uuid)
             assert len(result) == 1
 
@@ -2553,7 +2518,7 @@ class TestTermRepositoryFindSimilarTerms:
         mock_result = MockSelectResult(scalars_value=[other_term])
         mock_session.execute = AsyncMock(return_value=mock_result)
 
-        with patch.object(term_repo, 'get_by_id', return_value=mock_term):
+        with patch.object(term_repo, "get_by_id", return_value=mock_term):
             result = await term_repo.find_similar_terms(sample_uuid)
             assert other_term in result
 
@@ -2592,7 +2557,7 @@ class TestKnowledgeGraphRepositoryDfs:
                 return [edge]
             return []
 
-        with patch.object(kg_repo, 'get_edges', side_effect=mock_get_edges):
+        with patch.object(kg_repo, "get_edges", side_effect=mock_get_edges):
             result = await kg_repo.dfs_traverse("node1")
             assert "node1" in result
             assert "node2" in result

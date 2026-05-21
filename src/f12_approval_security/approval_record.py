@@ -11,6 +11,7 @@ from datetime import datetime
 @dataclass
 class ApprovalRecord:
     """审批记录"""
+
     record_id: str
     content_id: str
     content_hash: str
@@ -28,8 +29,9 @@ class ApprovalRecord:
         return f"{self.content_id}|{self.content_hash}|{self.reviewer_id}|{self.result}|{self.timestamp.isoformat()}"
 
     @classmethod
-    def create(cls, content_id: str, content_hash: str, reviewer_id: str,
-               result: str, comments: str, reviewer_ip: str = None) -> "ApprovalRecord":
+    def create(
+        cls, content_id: str, content_hash: str, reviewer_id: str, result: str, comments: str, reviewer_ip: str = None
+    ) -> "ApprovalRecord":
         """创建审批记录
 
         Args:
@@ -52,7 +54,7 @@ class ApprovalRecord:
             signature="",
             signature_source="",
             timestamp=datetime.utcnow(),
-            reviewer_ip=safe_ip
+            reviewer_ip=safe_ip,
         )
 
     @staticmethod

@@ -164,7 +164,7 @@ class KnowledgeGraph:
             new_status = NodeStatus(status.value) if isinstance(status, NodeStatus) else NodeStatus(status)
             # Create new node dict with updated status instead of mutation
             node_dict = node.to_dict()
-            node_dict['status'] = new_status
+            node_dict["status"] = new_status
             # Re-create node with new status
             updated_node = create_node(node.type, **node_dict)
             self._nodes[node_id] = updated_node
@@ -221,10 +221,7 @@ class KnowledgeGraph:
         # KG-006: Batch query instead of N+1
         # Get all sections at once and compute total
         section_nodes = [self._nodes.get(sid) for sid in sections if sid in self._nodes]
-        total_word_count = sum(
-            node.word_count for node in section_nodes
-            if node and hasattr(node, "word_count")
-        )
+        total_word_count = sum(node.word_count for node in section_nodes if node and hasattr(node, "word_count"))
 
         return {
             chapter_id: {
@@ -277,11 +274,13 @@ class KnowledgeGraph:
                 target_id = edge.target if edge.source == concept_id else edge.source
                 target = self._nodes.get(target_id)
                 if target:
-                    similar.append({
-                        "concept_id": target_id,
-                        "name": target.name,
-                        "similarity_score": score,
-                    })
+                    similar.append(
+                        {
+                            "concept_id": target_id,
+                            "name": target.name,
+                            "similarity_score": score,
+                        }
+                    )
 
         similar.sort(key=lambda x: x["similarity_score"], reverse=True)
         return similar

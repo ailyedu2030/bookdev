@@ -33,6 +33,7 @@ CONTENT_HASH_LENGTH = 64  # SHA-256 hash
 
 class ChapterCreate(BaseModel):
     """Chapter creation schema"""
+
     project_id: str
     title: str = Field(..., min_length=TITLE_MIN_LENGTH, max_length=TITLE_MAX_LENGTH)
     order_num: int = Field(..., ge=0)
@@ -41,6 +42,7 @@ class ChapterCreate(BaseModel):
 
 class ChapterUpdate(BaseModel):
     """Chapter update schema"""
+
     title: str | None = Field(default=None, min_length=TITLE_MIN_LENGTH, max_length=TITLE_MAX_LENGTH)
     order_num: int | None = Field(default=None, ge=0)
     status: str | None = Field(default=None, pattern=ChapterStatus.pattern())
@@ -50,6 +52,7 @@ class ChapterUpdate(BaseModel):
 
 class ChapterResponse(BaseModel):
     """Chapter response schema"""
+
     id: str
     project_id: str
     title: str
@@ -65,6 +68,7 @@ class ChapterResponse(BaseModel):
 
 class ChapterContentResponse(BaseModel):
     """Chapter content response schema"""
+
     id: str
     chapter_id: str
     content: str | None = None
@@ -76,6 +80,7 @@ class ChapterContentResponse(BaseModel):
 
 class SectionCreate(BaseModel):
     """Section creation schema"""
+
     chapter_id: str
     title: str = Field(..., min_length=TITLE_MIN_LENGTH, max_length=TITLE_MAX_LENGTH)
     order_num: int = Field(..., ge=0)
@@ -84,6 +89,7 @@ class SectionCreate(BaseModel):
 
 class SectionUpdate(BaseModel):
     """Section update schema"""
+
     title: str | None = Field(default=None, min_length=TITLE_MIN_LENGTH, max_length=TITLE_MAX_LENGTH)
     order_num: int | None = Field(default=None, ge=0)
     status: str | None = Field(default=None, pattern=ChapterStatus.pattern())
@@ -92,6 +98,7 @@ class SectionUpdate(BaseModel):
 
 class SectionResponse(BaseModel):
     """Section response schema"""
+
     id: str
     chapter_id: str
     title: str
@@ -105,24 +112,28 @@ class SectionResponse(BaseModel):
 
 class ReviewSubmit(BaseModel):
     """Review submission schema"""
+
     chapter_id: str
     comments: str | None = Field(default=None, max_length=2000)
 
 
 class ReviewApprove(BaseModel):
     """Review approval schema"""
+
     chapter_id: str
     comments: str | None = Field(default=None, max_length=2000)
 
 
 class ReviewReject(BaseModel):
     """Review rejection schema"""
+
     chapter_id: str
     comments: str = Field(..., min_length=1, max_length=2000)
 
 
 class ReviewResponse(BaseModel):
     """Review response schema"""
+
     id: str
     chapter_id: str
     reviewer_id: str | None = None
@@ -133,6 +144,7 @@ class ReviewResponse(BaseModel):
 
 class ChapterGenerateRequest(BaseModel):
     """Chapter AI generation request"""
+
     chapter_id: str
     prompt: str | None = Field(default=None, max_length=5000)
     force_regenerate: bool = False
@@ -140,6 +152,7 @@ class ChapterGenerateRequest(BaseModel):
 
 class ChapterGenerateResponse(BaseModel):
     """Chapter AI generation response"""
+
     success: bool = True
     chapter_id: str
     status: str
@@ -150,20 +163,15 @@ class ChapterGenerateResponse(BaseModel):
 
 class ChapterListResponse(BaseModel):
     """Chapter list response with pagination"""
+
     success: bool = True
     data: list[ChapterResponse]
-    meta: dict = Field(
-        default_factory=lambda: {
-            "total": 0,
-            "page": 1,
-            "per_page": 20,
-            "total_pages": 0
-        }
-    )
+    meta: dict = Field(default_factory=lambda: {"total": 0, "page": 1, "per_page": 20, "total_pages": 0})
 
 
 class ContentVersionResponse(BaseModel):
     """Content version response schema"""
+
     id: str
     chapter_id: str
     version: str

@@ -34,6 +34,7 @@ def create_event_bus(config: dict | None = None):
 
     if use_mock:
         from f00_kafka_eventbus.mock_bus import MockEventBus
+
         return MockEventBus()
     else:
         return RealEventBus(config=config)
@@ -84,10 +85,7 @@ class RealEventBus:
         topic_manager = KafkaTopicManager(
             bootstrap_servers=self._bootstrap_servers,
         )
-        topics = [
-            {"name": f"{self._topic_prefix}.{name}", **cfg}
-            for name, cfg in KafkaTopicManager.TOPICS.items()
-        ]
+        topics = [{"name": f"{self._topic_prefix}.{name}", **cfg} for name, cfg in KafkaTopicManager.TOPICS.items()]
         await topic_manager.create_topics(topics)
 
     async def shutdown(self) -> None:
@@ -133,20 +131,21 @@ class RealEventBus:
         if not event_type or not event_type.strip():
             raise ValueError("event_type cannot be empty")
 
-
         topic = f"{self._topic_prefix}.{event_type}"
 
         if topic not in self._subscribers:
             self._subscribers[topic] = []
 
         sub_id = len(self._subscribers[topic])
-        self._subscribers[topic].append({
-            "id": sub_id,
-            "event_type": event_type,
-            "handler": handler,
-            "max_retries": max_retries,
-            "retry_delay": retry_delay,
-        })
+        self._subscribers[topic].append(
+            {
+                "id": sub_id,
+                "event_type": event_type,
+                "handler": handler,
+                "max_retries": max_retries,
+                "retry_delay": retry_delay,
+            }
+        )
 
         return sub_id
 
@@ -204,25 +203,21 @@ class RealEventBus:
             try:
                 await handler(msg)
                 if attempt > 0:
-                    logger.info(
-                        f"Retry {attempt} succeeded for handler {handler.__name__}"
-                    )
+                    logger.info(f"Retry {attempt} succeeded for handler {handler.__name__}")
                 return True
             except Exception as e:
                 if attempt < max_retries:
                     # Calculate delay with exponential backoff and jitter
                     import random
-                    delay = min(retry_delay * (exponential_base ** attempt), max_delay)
+
+                    delay = min(retry_delay * (exponential_base**attempt), max_delay)
                     delay = delay * (0.5 + random.random() * 0.5)  # Add jitter
                     logger.warning(
-                        f"Handler {handler.__name__} attempt {attempt + 1} failed: {e}. "
-                        f"Retrying in {delay:.2f}s..."
+                        f"Handler {handler.__name__} attempt {attempt + 1} failed: {e}. " f"Retrying in {delay:.2f}s..."
                     )
                     await asyncio.sleep(delay)
                 else:
-                    logger.error(
-                        f"Handler {handler.__name__} failed after {max_retries + 1} attempts: {e}"
-                    )
+                    logger.error(f"Handler {handler.__name__} failed after {max_retries + 1} attempts: {e}")
 
         # All retries exhausted, return False
         return False
@@ -243,8 +238,7 @@ class RealEventBus:
             os.makedirs(self.DLQ_FALLBACK_DIR, exist_ok=True)
 
             fallback_file = os.path.join(
-                self.DLQ_FALLBACK_DIR,
-                f"dlq_fallback_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
+                self.DLQ_FALLBACK_DIR, f"dlq_fallback_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
             )
 
             fallback_entry = {
@@ -258,15 +252,12 @@ class RealEventBus:
                 "traceback": tb.format_exc(),
             }
 
-            with open(fallback_file, 'w') as f:
+            with open(fallback_file, "w") as f:
                 json.dump(fallback_entry, f, indent=2, default=str)
 
             logger.info(f"Message logged to fallback file: {fallback_file}")
         except Exception as fallback_error:
-            logger.error(
-                f"Failed to write fallback log: {fallback_error}. "
-                f"Original error: {error}"
-            )
+            logger.error(f"Failed to write fallback log: {fallback_error}. " f"Original error: {error}")
 
     async def start_consuming(self) -> None:
         """开始消费消息"""
@@ -291,7 +282,7 @@ class RealEventBus:
                     """
                     # KAFKA-015: Implement deduplication based on event_id
                     event_id = msg.get("event_id")
-                    if event_id and hasattr(self, '_processed_events'):
+                    if event_id and hasattr(self, "_processed_events"):
                         if event_id in self._processed_events:
                             logger.debug(f"Duplicate event detected: {event_id}, skipping")
                             return
@@ -322,8 +313,7 @@ class RealEventBus:
                                     except Exception as dlq_error:
                                         # KAFKA-014: DLQ failure should not cause message loss
                                         logger.error(
-                                            f"Failed to send to DLQ: {dlq_error}. "
-                                            f"Logging to fallback file instead."
+                                            f"Failed to send to DLQ: {dlq_error}. " f"Logging to fallback file instead."
                                         )
                                         self._log_to_fallback_file(
                                             msg,
@@ -332,17 +322,14 @@ class RealEventBus:
                                         )
                         except Exception as e:
                             # KAFKA-012: Ensure we continue to next message even on unexpected errors
-                            logger.error(
-                                f"Unexpected error in handler loop: {e}",
-                                exc_info=True
-                            )
+                            logger.error(f"Unexpected error in handler loop: {e}", exc_info=True)
                             continue
 
                 return handler
 
             self._consumers[topic] = consumer
             # Initialize deduplication set for this consumer
-            if not hasattr(self, '_processed_events'):
+            if not hasattr(self, "_processed_events"):
                 self._processed_events = set()
             await consumer.consume_in_background(await create_handler(subs))
 

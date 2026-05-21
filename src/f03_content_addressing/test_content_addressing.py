@@ -42,11 +42,7 @@ class TestContentAddressing:
         """F03-T004: 引用格式正确"""
         from f03_content_addressing.content_addressing import ContentAddressReference
 
-        ref = ContentAddressReference(
-            content_hash="abc123",
-            offset=0,
-            length=500
-        )
+        ref = ContentAddressReference(content_hash="abc123", offset=0, length=500)
 
         assert ref.to_string() == "{hash: abc123, offset: 0, length: 500}"
 
@@ -95,7 +91,7 @@ class TestContentAddressingHash:
         from f03_content_addressing.content_addressing import calculate_content_hash
 
         hash_result = calculate_content_hash("test")
-        assert all(c in '0123456789abcdef' for c in hash_result)
+        assert all(c in "0123456789abcdef" for c in hash_result)
 
     def test_hash_deterministic(self):
         """F03-T007c: 哈希是确定性的"""
@@ -138,11 +134,7 @@ class TestContentAddressReference:
         """F03-T008: 创建引用"""
         from f03_content_addressing.content_addressing import ContentAddressReference
 
-        ref = ContentAddressReference(
-            content_hash="hash123",
-            offset=10,
-            length=100
-        )
+        ref = ContentAddressReference(content_hash="hash123", offset=10, length=100)
 
         assert ref.content_hash == "hash123"
         assert ref.offset == 10

@@ -87,8 +87,10 @@ class TestF20JudgeServiceCoverage:
         client = MockLLMClient(should_fail=True)
 
         import pytest
+
         with pytest.raises(Exception, match="LLM API Error"):
             import asyncio
+
             asyncio.run(client.generate("test prompt"))
 
     def test_mock_llm_client_default_response(self):
@@ -98,6 +100,7 @@ class TestF20JudgeServiceCoverage:
         client = MockLLMClient()
 
         import asyncio
+
         response = asyncio.run(client.generate("any prompt"))
         data = json.loads(response)
 
@@ -117,6 +120,7 @@ class TestF20JudgeServiceCoverage:
         import asyncio
 
         import pytest
+
         with pytest.raises(JudgeServiceError):
             asyncio.run(service.judge_content("test content"))
 
@@ -166,9 +170,7 @@ class TestF16SamplingEngineCoverage:
         from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
-        chapters = [
-            Chapter(id="ch1", title="C1", chapter_type=ChapterType.THEORY, word_count=1000)
-        ]
+        chapters = [Chapter(id="ch1", title="C1", chapter_type=ChapterType.THEORY, word_count=1000)]
 
         result = engine.cluster_sampling(chapters, cluster_size=10)
 
@@ -372,7 +374,7 @@ class TestF30SampleManagerCoverage:
             "expected_score": 9.0,
             "content": {"text": "test"},
             "quality_metrics": {},
-            "metadata": {}
+            "metadata": {},
         }
 
         result = manager.add_sample(sample_data)
@@ -405,6 +407,7 @@ class TestDbInitCoverage:
                 session_mock.rollback.assert_called()
 
         import asyncio
+
         asyncio.run(test_session())
 
     def test_get_db_session_success(self):
@@ -424,12 +427,14 @@ class TestDbInitCoverage:
                 session_mock.commit.assert_called()
 
         import asyncio
+
         asyncio.run(test_session())
 
     def test_lazy_engine_creation(self):
         """DB-CG003: 懒加载引擎创建 (覆盖lines 46-55)"""
         import db
         from db import _get_engine, _get_session_maker
+
         db._engine = None
         db._async_session_maker = None
 
@@ -453,11 +458,7 @@ class TestF08RegulationVerifierCoverage:
 
         verifier = RegulationVerifier()
         with patch.object(verifier, "_get_law_keywords", return_value=[]):
-            result = verifier._calculate_content_similarity(
-                "some content",
-                "Unknown Law",
-                99
-            )
+            result = verifier._calculate_content_similarity("some content", "Unknown Law", 99)
 
         assert result == 0.5
 
@@ -619,7 +620,7 @@ class TestF29AdditionalCoverage:
         cov_file = tmp_path / ".coverage"
         cov_file.write_text("TOTAL 100 0 100 100.00\n")
 
-        with patch.object(tracker, '_parse_coverage_file', return_value=90.0):
+        with patch.object(tracker, "_parse_coverage_file", return_value=90.0):
             result = tracker.track(str(cov_file), threshold=80)
 
         assert result.status == CheckStatus.PASS
@@ -632,7 +633,7 @@ class TestF29AdditionalCoverage:
         cov_file = tmp_path / ".coverage"
         cov_file.write_text("invalid data")
 
-        with patch.object(tracker, '_parse_coverage_file', side_effect=ValueError("parse error")):
+        with patch.object(tracker, "_parse_coverage_file", side_effect=ValueError("parse error")):
             result = tracker.track(str(cov_file), threshold=80)
 
         assert result.status == CheckStatus.WARNING
@@ -703,7 +704,7 @@ class TestF30GoldenDatasetEdgeCases:
             "expected_score": 9.0,
             "content": {"text": "test"},
             "quality_metrics": {},
-            "metadata": {}
+            "metadata": {},
         }
         result = manager.add_sample(sample_data)
         assert result.sample_id == "test-id-001"
@@ -867,9 +868,7 @@ class TestF27GraphRAGCoverageGaps:
         engine = RAGEngine()
 
         doc1 = RAGDocument(
-            id="doc1",
-            content="The quick brown fox jumps over the lazy dog",
-            metadata={"source": "test"}
+            id="doc1", content="The quick brown fox jumps over the lazy dog", metadata={"source": "test"}
         )
 
         engine.add_document(doc1)
@@ -878,9 +877,6 @@ class TestF27GraphRAGCoverageGaps:
 
         assert isinstance(result, list)
         assert len(result) == 1
-
-
-
 
 
 class TestF16SamplingEngineCoverageGaps:

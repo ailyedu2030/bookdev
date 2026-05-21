@@ -25,10 +25,7 @@ class TestWorkflowSecurity:
 
         with pytest.raises(SecurityException) as exc_info:
             security.receive_signal(
-                signal_type="SubmitOutlineReview",
-                direct_call=True,
-                workflow_id="wf-001",
-                task_id="task-001"
+                signal_type="SubmitOutlineReview", direct_call=True, workflow_id="wf-001", task_id="task-001"
             )
 
         assert "DIRECT_SIGNAL_BLOCKED" in str(exc_info.value)
@@ -50,7 +47,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=None,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         with pytest.raises(SecurityException) as exc_info:
@@ -70,9 +67,7 @@ class TestWorkflowSecurity:
         security.register_workflow("wf-001", {"content": "test"})
 
         now = datetime.utcnow()
-        security._generate_signature(
-            "wf-001", "task-001", "abc123", "reviewer-001", now
-        )
+        security._generate_signature("wf-001", "task-001", "abc123", "reviewer-001", now)
 
         callback = ReviewCallback(
             workflow_id="wf-001",
@@ -81,7 +76,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature="invalid_signature",
-            timestamp=now
+            timestamp=now,
         )
 
         result = security.verify_callback(callback)
@@ -97,9 +92,7 @@ class TestWorkflowSecurity:
         security.register_workflow("wf-001", {"content": "original content"})
 
         now = datetime.utcnow()
-        valid_sig = security._generate_signature(
-            "wf-001", "task-001", "wrong_hash", "reviewer-001", now
-        )
+        valid_sig = security._generate_signature("wf-001", "task-001", "wrong_hash", "reviewer-001", now)
 
         callback = ReviewCallback(
             workflow_id="wf-001",
@@ -108,7 +101,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=valid_sig,
-            timestamp=now
+            timestamp=now,
         )
 
         result = security.verify_callback(callback)
@@ -138,7 +131,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=valid_sig,
-            timestamp=old_timestamp
+            timestamp=old_timestamp,
         )
 
         result = security.verify_callback(callback)
@@ -158,7 +151,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature="valid_signature",
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         result = security.verify_callback(callback)
@@ -177,9 +170,7 @@ class TestWorkflowSecurity:
         security.register_workflow("wf-001", content)
 
         now = datetime.utcnow()
-        valid_signature = security._generate_signature(
-            "wf-001", "task-001", content_hash, "reviewer-001", now
-        )
+        valid_signature = security._generate_signature("wf-001", "task-001", content_hash, "reviewer-001", now)
 
         callback = ReviewCallback(
             workflow_id="wf-001",
@@ -188,7 +179,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=valid_signature,
-            timestamp=now
+            timestamp=now,
         )
 
         result = security.verify_callback(callback)
@@ -218,7 +209,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=hsm_signature,
-            timestamp=now
+            timestamp=now,
         )
 
         result = security.verify_callback(callback)
@@ -237,9 +228,7 @@ class TestWorkflowSecurity:
         security.register_workflow("wf-003", content)
 
         now = datetime.utcnow()
-        valid_sig = security._generate_signature(
-            "wf-003", "task-001", content_hash, "reviewer-001", now
-        )
+        valid_sig = security._generate_signature("wf-003", "task-001", content_hash, "reviewer-001", now)
 
         callback = ReviewCallback(
             workflow_id="wf-003",
@@ -248,7 +237,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=valid_sig,
-            timestamp=now
+            timestamp=now,
         )
 
         result1 = security.verify_callback(callback)
@@ -261,7 +250,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=valid_sig,
-            timestamp=now
+            timestamp=now,
         )
 
         result2 = security.verify_callback(callback2)
@@ -277,19 +266,14 @@ class TestWorkflowSecurity:
         external_service = ExternalReviewService()
 
         session = external_service.initiate_review(
-            workflow_id="wf-010",
-            task_id="task-001",
-            content="Review content",
-            reviewer_id="reviewer-001"
+            workflow_id="wf-010", task_id="task-001", content="Review content", reviewer_id="reviewer-001"
         )
 
         assert session.workflow_id == "wf-010"
         assert session.status == "PENDING"
 
         callback = external_service.submit_review(
-            session_id=session.session_id,
-            result="APPROVED",
-            comments="Looks good"
+            session_id=session.session_id, result="APPROVED", comments="Looks good"
         )
 
         result = verifier.verify(callback)
@@ -307,12 +291,8 @@ class TestWorkflowSecurity:
         security.register_workflow("wf-multi", content)
 
         now = datetime.utcnow()
-        reviewer1_sig = security._generate_signature(
-            "wf-multi", "task-001", content_hash, "reviewer-001", now
-        )
-        reviewer2_sig = security._generate_signature(
-            "wf-multi", "task-001", content_hash, "reviewer-002", now
-        )
+        reviewer1_sig = security._generate_signature("wf-multi", "task-001", content_hash, "reviewer-001", now)
+        reviewer2_sig = security._generate_signature("wf-multi", "task-001", content_hash, "reviewer-002", now)
 
         callback1 = ReviewCallback(
             workflow_id="wf-multi",
@@ -321,7 +301,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=reviewer1_sig,
-            timestamp=now
+            timestamp=now,
         )
 
         result1 = security.verify_callback(callback1)
@@ -335,7 +315,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-002",
             result="APPROVED",
             signature=reviewer2_sig,
-            timestamp=now
+            timestamp=now,
         )
 
         result2 = security.verify_callback(callback2)
@@ -351,17 +331,11 @@ class TestWorkflowSecurity:
 
         with pytest.raises(SecurityException):
             security.receive_signal(
-                signal_type="SubmitOutlineReview",
-                direct_call=True,
-                workflow_id="wf-001",
-                task_id="task-001"
+                signal_type="SubmitOutlineReview", direct_call=True, workflow_id="wf-001", task_id="task-001"
             )
 
         result = security.receive_signal(
-            signal_type="PauseWorkflow",
-            direct_call=True,
-            workflow_id="wf-001",
-            task_id="task-001"
+            signal_type="PauseWorkflow", direct_call=True, workflow_id="wf-001", task_id="task-001"
         )
         assert result.is_valid is True
 
@@ -377,9 +351,7 @@ class TestWorkflowSecurity:
         security.register_workflow("wf-hash", content)
 
         now = datetime.utcnow()
-        valid_sig = security._generate_signature(
-            "wf-hash", "task-001", content_hash, "reviewer-001", now
-        )
+        valid_sig = security._generate_signature("wf-hash", "task-001", content_hash, "reviewer-001", now)
 
         callback = ReviewCallback(
             workflow_id="wf-hash",
@@ -388,7 +360,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=valid_sig,
-            timestamp=now
+            timestamp=now,
         )
 
         result = security.verify_callback(callback)
@@ -410,9 +382,7 @@ class TestWorkflowSecurity:
         assert initial_state == "OUTLINE_REVIEW"
 
         now = datetime.utcnow()
-        valid_signature = security._generate_signature(
-            workflow_id, "task-001", content_hash, "reviewer-001", now
-        )
+        valid_signature = security._generate_signature(workflow_id, "task-001", content_hash, "reviewer-001", now)
 
         callback = ReviewCallback(
             workflow_id=workflow_id,
@@ -421,7 +391,7 @@ class TestWorkflowSecurity:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=valid_signature,
-            timestamp=now
+            timestamp=now,
         )
 
         result = security.verify_callback(callback)
@@ -503,7 +473,7 @@ class TestCallbackVerifierUncovered:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature="",  # empty signature
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         result = verifier.verify(callback)
@@ -533,7 +503,7 @@ class TestCallbackVerifierUncovered:
             reviewer_id=reviewer_id,
             result="APPROVED",
             signature=valid_signature,
-            timestamp=now
+            timestamp=now,
         )
 
         result1 = verifier.verify(callback)
@@ -546,7 +516,7 @@ class TestCallbackVerifierUncovered:
             reviewer_id=reviewer_id,
             result="APPROVED",
             signature=valid_signature,
-            timestamp=now
+            timestamp=now,
         )
         result2 = verifier.verify(callback2)
         assert result2.is_valid is False
@@ -568,7 +538,7 @@ class TestCallbackVerifierUncovered:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature="wrong_signature",
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         result = verifier.verify(callback)
@@ -597,7 +567,7 @@ class TestCallbackVerifierUncovered:
             reviewer_id="reviewer-001",
             result="APPROVED",
             signature=hsm_signature,
-            timestamp=now
+            timestamp=now,
         )
 
         result = verifier.verify(callback)
@@ -626,10 +596,7 @@ class TestExternalReviewServiceUncovered:
         service = ExternalReviewService()
 
         with pytest.raises(ValueError, match="Session .* not found"):
-            service.submit_review(
-                session_id="nonexistent-session",
-                result="APPROVED"
-            )
+            service.submit_review(session_id="nonexistent-session", result="APPROVED")
 
     def test_sign_review_with_hsm_client(self):
         """_sign_review使用HSM客户端签名 (覆盖lines 84-85)"""
@@ -648,7 +615,7 @@ class TestExternalReviewServiceUncovered:
             content="Test content",
             reviewer_id="reviewer-001",
             status="PENDING",
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
 
         signature = service._sign_review(session, "APPROVED", datetime.utcnow())
@@ -670,7 +637,7 @@ class TestExternalReviewServiceUncovered:
             content="Test content",
             reviewer_id="reviewer-001",
             status="PENDING",
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
 
         signature = service._sign_review(session, "APPROVED", datetime.utcnow())

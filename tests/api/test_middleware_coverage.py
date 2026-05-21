@@ -113,20 +113,13 @@ class TestCSRFMiddlewareUncovered:
 
     def test_is_path_safe_with_exclude_paths(self):
         """Test _is_path_safe with exclude_paths."""
-        middleware = CSRFMiddleware(
-            app=MagicMock(),
-            exclude_paths=["/api/admin/"]
-        )
+        middleware = CSRFMiddleware(app=MagicMock(), exclude_paths=["/api/admin/"])
         assert middleware._is_path_safe("/api/admin/users") is True
         assert middleware._is_path_safe("/api/users") is False
 
     def test_is_path_safe_empty_lists(self):
         """Test _is_path_safe with empty safe_paths and exclude_paths."""
-        middleware = CSRFMiddleware(
-            app=MagicMock(),
-            safe_paths=[],
-            exclude_paths=[]
-        )
+        middleware = CSRFMiddleware(app=MagicMock(), safe_paths=[], exclude_paths=[])
         assert middleware._is_path_safe("/any/path") is False
 
     def test_is_state_changing_get(self):
@@ -216,6 +209,7 @@ class TestRateLimiterUncovered:
     def test_get_client_identifier_forwarded_for(self):
         """Test get_client_identifier with X-Forwarded-For header."""
         from api.middleware.rate_limit import rate_limit_settings
+
         original = rate_limit_settings.trust_x_forwarded_for
         rate_limit_settings.trust_x_forwarded_for = True
         try:
@@ -234,6 +228,7 @@ class TestRateLimiterUncovered:
     def test_get_client_identifier_real_ip(self):
         """Test get_client_identifier with X-Real-IP header."""
         from api.middleware.rate_limit import rate_limit_settings
+
         original = rate_limit_settings.trust_x_real_ip
         rate_limit_settings.trust_x_real_ip = True
         try:
@@ -253,18 +248,14 @@ class TestSecurityHeadersUncovered:
 
     def test_security_headers_config_hsts_preload(self):
         """Test SecurityHeadersConfig with HSTS preload flag."""
-        config = SecurityHeadersConfig(
-            hsts_include_subdomains=True,
-            hsts_preload=True
-        )
+        config = SecurityHeadersConfig(hsts_include_subdomains=True, hsts_preload=True)
         header = config.get_hsts_header()
         assert "preload" in header
 
     def test_security_headers_config_custom_csp(self):
         """Test SecurityHeadersConfig with custom CSP values."""
         config = SecurityHeadersConfig(
-            csp_default_src="'self'",
-            csp_script_src="'self' 'unsafe-inline' 'nonce-random123'"
+            csp_default_src="'self'", csp_script_src="'self' 'unsafe-inline' 'nonce-random123'"
         )
         header = config.get_csp_header()
         assert "default-src 'self'" in header
@@ -274,11 +265,7 @@ class TestSecurityHeadersUncovered:
     async def test_security_headers_middleware_exclude_paths(self):
         """Test SecurityHeadersMiddleware excludes paths correctly."""
         config = SecurityHeadersConfig()
-        middleware = SecurityHeadersMiddleware(
-            app=MagicMock(),
-            config=config,
-            exclude_paths=["/api/monitor/health"]
-        )
+        middleware = SecurityHeadersMiddleware(app=MagicMock(), config=config, exclude_paths=["/api/monitor/health"])
 
         mock_request = MagicMock(spec=Request)
         mock_request.url.path = "/api/monitor/health"

@@ -22,7 +22,7 @@ class TestTier1Verification:
             data_type="gdp",
             value=12900000000000,  # 12.9万亿
             year=2023,
-            region="中国"
+            region="中国",
         )
 
         assert result.is_verified is True
@@ -38,7 +38,7 @@ class TestTier1Verification:
         result = await verifier.verify(
             data_type="gdp",
             value=99999999999999,  # 明显异常
-            year=2023
+            year=2023,
         )
 
         assert result.is_verified is False
@@ -54,7 +54,7 @@ class TestTier1Verification:
         result = await verifier.verify(
             data_type="population",
             value=-1000,  # 不可能为负
-            year=2023
+            year=2023,
         )
 
         assert result.is_verified is False
@@ -67,14 +67,10 @@ class TestTier1Verification:
 
         verifier = Tier1Verifier()
 
-        with patch.object(verifier, '_call_external_api', new_callable=AsyncMock) as mock_api:
+        with patch.object(verifier, "_call_external_api", new_callable=AsyncMock) as mock_api:
             mock_api.return_value = {"verified": True, "value": 12900000000000, "source": "国家统计局"}
 
-            result = await verifier.verify(
-                data_type="gdp",
-                value=12900000000000,
-                year=2023
-            )
+            result = await verifier.verify(data_type="gdp", value=12900000000000, year=2023)
 
             mock_api.assert_called_once()
             assert result.is_verified is True
@@ -91,11 +87,7 @@ class TestDataLineageTracker:
         tracker = DataLineageTracker()
 
         tracker.register_raw_data("gdp-2023", 12900000000000, "国家统计局")
-        tracker.register_derived_data(
-            "per-capita",
-            formula="gdp-2023 / population-2023",
-            input_data_ids=["gdp-2023"]
-        )
+        tracker.register_derived_data("per-capita", formula="gdp-2023 / population-2023", input_data_ids=["gdp-2023"])
 
         lineage = tracker.get_propagation_chain("per-capita")
         assert len(lineage) == 2
@@ -110,31 +102,15 @@ class TestDataLineageTracker:
 
         # 注册多层派生 - data-0 -> data-1 -> data-2 -> data-3 (depth 3, OK)
         tracker.register_raw_data("data-0", 1000, "source")
-        r1 = tracker.register_derived_data(
-            "data-1",
-            formula="data-0 * 0.5",
-            input_data_ids=["data-0"]
-        )
+        r1 = tracker.register_derived_data("data-1", formula="data-0 * 0.5", input_data_ids=["data-0"])
         assert r1.rejected is False
-        r2 = tracker.register_derived_data(
-            "data-2",
-            formula="data-1 * 0.5",
-            input_data_ids=["data-1"]
-        )
+        r2 = tracker.register_derived_data("data-2", formula="data-1 * 0.5", input_data_ids=["data-1"])
         assert r2.rejected is False
-        r3 = tracker.register_derived_data(
-            "data-3",
-            formula="data-2 * 0.5",
-            input_data_ids=["data-2"]
-        )
+        r3 = tracker.register_derived_data("data-3", formula="data-2 * 0.5", input_data_ids=["data-2"])
         assert r3.rejected is False
 
         # 深度超过3应被阻断 - data-4的depth是4
-        result = tracker.register_derived_data(
-            "data-4",
-            formula="data-3 * 0.5",
-            input_data_ids=["data-3"]
-        )
+        result = tracker.register_derived_data("data-4", formula="data-3 * 0.5", input_data_ids=["data-3"])
 
         assert result.rejected is True
         assert "DEPTH_EXCEEDED" in result.reason
@@ -166,7 +142,7 @@ class TestDataLineageTracker:
         result = tracker.register_derived_data(
             "data-1",
             formula=None,  # 缺少公式
-            input_data_ids=["data-0"]
+            input_data_ids=["data-0"],
         )
 
         assert result.rejected is True
@@ -204,41 +180,17 @@ class TestDataLineageTracker:
 
         # data-0 -> data-1 -> data-2 -> data-3 -> data-4 (chain length = 5, OK)
         tracker.register_raw_data("data-0", 1000, "source")
-        tracker.register_derived_data(
-            "data-1",
-            formula="data-0 * 0.5",
-            input_data_ids=["data-0"]
-        )
-        tracker.register_derived_data(
-            "data-2",
-            formula="data-1 * 0.5",
-            input_data_ids=["data-1"]
-        )
-        tracker.register_derived_data(
-            "data-3",
-            formula="data-2 * 0.5",
-            input_data_ids=["data-2"]
-        )
-        tracker.register_derived_data(
-            "data-4",
-            formula="data-3 * 0.5",
-            input_data_ids=["data-3"]
-        )
+        tracker.register_derived_data("data-1", formula="data-0 * 0.5", input_data_ids=["data-0"])
+        tracker.register_derived_data("data-2", formula="data-1 * 0.5", input_data_ids=["data-1"])
+        tracker.register_derived_data("data-3", formula="data-2 * 0.5", input_data_ids=["data-2"])
+        tracker.register_derived_data("data-4", formula="data-3 * 0.5", input_data_ids=["data-3"])
 
         # 第5个派生应该被接受（chain length = 5）
-        result = tracker.register_derived_data(
-            "data-5",
-            formula="data-4 * 0.5",
-            input_data_ids=["data-4"]
-        )
+        result = tracker.register_derived_data("data-5", formula="data-4 * 0.5", input_data_ids=["data-4"])
         assert result.rejected is False
 
         # 超过最大链长度应被拒绝（chain length = 6 > 5）
-        result2 = tracker.register_derived_data(
-            "data-6",
-            formula="data-5 * 0.5",
-            input_data_ids=["data-5"]
-        )
+        result2 = tracker.register_derived_data("data-6", formula="data-5 * 0.5", input_data_ids=["data-5"])
         assert result2.rejected is True
         assert "DERIVATION_CHAIN_EXCEEDED" in result2.reason
 
@@ -253,15 +205,10 @@ class TestExternalDataVerifier:
 
         verifier = ExternalDataVerifier()
 
-        with patch.object(verifier, '_call_national_stats_api', new_callable=AsyncMock) as mock_api:
+        with patch.object(verifier, "_call_national_stats_api", new_callable=AsyncMock) as mock_api:
             mock_api.return_value = {"gdp": 12900000000000, "year": 2023}
 
-            result = await verifier.verify(
-                data_type="gdp",
-                value=12900000000000,
-                year=2023,
-                region="中国"
-            )
+            result = await verifier.verify(data_type="gdp", value=12900000000000, year=2023, region="中国")
 
             assert result.is_verified is True
 
@@ -272,15 +219,11 @@ class TestExternalDataVerifier:
 
         verifier = Tier1Verifier()
 
-        with patch.object(verifier, '_call_external_api', new_callable=AsyncMock) as mock_api:
+        with patch.object(verifier, "_call_external_api", new_callable=AsyncMock) as mock_api:
             # API返回12.9万亿，用户提供12.8万亿，偏差约0.77%
             mock_api.return_value = {"verified": True, "value": 12900000000000}
 
-            result = await verifier.verify(
-                data_type="gdp",
-                value=12800000000000,
-                year=2023
-            )
+            result = await verifier.verify(data_type="gdp", value=12800000000000, year=2023)
 
             assert result.discrepancy < 0.01  # 小于1%
 
@@ -299,11 +242,7 @@ class TestExternalDataVerifier:
 
         verifier._fetch_external_data = slow_fetch
 
-        result = await verifier.verify(
-            data_type="gdp",
-            value=12900000000000,
-            year=2023
-        )
+        result = await verifier.verify(data_type="gdp", value=12900000000000, year=2023)
 
         assert result.is_verified is False
         assert result.status == VerificationStatus.TIMEOUT
@@ -323,7 +262,7 @@ class TestSecurityTests:
         result = await verifier.verify(
             data_type="population",
             value=999999999999999999,  # 超出合理范围
-            year=2023
+            year=2023,
         )
 
         assert result.is_verified is False
@@ -360,9 +299,7 @@ class TestSecurityTests:
         tracker.register_raw_data("base", 1000, "source")
         for i in range(10):
             result = tracker.register_derived_data(
-                f"layer-{i+1}",
-                formula=f"layer-{i} * 1.01",
-                input_data_ids=[f"layer-{i}"]
+                f"layer-{i+1}", formula=f"layer-{i} * 1.01", input_data_ids=[f"layer-{i}"]
             )
             if i >= 4:
                 assert result.rejected is True
@@ -394,11 +331,7 @@ class TestSecurityTests:
 
         verifier = Tier1Verifier()
 
-        result = await verifier.verify(
-            data_type="price",
-            value=-100,
-            year=2023
-        )
+        result = await verifier.verify(data_type="price", value=-100, year=2023)
 
         assert result.is_verified is False
         assert "INVALID_RANGE" in result.reason
@@ -420,11 +353,7 @@ class TestIntegrationTests:
         tracker.register_raw_data("gdp-2023", 12900000000000, "国家统计局")
 
         # 验证数据
-        result = await verifier.verify(
-            data_type="gdp",
-            value=12900000000000,
-            year=2023
-        )
+        result = await verifier.verify(data_type="gdp", value=12900000000000, year=2023)
 
         assert result.is_verified is True
         lineage = tracker.get_propagation_chain("gdp-2023")
@@ -444,9 +373,7 @@ class TestIntegrationTests:
 
         # 2. 派生计算
         derived = tracker.register_derived_data(
-            "per-capita-gdp",
-            formula="gdp-2023 / population-2023",
-            input_data_ids=["gdp-2023"]
+            "per-capita-gdp", formula="gdp-2023 / population-2023", input_data_ids=["gdp-2023"]
         )
         assert derived.rejected is False
 
@@ -468,7 +395,7 @@ class TestTier1EngineUncoveredBranches:
         result = await verifier.verify(
             data_type="gdp",
             value="not a number",  # string instead of int/float
-            year=2023
+            year=2023,
         )
         assert result.is_verified is False
         assert "INVALID_TYPE" in result.reason
@@ -482,13 +409,9 @@ class TestTier1EngineUncoveredBranches:
 
         verifier = Tier1Verifier()
 
-        with patch.object(verifier, '_fetch_external_data', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(verifier, "_fetch_external_data", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = None  # API unavailable
-            result = await verifier.verify(
-                data_type="gdp",
-                value=12900000000000,
-                year=2023
-            )
+            result = await verifier.verify(data_type="gdp", value=12900000000000, year=2023)
             assert result.is_verified is False
             assert "EXTERNAL_API_UNAVAILABLE" in result.reason
 
@@ -501,13 +424,9 @@ class TestTier1EngineUncoveredBranches:
 
         verifier = Tier1Verifier()
 
-        with patch.object(verifier, '_fetch_external_data', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(verifier, "_fetch_external_data", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.side_effect = Exception("Network error")
-            result = await verifier.verify(
-                data_type="gdp",
-                value=12900000000000,
-                year=2023
-            )
+            result = await verifier.verify(data_type="gdp", value=12900000000000, year=2023)
             assert result.is_verified is False
             assert "ERROR:" in result.reason
 
@@ -537,11 +456,7 @@ class TestDataLineageTrackerUncovered:
         tracker = DataLineageTracker()
 
         tracker.register_raw_data("data-a", 100, "source")
-        tracker.register_derived_data(
-            "data-b",
-            formula="data-a * 2",
-            input_data_ids=["data-a"]
-        )
+        tracker.register_derived_data("data-b", formula="data-a * 2", input_data_ids=["data-a"])
 
         tracker.get_propagation_chain("data-a")
 
@@ -598,11 +513,7 @@ class TestDataLineageTrackerUncovered:
 
         tracker = DataLineageTracker()
         tracker.register_raw_data("data-a", 100, "source")
-        tracker.register_derived_data(
-            "data-b",
-            formula="data-a * 2",
-            input_data_ids=["data-a"]
-        )
+        tracker.register_derived_data("data-b", formula="data-a * 2", input_data_ids=["data-a"])
 
         chain = []
         visited = {"data-a"}

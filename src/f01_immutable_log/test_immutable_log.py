@@ -18,6 +18,7 @@ import pytest
 def reset_chain():
     """每个测试前重置全局链状态"""
     from f01_immutable_log import immutable_log
+
     immutable_log.reset_global_chain()
     yield
     immutable_log.reset_global_chain()
@@ -35,7 +36,7 @@ class TestImmutableLogEntry:
         assert log_entry.version_tag is not None
         assert len(log_entry.version_tag) == 64  # SHA-256 hex length
         # 版本戳应该是十六进制字符串
-        assert all(c in '0123456789abcdef' for c in log_entry.version_tag)
+        assert all(c in "0123456789abcdef" for c in log_entry.version_tag)
 
     def test_log_entry_must_have_content_hash(self):
         """F01-T002: 日志条目必须有内容哈希"""
@@ -151,7 +152,7 @@ class TestImmutableLogChain:
             timestamp=datetime.utcnow(),
             operation_type="call_1",
             payload={"data": "a"},
-            previous_hash="fake_previous"  # 错误的previous_hash
+            previous_hash="fake_previous",  # 错误的previous_hash
         )
 
         # 用假条目替换第一个条目
@@ -177,7 +178,7 @@ class TestImmutableLogChain:
             timestamp=entry2.timestamp,
             operation_type=entry2.operation_type,
             payload=entry2.payload,
-            previous_hash="fake_previous_hash"  # 错误的previous_hash
+            previous_hash="fake_previous_hash",  # 错误的previous_hash
         )
 
         assert verify_chain_integrity([entry1, broken_entry2]) is False
@@ -199,7 +200,7 @@ class TestImmutableLogChain:
             timestamp=entry1.timestamp,
             operation_type=entry1.operation_type,
             payload=entry1.payload,
-            previous_hash=entry1.previous_hash
+            previous_hash=entry1.previous_hash,
         )
 
         tampered_entries = [tampered_entry1, entry2]
@@ -370,7 +371,7 @@ class TestImmutableLogEdgeCases:
             "json": '{"key": "value"}',
             "newline": "line1\nline2",
             "quote": '他说："你好"',
-            "emoji": "🚀🎓📚"
+            "emoji": "🚀🎓📚",
         }
         entry = create_log_entry("op", special_data)
 
@@ -381,13 +382,7 @@ class TestImmutableLogEdgeCases:
         """F01-T009e: 嵌套数据结构"""
         from f01_immutable_log.immutable_log import create_log_entry
 
-        nested_data = {
-            "level1": {
-                "level2": {
-                    "level3": ["a", "b", "c"]
-                }
-            }
-        }
+        nested_data = {"level1": {"level2": {"level3": ["a", "b", "c"]}}}
         entry = create_log_entry("op", nested_data)
 
         assert entry.payload == nested_data

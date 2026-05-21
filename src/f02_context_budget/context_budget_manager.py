@@ -9,12 +9,14 @@ from dataclasses import dataclass
 
 class BudgetError(Exception):
     """预算错误异常"""
+
     pass
 
 
 @dataclass
 class BudgetResult:
     """预算操作结果"""
+
     accepted: bool
     rejection_reason: str | None = None
     evicted_material: str | None = None
@@ -57,10 +59,7 @@ class ContextBudgetManager:
         tokens = self.estimate_tokens(context)
 
         if tokens > self.L0_CORE_BUDGET:
-            return BudgetResult(
-                accepted=False,
-                rejection_reason="CORE_CONTEXT_EXCEEDED"
-            )
+            return BudgetResult(accepted=False, rejection_reason="CORE_CONTEXT_EXCEEDED")
 
         self._core_context = context
         self._core_context_tokens = tokens
@@ -80,19 +79,13 @@ class ContextBudgetManager:
         tokens = self.estimate_tokens(material)
 
         if tokens > self.L1_MATERIAL_BUDGET:
-            return BudgetResult(
-                accepted=False,
-                rejection_reason="MATERIAL_EXCEEDED"
-            )
+            return BudgetResult(accepted=False, rejection_reason="MATERIAL_EXCEEDED")
 
         evicted_material = None
         while self._get_material_total_tokens() + tokens > self.L1_MATERIAL_BUDGET:
             evicted = self._evict_oldest_material()
             if evicted is None:
-                return BudgetResult(
-                    accepted=False,
-                    rejection_reason="MATERIAL_BUDGET_EXCEEDED"
-                )
+                return BudgetResult(accepted=False, rejection_reason="MATERIAL_BUDGET_EXCEEDED")
             evicted_material = evicted
 
         self._materials[chapter_id] = material
@@ -116,10 +109,7 @@ class ContextBudgetManager:
         total_tokens = self._get_total_tokens()
 
         if total_tokens + tokens > self.TOTAL_BUDGET:
-            return BudgetResult(
-                accepted=False,
-                rejection_reason="TOTAL_BUDGET_EXCEEDED"
-            )
+            return BudgetResult(accepted=False, rejection_reason="TOTAL_BUDGET_EXCEEDED")
 
         result = self.add_material(chapter_id, content)
         if result.accepted and result.evicted_material:
@@ -181,10 +171,10 @@ class ContextBudgetManager:
             int: 估算的token数量
         """
         text = (
-            content.get("text", "") or
-            content.get("ref", "") or
-            content.get("reference", "") or
-            content.get("outline", "")
+            content.get("text", "")
+            or content.get("ref", "")
+            or content.get("reference", "")
+            or content.get("outline", "")
         )
         return len(text)
 

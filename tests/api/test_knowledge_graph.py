@@ -14,8 +14,6 @@ Tests for knowledge graph endpoints:
 """
 
 
-
-
 _in_memory_nodes = {}
 _in_memory_edges = {}
 _edge_id_counter = 0
@@ -38,9 +36,7 @@ class TestListNodes:
         assert isinstance(data, list)
         assert len(data) == 0
 
-    def test_list_nodes_with_data(
-        self, test_client, test_db, editor_authenticated, test_app
-    ):
+    def test_list_nodes_with_data(self, test_client, test_db, editor_authenticated, test_app):
         """Test listing nodes with existing data"""
         token = editor_authenticated["access_token"]
 
@@ -66,9 +62,7 @@ class TestListNodes:
         data = response2.json()
         assert len(data) >= 1
 
-    def test_list_nodes_filter_by_type(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_list_nodes_filter_by_type(self, test_client, test_db, editor_authenticated):
         """Test listing nodes filtered by type"""
         token = editor_authenticated["access_token"]
 
@@ -99,9 +93,7 @@ class TestListNodes:
         for node in data:
             assert node["node_type"] == "chapter"
 
-    def test_list_nodes_pagination(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_list_nodes_pagination(self, test_client, test_db, editor_authenticated):
         """Test node listing with pagination"""
         token = editor_authenticated["access_token"]
 
@@ -133,9 +125,7 @@ class TestListNodes:
 
         assert response.status_code == 401
 
-    def test_list_nodes_viewer_allowed(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_nodes_viewer_allowed(self, test_client, test_db, test_user_authenticated):
         """Test viewer can list nodes (has knowledge_graph:read permission)"""
         token = test_user_authenticated["access_token"]
 
@@ -150,9 +140,7 @@ class TestListNodes:
 class TestCreateNode:
     """Tests for creating knowledge graph nodes"""
 
-    def test_create_node(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_node(self, test_client, test_db, editor_authenticated):
         """Test successful node creation"""
         token = editor_authenticated["access_token"]
 
@@ -178,9 +166,7 @@ class TestCreateNode:
         assert "id" in data
         assert "created_at" in data
 
-    def test_create_node_minimal(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_node_minimal(self, test_client, test_db, editor_authenticated):
         """Test node creation with minimal data"""
         token = editor_authenticated["access_token"]
 
@@ -195,9 +181,7 @@ class TestCreateNode:
 
         assert response.status_code == 201
 
-    def test_create_node_viewer_forbidden(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_create_node_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot create nodes"""
         token = test_user_authenticated["access_token"]
 
@@ -243,9 +227,7 @@ class TestGetNode:
         assert data["id"] == node_id
         assert data["properties"]["title"] == "Test Chapter"
 
-    def test_get_node_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_node_not_found(self, test_client, test_db, editor_authenticated):
         """Test getting non-existent node"""
         token = editor_authenticated["access_token"]
 
@@ -318,9 +300,7 @@ class TestDeleteNode:
 
         assert response.status_code == 200
 
-    def test_delete_node_not_found(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_delete_node_not_found(self, test_client, test_db, content_admin_authenticated):
         """Test deleting non-existent node"""
         token = content_admin_authenticated["access_token"]
 
@@ -351,9 +331,7 @@ class TestListEdges:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_list_edges_filter_by_type(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_list_edges_filter_by_type(self, test_client, test_db, editor_authenticated):
         """Test listing edges filtered by edge type"""
         token = editor_authenticated["access_token"]
 
@@ -412,9 +390,7 @@ class TestCreateEdge:
         assert data["target_id"] == node2_id
         assert data["edge_type"] == "CONTAINS"
 
-    def test_create_edge_source_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_edge_source_not_found(self, test_client, test_db, editor_authenticated):
         """Test creating edge with non-existent source node"""
         token = editor_authenticated["access_token"]
 
@@ -445,9 +421,7 @@ class TestCreateEdge:
         data = response.json()
         assert data["detail"]["error"]["code"] == "SOURCE_NODE_NOT_FOUND"
 
-    def test_create_edge_target_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_create_edge_target_not_found(self, test_client, test_db, editor_authenticated):
         """Test creating edge with non-existent target node"""
         token = editor_authenticated["access_token"]
 
@@ -534,9 +508,7 @@ class TestDeleteEdge:
 class TestQueryGraph:
     """Tests for querying the knowledge graph"""
 
-    def test_query_graph(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_query_graph(self, test_client, test_db, editor_authenticated):
         """Test querying the graph"""
         token = editor_authenticated["access_token"]
 
@@ -564,9 +536,7 @@ class TestQueryGraph:
         assert "nodes" in data
         assert "edges" in data
 
-    def test_query_graph_empty_query(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_query_graph_empty_query(self, test_client, test_db, editor_authenticated):
         """Test querying with no matches"""
         token = editor_authenticated["access_token"]
 
@@ -584,9 +554,7 @@ class TestQueryGraph:
 class TestGraphStats:
     """Tests for graph statistics"""
 
-    def test_get_graph_stats(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_graph_stats(self, test_client, test_db, editor_authenticated):
         """Test getting graph statistics"""
         token = editor_authenticated["access_token"]
 

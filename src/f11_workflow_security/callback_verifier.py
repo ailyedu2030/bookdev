@@ -10,6 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class VerificationResult:
     """验证结果"""
+
     is_valid: bool
     reason: str = ""
     hsm_verified: bool = False

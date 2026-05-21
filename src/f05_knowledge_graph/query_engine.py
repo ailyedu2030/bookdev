@@ -79,10 +79,7 @@ class QueryEngine:
 
     def find_cliques(self, min_size: int = 3) -> list[list[str]]:
         """查找全连通子图 (cliques) - 简化实现"""
-        concept_ids = [
-            node_id for node_id, node in self.kg._nodes.items()
-            if node.type == "Concept"
-        ]
+        concept_ids = [node_id for node_id, node in self.kg._nodes.items() if node.type == "Concept"]
 
         similar_edges = {
             (e.source, e.target): e.properties.get("similarity_score", 1.0)
@@ -92,7 +89,7 @@ class QueryEngine:
 
         cliques = []
         for i, c1 in enumerate(concept_ids):
-            for c2 in concept_ids[i + 1:]:
+            for c2 in concept_ids[i + 1 :]:
                 if (c1, c2) in similar_edges or (c2, c1) in similar_edges:
                     cliques.append([c1, c2])
 

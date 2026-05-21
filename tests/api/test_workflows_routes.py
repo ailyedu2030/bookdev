@@ -11,9 +11,7 @@ from api.deps import generate_uuid
 class TestWorkflowsAdditional:
     """Additional tests for workflow endpoints"""
 
-    def test_list_workflows_empty(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_list_workflows_empty(self, test_client, test_db, editor_authenticated):
         """Test listing workflows when none exist"""
         token = editor_authenticated["access_token"]
 
@@ -27,9 +25,7 @@ class TestWorkflowsAdditional:
         assert isinstance(data, list)
         assert len(data) == 0
 
-    def test_list_workflows_pagination(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_list_workflows_pagination(self, test_client, test_db, editor_authenticated):
         """Test listing workflows with pagination"""
         token = editor_authenticated["access_token"]
 
@@ -42,9 +38,7 @@ class TestWorkflowsAdditional:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_list_workflows_filter_by_status(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_list_workflows_filter_by_status(self, test_client, test_db, editor_authenticated):
         """Test listing workflows filtered by status"""
         token = editor_authenticated["access_token"]
 
@@ -57,9 +51,7 @@ class TestWorkflowsAdditional:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_get_workflow_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_workflow_not_found(self, test_client, test_db, editor_authenticated):
         """Test getting non-existent workflow"""
         token = editor_authenticated["access_token"]
         fake_id = generate_uuid()
@@ -71,9 +63,7 @@ class TestWorkflowsAdditional:
 
         assert response.status_code == 404
 
-    def test_signal_workflow_not_found(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_not_found(self, test_client, test_db, content_admin_authenticated):
         """Test signaling non-existent workflow"""
         token = content_admin_authenticated["access_token"]
         fake_id = generate_uuid()
@@ -89,9 +79,7 @@ class TestWorkflowsAdditional:
 
         assert response.status_code == 404
 
-    def test_signal_workflow_wrong_status(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_wrong_status(self, test_client, test_db, content_admin_authenticated):
         """Test signaling workflow in wrong status"""
         token = content_admin_authenticated["access_token"]
         fake_id = generate_uuid()
@@ -107,9 +95,7 @@ class TestWorkflowsAdditional:
 
         assert response.status_code == 404
 
-    def test_cancel_workflow_not_found(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_not_found(self, test_client, test_db, content_admin_authenticated):
         """Test cancelling non-existent workflow"""
         token = content_admin_authenticated["access_token"]
         fake_id = generate_uuid()
@@ -124,9 +110,7 @@ class TestWorkflowsAdditional:
 
         assert response.status_code == 404
 
-    def test_terminate_workflow_not_found(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_terminate_workflow_not_found(self, test_client, test_db, content_admin_authenticated):
         """Test terminating non-existent workflow"""
         token = content_admin_authenticated["access_token"]
         fake_id = generate_uuid()
@@ -141,9 +125,7 @@ class TestWorkflowsAdditional:
 
         assert response.status_code == 404
 
-    def test_get_workflow_history_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_workflow_history_not_found(self, test_client, test_db, editor_authenticated):
         """Test getting history of non-existent workflow"""
         token = editor_authenticated["access_token"]
         fake_id = generate_uuid()
@@ -159,9 +141,7 @@ class TestWorkflowsAdditional:
 class TestWorkflowSignals:
     """Tests for workflow signal endpoint - uses correct import path"""
 
-    def test_signal_workflow_success(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_success(self, test_client, test_db, content_admin_authenticated):
         """Test successfully sending a signal to a running workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -200,9 +180,7 @@ class TestWorkflowSignals:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_signal_workflow_pending_status(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_pending_status(self, test_client, test_db, content_admin_authenticated):
         """Test signaling a pending workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -236,9 +214,7 @@ class TestWorkflowSignals:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_signal_workflow_completed_fails(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_completed_fails(self, test_client, test_db, content_admin_authenticated):
         """Test signaling a completed workflow returns 400"""
         token = content_admin_authenticated["access_token"]
 
@@ -272,9 +248,7 @@ class TestWorkflowSignals:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_signal_workflow_with_payload(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_with_payload(self, test_client, test_db, content_admin_authenticated):
         """Test signaling with complex payload"""
         token = content_admin_authenticated["access_token"]
 
@@ -316,9 +290,7 @@ class TestWorkflowSignals:
 class TestWorkflowCancel:
     """Tests for workflow cancellation - uses correct import path"""
 
-    def test_cancel_workflow_success(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_success(self, test_client, test_db, content_admin_authenticated):
         """Test successfully cancelling a running workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -353,9 +325,7 @@ class TestWorkflowCancel:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_cancel_workflow_pending(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_pending(self, test_client, test_db, content_admin_authenticated):
         """Test cancelling a pending workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -387,9 +357,7 @@ class TestWorkflowCancel:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_cancel_workflow_completed_fails(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_completed_fails(self, test_client, test_db, content_admin_authenticated):
         """Test cancelling an already completed workflow returns 400"""
         token = content_admin_authenticated["access_token"]
 
@@ -421,9 +389,7 @@ class TestWorkflowCancel:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_cancel_workflow_failed_fails(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_failed_fails(self, test_client, test_db, content_admin_authenticated):
         """Test cancelling a failed workflow returns 400"""
         token = content_admin_authenticated["access_token"]
 
@@ -458,9 +424,7 @@ class TestWorkflowCancel:
 class TestWorkflowTerminate:
     """Tests for workflow termination - uses correct import path"""
 
-    def test_terminate_workflow_success(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_terminate_workflow_success(self, test_client, test_db, content_admin_authenticated):
         """Test successfully terminating a running workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -495,9 +459,7 @@ class TestWorkflowTerminate:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_terminate_workflow_pending(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_terminate_workflow_pending(self, test_client, test_db, content_admin_authenticated):
         """Test terminating a pending workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -529,9 +491,7 @@ class TestWorkflowTerminate:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_terminate_workflow_cancelled_fails(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_terminate_workflow_cancelled_fails(self, test_client, test_db, content_admin_authenticated):
         """Test terminating an already cancelled workflow returns 400"""
         token = content_admin_authenticated["access_token"]
 
@@ -567,9 +527,7 @@ class TestWorkflowTerminate:
 class TestWorkflowHistory:
     """Tests for workflow history - uses correct import path"""
 
-    def test_get_workflow_history_with_events(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_workflow_history_with_events(self, test_client, test_db, editor_authenticated):
         """Test getting workflow history with events"""
         token = editor_authenticated["access_token"]
 
@@ -613,9 +571,7 @@ class TestWorkflowHistory:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_get_workflow_history_empty(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_workflow_history_empty(self, test_client, test_db, editor_authenticated):
         """Test getting workflow history when no events"""
         token = editor_authenticated["access_token"]
 
@@ -645,9 +601,7 @@ class TestWorkflowHistory:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_get_workflow_history_missing_history_key(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_workflow_history_missing_history_key(self, test_client, test_db, editor_authenticated):
         """Test getting history when history key is missing"""
         token = editor_authenticated["access_token"]
 
@@ -681,14 +635,13 @@ class TestWorkflowHistory:
 class TestStartWorkflow:
     """Tests for starting workflows"""
 
-    def test_start_chapter_generation_workflow(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_start_chapter_generation_workflow(self, test_client, test_db, content_admin_authenticated):
         """Test starting a chapter generation workflow"""
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
 
         from tests.api.conftest import create_test_chapter, create_test_project
+
         project = create_test_project(test_db, owner_id=user.id)
         chapter = create_test_chapter(test_db, project_id=project["id"])
 
@@ -710,9 +663,7 @@ class TestStartWorkflow:
 class TestListWorkflowTypes:
     """Tests for listing workflow types"""
 
-    def test_list_workflow_types(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_list_workflow_types(self, test_client, test_db, editor_authenticated):
         """Test listing available workflow types"""
         token = editor_authenticated["access_token"]
 
@@ -789,9 +740,7 @@ class TestWorkflowEdgeCases:
 class TestWorkflowSignalsFixed:
     """Tests for workflow signal endpoint - uses correct import path"""
 
-    def test_signal_workflow_success(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_success(self, test_client, test_db, content_admin_authenticated):
         """Test successfully sending a signal to a running workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -830,9 +779,7 @@ class TestWorkflowSignalsFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_signal_workflow_pending_status(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_pending_status(self, test_client, test_db, content_admin_authenticated):
         """Test signaling a pending workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -866,9 +813,7 @@ class TestWorkflowSignalsFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_signal_workflow_completed_fails(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_completed_fails(self, test_client, test_db, content_admin_authenticated):
         """Test signaling a completed workflow returns 400"""
         token = content_admin_authenticated["access_token"]
 
@@ -902,9 +847,7 @@ class TestWorkflowSignalsFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_signal_workflow_with_payload(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_signal_workflow_with_payload(self, test_client, test_db, content_admin_authenticated):
         """Test signaling with complex payload"""
         token = content_admin_authenticated["access_token"]
 
@@ -946,9 +889,7 @@ class TestWorkflowSignalsFixed:
 class TestWorkflowCancelFixed:
     """Tests for workflow cancellation - uses correct import path"""
 
-    def test_cancel_workflow_success(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_success(self, test_client, test_db, content_admin_authenticated):
         """Test successfully cancelling a running workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -983,9 +924,7 @@ class TestWorkflowCancelFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_cancel_workflow_pending(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_pending(self, test_client, test_db, content_admin_authenticated):
         """Test cancelling a pending workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -1017,9 +956,7 @@ class TestWorkflowCancelFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_cancel_workflow_completed_fails(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_completed_fails(self, test_client, test_db, content_admin_authenticated):
         """Test cancelling an already completed workflow returns 400"""
         token = content_admin_authenticated["access_token"]
 
@@ -1051,9 +988,7 @@ class TestWorkflowCancelFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_cancel_workflow_failed_fails(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_cancel_workflow_failed_fails(self, test_client, test_db, content_admin_authenticated):
         """Test cancelling a failed workflow returns 400"""
         token = content_admin_authenticated["access_token"]
 
@@ -1088,9 +1023,7 @@ class TestWorkflowCancelFixed:
 class TestWorkflowTerminateFixed:
     """Tests for workflow termination - uses correct import path"""
 
-    def test_terminate_workflow_success(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_terminate_workflow_success(self, test_client, test_db, content_admin_authenticated):
         """Test successfully terminating a running workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -1125,9 +1058,7 @@ class TestWorkflowTerminateFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_terminate_workflow_pending(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_terminate_workflow_pending(self, test_client, test_db, content_admin_authenticated):
         """Test terminating a pending workflow"""
         token = content_admin_authenticated["access_token"]
 
@@ -1159,9 +1090,7 @@ class TestWorkflowTerminateFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_terminate_workflow_cancelled_fails(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_terminate_workflow_cancelled_fails(self, test_client, test_db, content_admin_authenticated):
         """Test terminating an already cancelled workflow returns 400"""
         token = content_admin_authenticated["access_token"]
 
@@ -1197,9 +1126,7 @@ class TestWorkflowTerminateFixed:
 class TestWorkflowHistoryFixed:
     """Tests for workflow history - uses correct import path"""
 
-    def test_get_workflow_history_with_events(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_workflow_history_with_events(self, test_client, test_db, editor_authenticated):
         """Test getting workflow history with events"""
         token = editor_authenticated["access_token"]
 
@@ -1243,9 +1170,7 @@ class TestWorkflowHistoryFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_get_workflow_history_empty(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_workflow_history_empty(self, test_client, test_db, editor_authenticated):
         """Test getting workflow history when no events"""
         token = editor_authenticated["access_token"]
 
@@ -1275,9 +1200,7 @@ class TestWorkflowHistoryFixed:
         if workflow_id in _workflows_store:
             del _workflows_store[workflow_id]
 
-    def test_get_workflow_history_missing_history_key(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_get_workflow_history_missing_history_key(self, test_client, test_db, editor_authenticated):
         """Test getting history when history key is missing"""
         token = editor_authenticated["access_token"]
 
@@ -1311,14 +1234,13 @@ class TestWorkflowHistoryFixed:
 class TestStartWorkflowFixed:
     """Tests for starting workflows - uses correct import path"""
 
-    def test_start_chapter_generation_workflow(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_start_chapter_generation_workflow(self, test_client, test_db, content_admin_authenticated):
         """Test starting a chapter generation workflow"""
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
 
         from tests.api.conftest import create_test_chapter, create_test_project
+
         project = create_test_project(test_db, owner_id=user.id)
         chapter = create_test_chapter(test_db, project_id=project["id"])
 
@@ -1337,14 +1259,13 @@ class TestStartWorkflowFixed:
         assert data["chapter_id"] == chapter["id"]
         assert "id" in data
 
-    def test_start_chapter_generation_with_prompt(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_start_chapter_generation_with_prompt(self, test_client, test_db, content_admin_authenticated):
         """Test starting workflow with custom prompt"""
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
 
         from tests.api.conftest import create_test_chapter, create_test_project
+
         project = create_test_project(test_db, owner_id=user.id)
         chapter = create_test_chapter(test_db, project_id=project["id"])
 
@@ -1365,9 +1286,7 @@ class TestStartWorkflowFixed:
 class TestListWorkflowTypesFixed:
     """Tests for listing workflow types"""
 
-    def test_list_workflow_types(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_list_workflow_types(self, test_client, test_db, editor_authenticated):
         """Test listing available workflow types"""
         token = editor_authenticated["access_token"]
 

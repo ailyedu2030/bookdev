@@ -641,10 +641,12 @@ class TestDatabaseSessionExtended:
     def test_lock_term(self):
         """Test locking a term"""
         db = DatabaseSession()
-        term = db.create_term({
-            "term": "Test Term",
-            "definition": "A test definition",
-        })
+        term = db.create_term(
+            {
+                "term": "Test Term",
+                "definition": "A test definition",
+            }
+        )
 
         locked = db.lock_term(term["id"], "Pending review")
 
@@ -663,12 +665,14 @@ class TestDatabaseSessionExtended:
     def test_add_session(self):
         """Test adding a session"""
         db = DatabaseSession()
-        user = db.create_user({
-            "username": "testuser",
-            "email": "test@test.com",
-            "password": "testpassword123",
-            "role": "viewer",
-        })
+        user = db.create_user(
+            {
+                "username": "testuser",
+                "email": "test@test.com",
+                "password": "testpassword123",
+                "role": "viewer",
+            }
+        )
 
         db.add_session(user.id, "token123")
 

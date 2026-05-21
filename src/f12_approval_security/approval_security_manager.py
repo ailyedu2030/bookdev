@@ -12,6 +12,7 @@ from typing import Any
 
 class SecurityException(Exception):
     """安全异常"""
+
     def __init__(self, code: str, message: str):
         self.code = code
         self.message = message
@@ -21,6 +22,7 @@ class SecurityException(Exception):
 @dataclass
 class VerificationResult:
     """验证结果"""
+
     is_valid: bool
     reason: str = ""
     hsm_verified: bool = False
@@ -29,6 +31,7 @@ class VerificationResult:
 @dataclass
 class ApprovalRecord:
     """审批记录"""
+
     record_id: str
     content_id: str
     content_hash: str
@@ -46,10 +49,12 @@ class ApprovalRecord:
         return f"{self.content_id}|{self.content_hash}|{self.reviewer_id}|{self.result}|{self.timestamp.isoformat()}"
 
     @classmethod
-    def create(cls, content_id: str, content_hash: str, reviewer_id: str,
-               result: str, comments: str, reviewer_ip: str = None) -> "ApprovalRecord":
+    def create(
+        cls, content_id: str, content_hash: str, reviewer_id: str, result: str, comments: str, reviewer_ip: str = None
+    ) -> "ApprovalRecord":
         """创建审批记录"""
         import uuid
+
         # F12-001/F12-002 FIX: 从环境变量或安全源获取真实IP地址
         safe_ip = reviewer_ip or cls._get_safe_ip()
         return cls(
@@ -62,7 +67,7 @@ class ApprovalRecord:
             signature="",
             signature_source="",
             timestamp=datetime.utcnow(),
-            reviewer_ip=safe_ip
+            reviewer_ip=safe_ip,
         )
 
     @staticmethod
@@ -94,6 +99,7 @@ class ApprovalSecurityManager:
     def calculate_content_hash(self, content: dict[str, Any]) -> str:
         """计算内容哈希"""
         import json
+
         content_str = json.dumps(content, sort_keys=True, default=str)
         return hashlib.sha256(content_str.encode()).hexdigest()
 
@@ -106,7 +112,7 @@ class ApprovalSecurityManager:
         comments: str = "",
         signature: str | None = None,
         is_high_risk: bool = False,
-        reviewer_ip: str = None
+        reviewer_ip: str = None,
     ) -> ApprovalRecord:
         """提交审批"""
         if signature is None:
@@ -118,7 +124,9 @@ class ApprovalSecurityManager:
 
         # F12-003 FIX: 如果无HSM，拒绝所有审批（移除不安全回退）
         if not self.hsm_client:
-            raise SecurityException("HSM_REQUIRED", "Cannot submit approval without HSM - this is a security requirement")
+            raise SecurityException(
+                "HSM_REQUIRED", "Cannot submit approval without HSM - this is a security requirement"
+            )
 
         safe_ip = reviewer_ip or os.environ.get("REVIEWER_IP", "UNKNOWN")
 
@@ -133,7 +141,7 @@ class ApprovalSecurityManager:
             signature_source="HSM",
             timestamp=datetime.utcnow(),
             reviewer_ip=safe_ip,
-            is_high_risk=is_high_risk
+            is_high_risk=is_high_risk,
         )
 
         # F12-004 FIX: 实现真正的多重审批验证
@@ -145,7 +153,7 @@ class ApprovalSecurityManager:
             if current_count >= required_count:
                 raise SecurityException(
                     "MULTI_APPROVAL_COMPLETE",
-                    f"Content {content_id} already has {current_count} approvals, maximum is {required_count}"
+                    f"Content {content_id} already has {current_count} approvals, maximum is {required_count}",
                 )
 
             self._approval_requirements[content_id] = required_count
@@ -192,8 +200,7 @@ class ApprovalSecurityManager:
 
             if current_count < required_count:
                 return VerificationResult(
-                    is_valid=False,
-                    reason=f"MULTI_APPROVAL_INCOMPLETE: need {required_count}, have {current_count}"
+                    is_valid=False, reason=f"MULTI_APPROVAL_INCOMPLETE: need {required_count}, have {current_count}"
                 )
 
         if not self._verify_signature(record):
@@ -224,15 +231,13 @@ class ApprovalSecurityManager:
     def _generate_record_id(self) -> str:
         """生成记录ID"""
         import uuid
+
         return f"rec-{uuid.uuid4().hex[:12]}"
 
     def _verify_signature(self, record: ApprovalRecord) -> bool:
         """验证签名"""
         if self.hsm_client:
-            return self.hsm_client.verify(
-                record.to_signable_string(),
-                record.signature
-            )
+            return self.hsm_client.verify(record.to_signable_string(), record.signature)
         # F12-003 FIX: 移除不安全的回退
         return False
 
@@ -252,11 +257,13 @@ class ApprovalSecurityManager:
         if content_id not in self._audit_trail:
             self._audit_trail[content_id] = []
 
-        self._audit_trail[content_id].append({
-            "record_id": record.record_id,
-            "reviewer_id": record.reviewer_id,
-            "result": record.result,
-            "timestamp": record.timestamp.isoformat(),
-            "reviewer_ip": record.reviewer_ip,
-            "action": "APPROVAL_SUBMITTED"
-        })
+        self._audit_trail[content_id].append(
+            {
+                "record_id": record.record_id,
+                "reviewer_id": record.reviewer_id,
+                "result": record.result,
+                "timestamp": record.timestamp.isoformat(),
+                "reviewer_ip": record.reviewer_ip,
+                "action": "APPROVAL_SUBMITTED",
+            }
+        )

@@ -53,7 +53,7 @@ class TestQualityGate:
 
         gate = QualityGate()
         result = gate.run_quality_gates("/test/path")
-        assert hasattr(result, 'passed')
+        assert hasattr(result, "passed")
         assert isinstance(result.passed, bool)
 
     def test_quality_gate_result_has_check_results(self):
@@ -62,7 +62,7 @@ class TestQualityGate:
 
         gate = QualityGate()
         result = gate.run_quality_gates("/test/path")
-        assert hasattr(result, 'check_results')
+        assert hasattr(result, "check_results")
         assert isinstance(result.check_results, list)
 
     def test_quality_gate_result_has_summary(self):
@@ -71,7 +71,7 @@ class TestQualityGate:
 
         gate = QualityGate()
         result = gate.run_quality_gates("/test/path")
-        assert hasattr(result, 'summary')
+        assert hasattr(result, "summary")
         assert isinstance(result.summary, dict)
 
     def test_quality_gate_result_has_timestamp(self):
@@ -80,7 +80,7 @@ class TestQualityGate:
 
         gate = QualityGate()
         result = gate.run_quality_gates("/test/path")
-        assert hasattr(result, 'timestamp')
+        assert hasattr(result, "timestamp")
         assert isinstance(result.timestamp, str)
 
     def test_run_linter_check(self):
@@ -112,9 +112,9 @@ class TestQualityGate:
         from f29_quality_gate.quality_gate import QualityGate
 
         gate = QualityGate()
-        with patch.object(gate, '_run_linter_check') as mock_linter:
-            with patch.object(gate, '_run_security_scan') as mock_security:
-                with patch.object(gate, '_run_coverage_check') as mock_coverage:
+        with patch.object(gate, "_run_linter_check") as mock_linter:
+            with patch.object(gate, "_run_security_scan") as mock_security:
+                with patch.object(gate, "_run_coverage_check") as mock_coverage:
                     mock_linter.return_value = CheckResult("linter", CheckStatus.PASS, "OK")
                     mock_security.return_value = CheckResult("security", CheckStatus.PASS, "OK")
                     mock_coverage.return_value = CheckResult("coverage", CheckStatus.PASS, "OK")
@@ -127,9 +127,9 @@ class TestQualityGate:
         from f29_quality_gate.quality_gate import QualityGate
 
         gate = QualityGate()
-        with patch.object(gate, '_run_linter_check') as mock_linter:
-            with patch.object(gate, '_run_security_scan') as mock_security:
-                with patch.object(gate, '_run_coverage_check') as mock_coverage:
+        with patch.object(gate, "_run_linter_check") as mock_linter:
+            with patch.object(gate, "_run_security_scan") as mock_security:
+                with patch.object(gate, "_run_coverage_check") as mock_coverage:
                     mock_linter.return_value = CheckResult("linter", CheckStatus.PASS, "OK")
                     mock_security.return_value = CheckResult("security", CheckStatus.FAIL, "漏洞发现")
                     mock_coverage.return_value = CheckResult("coverage", CheckStatus.PASS, "OK")
@@ -143,11 +143,7 @@ class TestCheckResult:
 
     def test_check_result_has_required_fields(self):
         """F29-T013: CheckResult包含所有必要字段"""
-        result = CheckResult(
-            name="test_check",
-            status=CheckStatus.PASS,
-            message="检查通过"
-        )
+        result = CheckResult(name="test_check", status=CheckStatus.PASS, message="检查通过")
         assert result.name == "test_check"
         assert result.status == CheckStatus.PASS
         assert result.message == "检查通过"
@@ -155,10 +151,7 @@ class TestCheckResult:
     def test_check_result_has_details(self):
         """F29-T014: CheckResult可包含详细信息"""
         result = CheckResult(
-            name="test",
-            status=CheckStatus.WARNING,
-            message="发现警告",
-            details={"warnings": ["未使用的变量"]}
+            name="test", status=CheckStatus.WARNING, message="发现警告", details={"warnings": ["未使用的变量"]}
         )
         assert result.details is not None
         assert "warnings" in result.details
@@ -206,7 +199,7 @@ class TestSecurityScanner:
         import tempfile
 
         scanner = SecurityScanner()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("api_key = 'sk-1234567890abcdefghijklmnopqrstu'\n")
             temp_path = f.name
 
@@ -242,14 +235,14 @@ class TestLinterCheckerDetailed:
         import tempfile
 
         linter = LinterChecker()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("def foo(\n    pass\n")
             temp_path = f.name
 
         try:
             result = linter._check_file(temp_path)
             assert result.status == CheckStatus.FAIL
-            assert '语法错误' in result.message
+            assert "语法错误" in result.message
         finally:
             os.unlink(temp_path)
 
@@ -259,7 +252,7 @@ class TestLinterCheckerDetailed:
         import tempfile
 
         linter = LinterChecker()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("def foo():\n    pass\n")
             temp_path = f.name
 
@@ -276,7 +269,7 @@ class TestLinterCheckerDetailed:
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, 'valid.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "valid.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = linter._check_directory(tmpdir)
@@ -289,14 +282,14 @@ class TestLinterCheckerDetailed:
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, 'valid.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "valid.py"), "w") as f:
                 f.write("x = 1\n")
-            with open(os.path.join(tmpdir, 'invalid.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "invalid.py"), "w") as f:
                 f.write("def foo(\n    pass\n")
 
             result = linter._check_directory(tmpdir)
             assert result.status == CheckStatus.FAIL
-            assert '发现 1 个错误' in result.message
+            assert "发现 1 个错误" in result.message
 
 
 class TestSecurityScannerDetailed:
@@ -308,7 +301,7 @@ class TestSecurityScannerDetailed:
         import tempfile
 
         scanner = SecurityScanner()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("api_key = 'sk-1234567890abcdefghijklmnopqrstu'\n")
             temp_path = f.name
 
@@ -324,7 +317,7 @@ class TestSecurityScannerDetailed:
         import tempfile
 
         scanner = SecurityScanner()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("password = 'mysecretpassword123'\n")
             temp_path = f.name
 
@@ -341,7 +334,7 @@ class TestSecurityScannerDetailed:
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, 'clean.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "clean.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = scanner.scan(tmpdir)
@@ -354,9 +347,9 @@ class TestSecurityScannerDetailed:
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, 'conftest.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "conftest.py"), "w") as f:
                 f.write("password = 'secret123'\n")
-            with open(os.path.join(tmpdir, 'clean.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "clean.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = scanner.scan(tmpdir)
@@ -373,8 +366,8 @@ class TestCoverageTrackerDetailed:
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            coverage_file = os.path.join(tmpdir, '.coverage')
-            with open(coverage_file, 'w') as f:
+            coverage_file = os.path.join(tmpdir, ".coverage")
+            with open(coverage_file, "w") as f:
                 f.write("SF:/path/to/file.py\n")
                 f.write("DA:10,3\n")
                 f.write("DA:11,2\n")
@@ -390,8 +383,8 @@ class TestCoverageTrackerDetailed:
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            coverage_file = os.path.join(tmpdir, '.coverage')
-            with open(coverage_file, 'w') as f:
+            coverage_file = os.path.join(tmpdir, ".coverage")
+            with open(coverage_file, "w") as f:
                 f.write("SF:/path/to/file.py\n")
 
             result = tracker._parse_coverage_file(coverage_file)
@@ -424,9 +417,9 @@ class TestQualityGateSummary:
         from f29_quality_gate.quality_gate import QualityGate
 
         gate = QualityGate()
-        with patch.object(gate, '_run_linter_check') as mock_linter:
-            with patch.object(gate, '_run_security_scan') as mock_security:
-                with patch.object(gate, '_run_coverage_check') as mock_coverage:
+        with patch.object(gate, "_run_linter_check") as mock_linter:
+            with patch.object(gate, "_run_security_scan") as mock_security:
+                with patch.object(gate, "_run_coverage_check") as mock_coverage:
                     mock_linter.return_value = CheckResult("linter", CheckStatus.WARNING, "警告")
                     mock_security.return_value = CheckResult("security", CheckStatus.WARNING, "警告")
                     mock_coverage.return_value = CheckResult("coverage", CheckStatus.WARNING, "警告")
@@ -472,7 +465,7 @@ class TestEdgeCases:
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
-            subdir = os.path.join(tmpdir, 'subdir')
+            subdir = os.path.join(tmpdir, "subdir")
             os.makedirs(subdir)
             result = scanner._scan_file(subdir)
             assert isinstance(result, list)
@@ -484,8 +477,8 @@ class TestEdgeCases:
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            coverage_file = os.path.join(tmpdir, '.coverage')
-            with open(coverage_file, 'w') as f:
+            coverage_file = os.path.join(tmpdir, ".coverage")
+            with open(coverage_file, "w") as f:
                 f.write("")
 
             result = tracker._parse_coverage_file(coverage_file)
@@ -497,19 +490,15 @@ class TestEdgeCases:
 
         gate = QualityGate()
         result = gate.run_quality_gates("/test/path")
-        assert 'total' in result.summary
-        assert 'passed' in result.summary
-        assert 'failed' in result.summary
-        assert 'warnings' in result.summary
-        assert 'skipped' in result.summary
+        assert "total" in result.summary
+        assert "passed" in result.summary
+        assert "failed" in result.summary
+        assert "warnings" in result.summary
+        assert "skipped" in result.summary
 
     def test_check_result_str_representation(self):
         """F29-T038: CheckResult可转换为字符串"""
-        result = CheckResult(
-            name="test",
-            status=CheckStatus.PASS,
-            message="OK"
-        )
+        result = CheckResult(name="test", status=CheckStatus.PASS, message="OK")
         assert "test" in str(result)
         assert "PASS" in str(result)
 
@@ -519,7 +508,7 @@ class TestEdgeCases:
             passed=True,
             check_results=[],
             summary={"total": 0, "passed": 0, "failed": 0, "warnings": 0, "skipped": 0},
-            timestamp="2024-01-01T00:00:00"
+            timestamp="2024-01-01T00:00:00",
         )
         assert "QualityGateResult" in str(result)
 
@@ -533,6 +522,7 @@ class TestEdgeCases:
         with tempfile.TemporaryDirectory() as tmpdir:
             socket_path = tmpdir + "/test.sock"
             import socket
+
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.bind(socket_path)
             sock.listen(1)
@@ -563,9 +553,9 @@ class TestEdgeCases:
         from f29_quality_gate.quality_gate import CheckResult, CheckStatus, QualityGate
 
         gate = QualityGate()
-        with patch.object(gate, '_run_linter_check') as mock_linter:
-            with patch.object(gate, '_run_security_scan') as mock_security:
-                with patch.object(gate, '_run_coverage_check') as mock_coverage:
+        with patch.object(gate, "_run_linter_check") as mock_linter:
+            with patch.object(gate, "_run_security_scan") as mock_security:
+                with patch.object(gate, "_run_coverage_check") as mock_coverage:
                     mock_linter.return_value = CheckResult("linter", CheckStatus.SKIP, "跳过")
                     mock_security.return_value = CheckResult("security", CheckStatus.SKIP, "跳过")
                     mock_coverage.return_value = CheckResult("coverage", CheckStatus.SKIP, "跳过")
@@ -587,7 +577,7 @@ class TestF29CoverageGapsRemaining:
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, 'valid.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "valid.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = linter.check(tmpdir)
@@ -603,11 +593,11 @@ class TestF29CoverageGapsRemaining:
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            pycache_dir = os.path.join(tmpdir, '__pycache__')
+            pycache_dir = os.path.join(tmpdir, "__pycache__")
             os.makedirs(pycache_dir)
-            with open(os.path.join(pycache_dir, 'valid.py'), 'w') as f:
+            with open(os.path.join(pycache_dir, "valid.py"), "w") as f:
                 f.write("x = 1\n")
-            with open(os.path.join(tmpdir, 'clean.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "clean.py"), "w") as f:
                 f.write("y = 2\n")
 
             result = linter._check_directory(tmpdir)
@@ -622,7 +612,7 @@ class TestF29CoverageGapsRemaining:
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch('os.path.exists', return_value=False):
+            with patch("os.path.exists", return_value=False):
                 result = tracker.track(tmpdir, threshold=80)
 
                 assert result.status == CheckStatus.WARNING
@@ -636,7 +626,7 @@ class TestF29CoverageGapsRemaining:
         from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("def foo():\n    pass\n")
             temp_path = f.name
 
@@ -651,8 +641,8 @@ class TestF29CoverageGapsRemaining:
         from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
-        with patch.object(tracker, '_parse_coverage_file', return_value=90.0):
-            with patch('os.path.exists', return_value=True):
+        with patch.object(tracker, "_parse_coverage_file", return_value=90.0):
+            with patch("os.path.exists", return_value=True):
                 result = tracker.track("/test/path", threshold=80)
 
                 assert result.status == CheckStatus.PASS
@@ -662,7 +652,7 @@ class TestF29CoverageGapsRemaining:
         from f29_quality_gate.quality_gate import CheckStatus, QualityGate
 
         gate = QualityGate()
-        with patch.object(gate.coverage_tracker, '_parse_coverage_file', side_effect=Exception("parse error")):
+        with patch.object(gate.coverage_tracker, "_parse_coverage_file", side_effect=Exception("parse error")):
             result = gate._run_coverage_check("/test/path")
 
             assert result.status == CheckStatus.WARNING
@@ -682,12 +672,12 @@ class TestF29CoverageGapsRemaining:
 
         tracker = CoverageTracker()
         mock_run = MagicMock()
-        mock_run.return_value.stdout = 'TOTAL      100     25   75.00%'
+        mock_run.return_value.stdout = "TOTAL      100     25   75.00%"
 
-        with patch('subprocess.run', mock_run):
-            with patch('os.path.exists', return_value=True):
-                with patch('builtins.open', MagicMock()):
-                    result = tracker._parse_coverage_file('/test/.coverage')
+        with patch("subprocess.run", mock_run):
+            with patch("os.path.exists", return_value=True):
+                with patch("builtins.open", MagicMock()):
+                    result = tracker._parse_coverage_file("/test/.coverage")
 
                     assert isinstance(result, float)
 
@@ -710,11 +700,11 @@ class TestF29CoverageGapsRemaining:
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            pycache_dir = os.path.join(tmpdir, '__pycache__')
+            pycache_dir = os.path.join(tmpdir, "__pycache__")
             os.makedirs(pycache_dir)
-            with open(os.path.join(pycache_dir, 'cached.pyc'), 'w') as f:
+            with open(os.path.join(pycache_dir, "cached.pyc"), "w") as f:
                 f.write("x = 1\n")
-            with open(os.path.join(tmpdir, 'valid.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "valid.py"), "w") as f:
                 f.write("y = 2\n")
 
             result = linter._check_directory(tmpdir)
@@ -729,11 +719,11 @@ class TestF29CoverageGapsRemaining:
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            cache_dir = os.path.join(tmpdir, '.pytest_cache')
+            cache_dir = os.path.join(tmpdir, ".pytest_cache")
             os.makedirs(cache_dir)
-            with open(os.path.join(cache_dir, 'cache.json'), 'w') as f:
+            with open(os.path.join(cache_dir, "cache.json"), "w") as f:
                 f.write('{"key": "value"}\n')
-            with open(os.path.join(tmpdir, 'valid.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "valid.py"), "w") as f:
                 f.write("z = 3\n")
 
             result = linter._check_directory(tmpdir)
@@ -748,11 +738,11 @@ class TestF29CoverageGapsRemaining:
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
-            pycache_dir = os.path.join(tmpdir, '__pycache__')
+            pycache_dir = os.path.join(tmpdir, "__pycache__")
             os.makedirs(pycache_dir)
-            with open(os.path.join(pycache_dir, 'evil.pyc'), 'w') as f:
+            with open(os.path.join(pycache_dir, "evil.pyc"), "w") as f:
                 f.write("password = 'secret123'\n")
-            with open(os.path.join(tmpdir, 'clean.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "clean.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = scanner.scan(tmpdir)
@@ -767,11 +757,11 @@ class TestF29CoverageGapsRemaining:
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
-            git_dir = os.path.join(tmpdir, '.git')
+            git_dir = os.path.join(tmpdir, ".git")
             os.makedirs(git_dir)
-            with open(os.path.join(git_dir, 'config'), 'w') as f:
+            with open(os.path.join(git_dir, "config"), "w") as f:
                 f.write("password = 'secret456'\n")
-            with open(os.path.join(tmpdir, 'clean.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "clean.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = scanner.scan(tmpdir)
@@ -786,9 +776,9 @@ class TestF29CoverageGapsRemaining:
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, 'data.txt'), 'w') as f:
+            with open(os.path.join(tmpdir, "data.txt"), "w") as f:
                 f.write("password = 'secret789'\n")
-            with open(os.path.join(tmpdir, 'clean.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "clean.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = scanner.scan(tmpdir)
@@ -803,9 +793,9 @@ class TestF29CoverageGapsRemaining:
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, 'test_secret.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "test_secret.py"), "w") as f:
                 f.write("api_key = 'sk-1234567890abcdefghijklmnopqrstu'\n")
-            with open(os.path.join(tmpdir, 'clean.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "clean.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = scanner.scan(tmpdir)
@@ -820,8 +810,8 @@ class TestF29CoverageGapsRemaining:
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            coverage_file = os.path.join(tmpdir, '.coverage')
-            with open(coverage_file, 'w') as f:
+            coverage_file = os.path.join(tmpdir, ".coverage")
+            with open(coverage_file, "w") as f:
                 f.write('{"data": {}}\n')
 
             result = tracker._parse_coverage_file(coverage_file)
@@ -836,9 +826,9 @@ class TestF29CoverageGapsRemaining:
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, 'conftest.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "conftest.py"), "w") as f:
                 f.write("secret = 'super_secret_token_123456789012'\n")
-            with open(os.path.join(tmpdir, 'clean.py'), 'w') as f:
+            with open(os.path.join(tmpdir, "clean.py"), "w") as f:
                 f.write("x = 1\n")
 
             result = scanner.scan(tmpdir)
@@ -863,8 +853,8 @@ class TestF29CoverageGapsRemaining:
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            coverage_file = os.path.join(tmpdir, '.coverage')
-            with open(coverage_file, 'w') as f:
+            coverage_file = os.path.join(tmpdir, ".coverage")
+            with open(coverage_file, "w") as f:
                 f.write('{"data": {}}\n')
 
             tracker._parse_coverage_file = lambda coverage_file: 75.0
@@ -884,7 +874,7 @@ class TestF29CoverageGapsRemaining:
             raise RuntimeError("parse error")
 
         tracker._parse_coverage_file = raising_parse
-        with patch('os.path.exists', return_value=True):
+        with patch("os.path.exists", return_value=True):
             result = tracker.track("/fake/path", threshold=80)
 
             assert result.status == CheckStatus.WARNING
@@ -899,21 +889,14 @@ class TestF29CoverageGapsRemaining:
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
-            py_file = os.path.join(tmpdir, 'test_module.py')
-            with open(py_file, 'w') as f:
-                f.write('x = 1\n')
+            py_file = os.path.join(tmpdir, "test_module.py")
+            with open(py_file, "w") as f:
+                f.write("x = 1\n")
 
-            subprocess.run(
-                ['python', '-m', 'coverage', 'run', py_file],
-                capture_output=True, text=True, cwd=tmpdir
-            )
+            subprocess.run(["python", "-m", "coverage", "run", py_file], capture_output=True, text=True, cwd=tmpdir)
 
-            coverage_file = os.path.join(tmpdir, '.coverage')
+            coverage_file = os.path.join(tmpdir, ".coverage")
             result = tracker._parse_coverage_file(coverage_file)
 
             assert isinstance(result, float)
             assert result >= 0
-
-
-
-

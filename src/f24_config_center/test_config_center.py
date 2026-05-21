@@ -194,12 +194,7 @@ class TestConfigCenterComplexTypes:
     def test_set_config_supports_nested_objects(self):
         """F24-UT023: 支持嵌套对象配置"""
         cc = ConfigCenter()
-        config = {
-            "database": {
-                "primary": {"host": "db1", "port": 5432},
-                "replica": {"host": "db2", "port": 5433}
-            }
-        }
+        config = {"database": {"primary": {"host": "db1", "port": 5432}, "replica": {"host": "db2", "port": 5433}}}
         cc.set_config("config", config)
         result = cc.get_config("config")
         assert result["database"]["primary"]["host"] == "db1"

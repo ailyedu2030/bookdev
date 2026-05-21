@@ -61,15 +61,13 @@ _SENSITIVE_TOPICS: dict[str, float] = {
 }
 
 # 预编译正则缓存
-_TOPIC_PATTERNS: dict[str, re.Pattern] = {
-    topic: re.compile(re.escape(topic))
-    for topic in _SENSITIVE_TOPICS
-}
+_TOPIC_PATTERNS: dict[str, re.Pattern] = {topic: re.compile(re.escape(topic)) for topic in _SENSITIVE_TOPICS}
 
 
 # ═══════════════════════════════════════════════════════════════
 # Data Class
 # ═══════════════════════════════════════════════════════════════
+
 
 @dataclass
 class ScanResult:
@@ -85,6 +83,7 @@ class ScanResult:
 # ═══════════════════════════════════════════════════════════════
 # TopicTracker
 # ═══════════════════════════════════════════════════════════════
+
 
 class TopicTracker:
     """跨章节话题追踪器
@@ -165,6 +164,7 @@ class TopicTracker:
 # ═══════════════════════════════════════════════════════════════
 # CombinationAnalyzer
 # ═══════════════════════════════════════════════════════════════
+
 
 class CombinationAnalyzer:
     """组合敏感分析器
@@ -269,15 +269,14 @@ class CombinationAnalyzer:
                 topics = obs["topics"]
                 rule_pairs = obs.get("rule_pairs", [])
 
-                dangerous.append({
-                    "topics": topics,
-                    "score": score,
-                    "occurrences": obs["count"],
-                    "matched_rules": [
-                        {"pair": (t1, t2), "rule_weight": rw}
-                        for t1, t2, rw in rule_pairs
-                    ],
-                })
+                dangerous.append(
+                    {
+                        "topics": topics,
+                        "score": score,
+                        "occurrences": obs["count"],
+                        "matched_rules": [{"pair": (t1, t2), "rule_weight": rw} for t1, t2, rw in rule_pairs],
+                    }
+                )
 
         dangerous.sort(key=lambda x: x["score"], reverse=True)
         return dangerous
@@ -291,6 +290,7 @@ class CombinationAnalyzer:
 # ═══════════════════════════════════════════════════════════════
 # GlobalSemanticScanner
 # ═══════════════════════════════════════════════════════════════
+
 
 class GlobalSemanticScanner:
     """全局语义扫描器
@@ -377,14 +377,10 @@ class GlobalSemanticScanner:
 
         # 组合分析: 章节内同时出现的话题
         if len(detected_topics) >= 2:
-            combo_score = self.combination_analyzer.analyze_combination(
-                list(detected_topics)
-            )
+            combo_score = self.combination_analyzer.analyze_combination(list(detected_topics))
             if combo_score > 0:
                 for r in results:
-                    r.combined_risks.append(
-                        f"组合风险:{'+'.join(sorted(detected_topics))}={combo_score:.4f}"
-                    )
+                    r.combined_risks.append(f"组合风险:{'+'.join(sorted(detected_topics))}={combo_score:.4f}")
 
         # 更新 affected_chapters
         for r in results:
@@ -409,9 +405,7 @@ class GlobalSemanticScanner:
         topic_scores = []
         for results in self._chapter_results.values():
             for r in results:
-                topic_scores.append(
-                    self.topic_tracker.get_risk_score(r.topic_id)
-                )
+                topic_scores.append(self.topic_tracker.get_risk_score(r.topic_id))
 
         if not topic_scores:
             return 0.0
@@ -441,16 +435,18 @@ class GlobalSemanticScanner:
                 risk_score = self.topic_tracker.get_risk_score(topic)
                 avg_weight = entry["total_weight"] / max(entry["frequency"], 1)
 
-                risks.append({
-                    "topic": topic,
-                    "chapters": chapters,
-                    "chapter_count": len(chapters),
-                    "risk_score": risk_score,
-                    "total_weight": round(entry["total_weight"], 4),
-                    "frequency": entry["frequency"],
-                    "avg_weight": round(avg_weight, 4),
-                    "severity": self._classify_severity(risk_score),
-                })
+                risks.append(
+                    {
+                        "topic": topic,
+                        "chapters": chapters,
+                        "chapter_count": len(chapters),
+                        "risk_score": risk_score,
+                        "total_weight": round(entry["total_weight"], 4),
+                        "frequency": entry["frequency"],
+                        "avg_weight": round(avg_weight, 4),
+                        "severity": self._classify_severity(risk_score),
+                    }
+                )
 
         risks.sort(key=lambda x: x["risk_score"], reverse=True)
         return risks
@@ -477,15 +473,9 @@ class GlobalSemanticScanner:
             "unique_topics_count": len(unique_topics),
             "cross_chapter_risks": cross_risks,
             "dangerous_combinations": dangerous,
-            "high_severity_count": sum(
-                1 for r in cross_risks if r["severity"] == "HIGH"
-            ),
-            "medium_severity_count": sum(
-                1 for r in cross_risks if r["severity"] == "MEDIUM"
-            ),
-            "low_severity_count": sum(
-                1 for r in cross_risks if r["severity"] == "LOW"
-            ),
+            "high_severity_count": sum(1 for r in cross_risks if r["severity"] == "HIGH"),
+            "medium_severity_count": sum(1 for r in cross_risks if r["severity"] == "MEDIUM"),
+            "low_severity_count": sum(1 for r in cross_risks if r["severity"] == "LOW"),
             "scanned_chapter_ids": sorted(self._scanned_chapters),
         }
 

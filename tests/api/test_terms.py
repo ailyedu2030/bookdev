@@ -48,9 +48,7 @@ class TestListTerms:
         assert len(data["data"]) == 2
         assert data["total"] == 2
 
-    def test_list_terms_filter_by_domain(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_terms_filter_by_domain(self, test_client, test_db, test_user_authenticated):
         """Test listing terms filtered by domain"""
         token = test_user_authenticated["access_token"]
 
@@ -68,9 +66,7 @@ class TestListTerms:
         assert len(data["data"]) == 2
         assert all(t["domain"] == "programming" for t in data["data"])
 
-    def test_list_terms_filter_by_locked(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_terms_filter_by_locked(self, test_client, test_db, test_user_authenticated):
         """Test listing terms filtered by lock status"""
         token = test_user_authenticated["access_token"]
 
@@ -178,9 +174,7 @@ class TestCreateTerm:
 
         assert response.status_code == 422
 
-    def test_create_term_empty_definition(
-        self, test_client, test_db, author_authenticated
-    ):
+    def test_create_term_empty_definition(self, test_client, test_db, author_authenticated):
         """Test creating term with empty definition fails"""
         token = author_authenticated["access_token"]
 
@@ -198,9 +192,7 @@ class TestCreateTerm:
 
         assert response.status_code == 422
 
-    def test_create_term_viewer_forbidden(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_create_term_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot create terms"""
         token = test_user_authenticated["access_token"]
 
@@ -238,9 +230,7 @@ class TestGetTerm:
         assert data["id"] == term["id"]
         assert data["term"] == "Python"
 
-    def test_get_term_not_found(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_get_term_not_found(self, test_client, test_db, test_user_authenticated):
         """Test getting non-existent term"""
         token = test_user_authenticated["access_token"]
 
@@ -259,9 +249,7 @@ class TestUpdateTerm:
         """Test updating term details"""
         token = author_authenticated["access_token"]
 
-        term = create_test_term(
-            test_db, term="Python", definition="Original definition"
-        )
+        term = create_test_term(test_db, term="Python", definition="Original definition")
 
         response = test_client.put(
             f"/api/terms/{term['id']}",
@@ -301,9 +289,7 @@ class TestUpdateTerm:
         data = response.json()
         assert data["detail"]["error"]["code"] == "TERM_LOCKED"
 
-    def test_update_term_not_found(
-        self, test_client, test_db, author_authenticated
-    ):
+    def test_update_term_not_found(self, test_client, test_db, author_authenticated):
         """Test updating non-existent term"""
         token = author_authenticated["access_token"]
 
@@ -342,9 +328,7 @@ class TestLockTerm:
         assert data["locked"] is True
         assert data["lock_reason"] == "Standardized definition"
 
-    def test_lock_term_not_found(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_lock_term_not_found(self, test_client, test_db, editor_authenticated):
         """Test locking non-existent term"""
         token = editor_authenticated["access_token"]
 
@@ -359,9 +343,7 @@ class TestLockTerm:
 
         assert response.status_code == 404
 
-    def test_lock_term_viewer_forbidden(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_lock_term_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot lock terms"""
         token = test_user_authenticated["access_token"]
 
@@ -403,9 +385,7 @@ class TestUnlockTerm:
 class TestSearchTerms:
     """Tests for searching terms"""
 
-    def test_search_terms_by_term(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_search_terms_by_term(self, test_client, test_db, test_user_authenticated):
         """Test searching terms by term name"""
         token = test_user_authenticated["access_token"]
 
@@ -427,15 +407,11 @@ class TestSearchTerms:
         assert "Pythonista" in terms_found
         assert "JavaScript" not in terms_found
 
-    def test_search_terms_by_definition(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_search_terms_by_definition(self, test_client, test_db, test_user_authenticated):
         """Test searching terms by definition content"""
         token = test_user_authenticated["access_token"]
 
-        create_test_term(
-            test_db, term="AI", definition="Artificial Intelligence simulation"
-        )
+        create_test_term(test_db, term="AI", definition="Artificial Intelligence simulation")
         create_test_term(test_db, term="ML", definition="Machine Learning")
 
         response = test_client.post(
@@ -449,15 +425,11 @@ class TestSearchTerms:
         assert data["total"] == 1
         assert data["data"][0]["term"] == "AI"
 
-    def test_search_terms_by_synonym(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_search_terms_by_synonym(self, test_client, test_db, test_user_authenticated):
         """Test searching terms by synonym"""
         token = test_user_authenticated["access_token"]
 
-        create_test_term(
-            test_db, term="Machine Learning", synonyms=["ML", "Statistical Learning"]
-        )
+        create_test_term(test_db, term="Machine Learning", synonyms=["ML", "Statistical Learning"])
 
         response = test_client.post(
             "/api/terms/search",
@@ -470,18 +442,12 @@ class TestSearchTerms:
         assert data["total"] == 1
         assert data["data"][0]["term"] == "Machine Learning"
 
-    def test_search_terms_with_domain_filter(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_search_terms_with_domain_filter(self, test_client, test_db, test_user_authenticated):
         """Test searching terms with domain filter"""
         token = test_user_authenticated["access_token"]
 
-        create_test_term(
-            test_db, term="Python", domain="programming", definition="Lang"
-        )
-        create_test_term(
-            test_db, term="Snake", domain="biology", definition="Animal"
-        )
+        create_test_term(test_db, term="Python", domain="programming", definition="Lang")
+        create_test_term(test_db, term="Snake", domain="biology", definition="Animal")
 
         response = test_client.post(
             "/api/terms/search",
@@ -494,9 +460,7 @@ class TestSearchTerms:
         assert data["total"] == 1
         assert data["data"][0]["domain"] == "programming"
 
-    def test_search_terms_empty_query(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_search_terms_empty_query(self, test_client, test_db, test_user_authenticated):
         """Test searching with empty query fails"""
         token = test_user_authenticated["access_token"]
 

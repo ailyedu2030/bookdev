@@ -34,6 +34,7 @@ REFRESH_TOKEN_EXPIRE_SECONDS = 604800  # 7 days
 
 class UserCreate(BaseModel):
     """User registration schema"""
+
     username: str = Field(..., min_length=3, max_length=100)
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
@@ -43,12 +44,14 @@ class UserCreate(BaseModel):
 
 class UserLogin(BaseModel):
     """User login schema"""
+
     email: EmailStr
     password: str = Field(..., min_length=1)
 
 
 class UserResponse(BaseModel):
     """User response schema"""
+
     id: str
     username: str
     email: str
@@ -61,6 +64,7 @@ class UserResponse(BaseModel):
 
 class UserUpdate(BaseModel):
     """User update schema"""
+
     username: str | None = Field(default=None, min_length=3, max_length=100)
     email: EmailStr | None = None
     organization_id: str | None = None
@@ -69,11 +73,13 @@ class UserUpdate(BaseModel):
 
 class UserRoleUpdate(BaseModel):
     """User role update schema"""
+
     role: str = Field(..., pattern=UserRole.pattern())
 
 
 class Token(BaseModel):
     """Token response schema"""
+
     access_token: str
     refresh_token: str
     token_type: TokenType = "bearer"
@@ -82,6 +88,7 @@ class Token(BaseModel):
 
 class TokenPayload(BaseModel):
     """JWT token payload"""
+
     sub: str
     email: str
     role: str
@@ -92,28 +99,33 @@ class TokenPayload(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     """Refresh token request"""
+
     refresh_token: str = Field(..., min_length=1)
 
 
 class PasswordChange(BaseModel):
     """Password change schema"""
+
     old_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8, max_length=128)
 
 
 class PasswordResetRequest(BaseModel):
     """Password reset request"""
+
     email: EmailStr
 
 
 class PasswordResetConfirm(BaseModel):
     """Password reset confirm schema"""
+
     token: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8, max_length=128)
 
 
 class RoleResponse(BaseModel):
     """Role response schema"""
+
     id: str
     name: str
     description: str | None = None
@@ -122,6 +134,7 @@ class RoleResponse(BaseModel):
 
 class PermissionResponse(BaseModel):
     """Permission response schema"""
+
     id: str
     resource: str
     action: str

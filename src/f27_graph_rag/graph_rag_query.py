@@ -11,6 +11,7 @@ from typing import Any
 @dataclass
 class GraphNode:
     """知识图谱节点"""
+
     id: str
     label: str
     properties: dict[str, Any] = field(default_factory=dict)
@@ -19,6 +20,7 @@ class GraphNode:
 @dataclass
 class GraphEdge:
     """知识图谱边"""
+
     source: str
     target: str
     relation: str
@@ -28,6 +30,7 @@ class GraphEdge:
 @dataclass
 class KnowledgeGraph:
     """知识图谱"""
+
     nodes: list[GraphNode] = field(default_factory=list)
     edges: list[GraphEdge] = field(default_factory=list)
 
@@ -82,6 +85,7 @@ class KnowledgeGraph:
 @dataclass
 class RAGDocument:
     """RAG文档"""
+
     id: str
     content: str
     embedding: list[float] = field(default_factory=list)
@@ -91,6 +95,7 @@ class RAGDocument:
 @dataclass
 class RAGEngine:
     """RAG引擎"""
+
     documents: list[RAGDocument] = field(default_factory=list)
 
     def add_document(self, doc: RAGDocument):
@@ -119,6 +124,7 @@ class RAGEngine:
 @dataclass
 class GraphRAGAnswer:
     """GraphRAG答案"""
+
     answer: str
     confidence: float
     sources: list[str]
@@ -153,16 +159,9 @@ class GraphRAGQuery:
         graph_context = self._get_graph_context(intent)
         rag_context = self._get_rag_context(question)
 
-        answer = self._generate_answer(
-            question=question,
-            graph_context=graph_context,
-            rag_context=rag_context
-        )
+        answer = self._generate_answer(question=question, graph_context=graph_context, rag_context=rag_context)
 
-        sources = list(set(
-            [n.label for n in self.kg.nodes]
-            + [doc.id for doc in self.rag.documents[:3]]
-        ))
+        sources = list(set([n.label for n in self.kg.nodes] + [doc.id for doc in self.rag.documents[:3]]))
 
         graph_paths = []
         # Fixed: Limit path finding to prevent excessive computation
@@ -178,7 +177,7 @@ class GraphRAGQuery:
             confidence=min(confidence, 1.0),
             sources=sources,
             graph_paths=graph_paths[:5],
-            evidence=graph_context + rag_context
+            evidence=graph_context + rag_context,
         )
 
     def _parse_intent(self, question: str) -> dict[str, Any]:
@@ -192,11 +191,7 @@ class GraphRAGQuery:
         """
         question_lower = question.lower()
 
-        intent = {
-            "original": question,
-            "type": "general",
-            "entities": []
-        }
+        intent = {"original": question, "type": "general", "entities": []}
 
         for node in self.kg.nodes:
             if node.label.lower() in question_lower:
@@ -269,12 +264,7 @@ class GraphRAGQuery:
         path = self.kg.find_path(start, end, max_depth)
         return [path] if path else []
 
-    def _generate_answer(
-        self,
-        question: str,
-        graph_context: list[str],
-        rag_context: list[str]
-    ) -> str:
+    def _generate_answer(self, question: str, graph_context: list[str], rag_context: list[str]) -> str:
         """生成答案
 
         Args:

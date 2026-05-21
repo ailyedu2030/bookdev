@@ -131,12 +131,14 @@ async def create_chapter(
             },
         )
 
-    chapter = db.create_chapter({
-        "project_id": chapter_data.project_id,
-        "title": chapter_data.title,
-        "order_num": chapter_data.order_num,
-        "parent_chapter_id": chapter_data.parent_chapter_id,
-    })
+    chapter = db.create_chapter(
+        {
+            "project_id": chapter_data.project_id,
+            "title": chapter_data.title,
+            "order_num": chapter_data.order_num,
+            "parent_chapter_id": chapter_data.parent_chapter_id,
+        }
+    )
 
     return ChapterResponse(**chapter)
 
@@ -256,11 +258,7 @@ async def delete_chapter(
     response_model=ChapterGenerateResponse,
     dependencies=[
         Depends(csrf_protect),
-        Depends(rate_limit(RateLimitConfig(
-            requests=10,
-            window_seconds=3600,
-            key_prefix="generate"
-        ))),
+        Depends(rate_limit(RateLimitConfig(requests=10, window_seconds=3600, key_prefix="generate"))),
     ],
 )
 async def generate_chapter_content(
@@ -291,10 +289,13 @@ async def generate_chapter_content(
 
     generation_id = generate_uuid()
 
-    db.update_chapter(chapter_id, {
-        "status": "generating",
-        "generation_id": generation_id,
-    })
+    db.update_chapter(
+        chapter_id,
+        {
+            "status": "generating",
+            "generation_id": generation_id,
+        },
+    )
 
     background_tasks.add_task(
         simulate_content_generation,
@@ -322,19 +323,23 @@ async def simulate_content_generation(
 ):
     """Simulate background content generation"""
     import asyncio
+
     await asyncio.sleep(2)
 
     generated_content = f"Generated content for chapter {chapter_id}..."
 
     word_count = len(generated_content)
 
-    db.update_chapter(chapter_id, {
-        "content": generated_content,
-        "status": "draft",
-        "word_count": word_count,
-        "content_hash": hash_content(generated_content),
-        "version": "1.0",
-    })
+    db.update_chapter(
+        chapter_id,
+        {
+            "content": generated_content,
+            "status": "draft",
+            "word_count": word_count,
+            "content_hash": hash_content(generated_content),
+            "version": "1.0",
+        },
+    )
 
 
 @router.post(
@@ -526,13 +531,15 @@ async def create_section(
             },
         )
 
-    section = db.create_section({
-        "chapter_id": section_data.chapter_id,
-        "title": section_data.title,
-        "order_num": section_data.order_num,
-        "status": "draft",
-        "parent_section_id": section_data.parent_section_id,
-    })
+    section = db.create_section(
+        {
+            "chapter_id": section_data.chapter_id,
+            "title": section_data.title,
+            "order_num": section_data.order_num,
+            "status": "draft",
+            "parent_section_id": section_data.parent_section_id,
+        }
+    )
 
     return SectionResponse(
         id=section["id"],

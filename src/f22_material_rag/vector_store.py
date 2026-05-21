@@ -53,11 +53,7 @@ class InMemoryVectorStore:
         similarities = []
         for vid, vector in self._vectors.items():
             similarity = self._cosine_similarity(query_vector, vector)
-            similarities.append({
-                "id": vid,
-                "score": similarity,
-                "metadata": self._metadata.get(vid, {})
-            })
+            similarities.append({"id": vid, "score": similarity, "metadata": self._metadata.get(vid, {})})
 
         similarities.sort(key=lambda x: x["score"], reverse=True)
         return similarities[:top_k]

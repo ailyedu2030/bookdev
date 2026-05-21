@@ -13,6 +13,7 @@ from typing import Any
 @dataclass
 class GoldenSample:
     """Golden样本"""
+
     sample_id: str
     quality_level: str
     expected_score: float
@@ -96,7 +97,7 @@ class SampleManager:
             quality_metrics=data.get("quality_metrics", {}),
             metadata=data.get("metadata", {}),
             hallucination_markers=data.get("hallucination_markers", []),
-            regulation_errors=data.get("regulation_errors", [])
+            regulation_errors=data.get("regulation_errors", []),
         )
 
     def get_sample_by_id(self, sample_id: str) -> GoldenSample | None:
@@ -127,10 +128,7 @@ class SampleManager:
         Returns:
             幻觉样本列表
         """
-        return [
-            sample for sample in self._samples.values()
-            if sample.quality_level == "hallucination"
-        ]
+        return [sample for sample in self._samples.values() if sample.quality_level == "hallucination"]
 
     def get_regulation_error_samples(self) -> list[GoldenSample]:
         """
@@ -139,16 +137,9 @@ class SampleManager:
         Returns:
             法规错误样本列表
         """
-        return [
-            sample for sample in self._samples.values()
-            if sample.quality_level == "regulation_error"
-        ]
+        return [sample for sample in self._samples.values() if sample.quality_level == "regulation_error"]
 
-    def update_sample(
-        self,
-        sample_id: str,
-        updates: dict[str, Any]
-    ) -> GoldenSample | None:
+    def update_sample(self, sample_id: str, updates: dict[str, Any]) -> GoldenSample | None:
         """
         更新样本（保持不可变性）
 

@@ -77,12 +77,13 @@ async def get_metrics(
 
     try:
         from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard
+
         dashboard = MonitoringDashboard()
         dashboard_metrics = dashboard.get_metrics()
 
-        if hasattr(dashboard_metrics, 'workflows'):
+        if hasattr(dashboard_metrics, "workflows"):
             metrics["modules"]["workflows"] = dashboard_metrics.workflows
-        if hasattr(dashboard_metrics, 'alerts'):
+        if hasattr(dashboard_metrics, "alerts"):
             metrics["alerts"] = len(dashboard_metrics.alerts) if dashboard_metrics.alerts else 0
 
     except ImportError:
@@ -90,6 +91,7 @@ async def get_metrics(
 
     try:
         from f31_minimax_client.cost_tracker import CostTracker
+
         tracker = CostTracker()
         stats = tracker.get_usage_stats()
         metrics["llm_usage"] = {
@@ -102,11 +104,12 @@ async def get_metrics(
 
     try:
         from f02_context_budget.context_budget_manager import ContextBudgetManager
+
         budget = ContextBudgetManager()
         usage = budget.get_total_usage()
         metrics["context_budget"] = {
             "total_tokens": usage if isinstance(usage, int | float) else 0,
-            "limit": budget.max_tokens if hasattr(budget, 'max_tokens') else 200000,
+            "limit": budget.max_tokens if hasattr(budget, "max_tokens") else 200000,
         }
     except ImportError:
         metrics["context_budget"] = {"error": "Module not available"}
@@ -144,6 +147,7 @@ async def get_logs(
 
     try:
         from f01_immutable_log.immutable_log import ImmutableLog
+
         log = ImmutableLog()
         entries = log.get_entries()
 
@@ -155,18 +159,20 @@ async def get_logs(
             if resource_type and entry.get("resource_type") != resource_type:
                 continue
 
-            logs.append(LogEntry(
-                id=entry.get("id", ""),
-                event_type=entry.get("event_type", ""),
-                user_id=entry.get("user_id"),
-                resource_type=entry.get("resource_type"),
-                resource_id=entry.get("resource_id"),
-                action=entry.get("action"),
-                result=entry.get("result"),
-                details=entry.get("details"),
-                ip_address=entry.get("ip_address"),
-                created_at=entry.get("timestamp", datetime.utcnow().isoformat()),
-            ))
+            logs.append(
+                LogEntry(
+                    id=entry.get("id", ""),
+                    event_type=entry.get("event_type", ""),
+                    user_id=entry.get("user_id"),
+                    resource_type=entry.get("resource_type"),
+                    resource_id=entry.get("resource_id"),
+                    action=entry.get("action"),
+                    result=entry.get("result"),
+                    details=entry.get("details"),
+                    ip_address=entry.get("ip_address"),
+                    created_at=entry.get("timestamp", datetime.utcnow().isoformat()),
+                )
+            )
 
     except ImportError:
         pass
@@ -194,18 +200,23 @@ async def get_alerts(
 
     try:
         from f28_monitoring_dashboard.monitoring_dashboard import Alert, MonitoringDashboard
+
         dashboard = MonitoringDashboard()
 
-        if hasattr(dashboard, 'get_alerts'):
+        if hasattr(dashboard, "get_alerts"):
             raw_alerts = dashboard.get_alerts(severity=severity, resolved=resolved)
             for alert in raw_alerts:
-                alerts.append({
-                    "id": alert.id if hasattr(alert, 'id') else str(alert),
-                    "severity": alert.severity if hasattr(alert, 'severity') else "info",
-                    "message": alert.message if hasattr(alert, 'message') else str(alert),
-                    "resolved": alert.resolved if hasattr(alert, 'resolved') else False,
-                    "created_at": alert.created_at if hasattr(alert, 'created_at') else datetime.utcnow().isoformat(),
-                })
+                alerts.append(
+                    {
+                        "id": alert.id if hasattr(alert, "id") else str(alert),
+                        "severity": alert.severity if hasattr(alert, "severity") else "info",
+                        "message": alert.message if hasattr(alert, "message") else str(alert),
+                        "resolved": alert.resolved if hasattr(alert, "resolved") else False,
+                        "created_at": alert.created_at
+                        if hasattr(alert, "created_at")
+                        else datetime.utcnow().isoformat(),
+                    }
+                )
     except ImportError:
         pass
 
@@ -233,8 +244,9 @@ async def get_workflow_stats(
 
     try:
         from f04_temporal_workflow.workflows.mock_client import MockWorkflowClient
+
         client = MockWorkflowClient()
-        if hasattr(client, 'get_stats'):
+        if hasattr(client, "get_stats"):
             stats = client.get_stats()
     except ImportError:
         pass
@@ -254,6 +266,7 @@ async def get_dashboard_summary(
     """
     try:
         from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard
+
         dashboard = MonitoringDashboard()
         summary = dashboard.get_dashboard_summary()
 
@@ -287,12 +300,16 @@ async def append_log(
     """
     try:
         from f01_immutable_log.immutable_log import ImmutableLog
+
         log = ImmutableLog()
-        log.append(event_type, {
-            **details,
-            "user_id": user.id,
-            "username": user.username,
-        })
+        log.append(
+            event_type,
+            {
+                **details,
+                "user_id": user.id,
+                "username": user.username,
+            },
+        )
 
         return SuccessResponse(
             success=True,

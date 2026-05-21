@@ -38,8 +38,8 @@ class PoliticalTracker:
 
     def _normalize_topic(self, topic: str) -> str:
         normalizations = {
-            '台灣': '台湾',
-            '臺灣': '台湾',
+            "台灣": "台湾",
+            "臺灣": "台湾",
         }
         return normalizations.get(topic, topic.strip())
 
@@ -50,10 +50,7 @@ class PoliticalTracker:
                 self._topics[normalized] = []
                 self._normalized_topics[topic] = normalized
             self._topics[normalized].append(sensitivity_level)
-            self._sensitivity_cache[normalized] = max(
-                self._topics[normalized],
-                key=lambda x: x.value
-            )
+            self._sensitivity_cache[normalized] = max(self._topics[normalized], key=lambda x: x.value)
             return self.get_topic_aggregation(normalized)
 
     def check_topic_sensitivity(self, topic: str) -> SensitivityLevel:
@@ -74,9 +71,7 @@ class PoliticalTracker:
             levels = self._topics[normalized]
             max_level = max(levels, key=lambda x: x.value) if levels else SensitivityLevel.NONE
             return TopicAggregation(
-                count=len(levels),
-                levels=levels,
-                is_aggregated_risk=max_level.value >= SensitivityLevel.HIGH.value
+                count=len(levels), levels=levels, is_aggregated_risk=max_level.value >= SensitivityLevel.HIGH.value
             )
 
     def cross_topic_analysis(self, topics: list[str]) -> CrossTopicAnalysis:
@@ -89,5 +84,5 @@ class PoliticalTracker:
             return CrossTopicAnalysis(
                 is_aggregated_risk=max_sensitivity.value >= SensitivityLevel.HIGH.value,
                 topics=topics,
-                max_sensitivity=max_sensitivity
+                max_sensitivity=max_sensitivity,
             )

@@ -43,11 +43,7 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
     "/register",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(rate_limit(RateLimitConfig(
-        requests=3,
-        window_seconds=3600,
-        key_prefix="register"
-    )))],
+    dependencies=[Depends(rate_limit(RateLimitConfig(requests=3, window_seconds=3600, key_prefix="register")))],
 )
 async def register(
     user_data: UserCreate,
@@ -86,14 +82,16 @@ async def register(
             },
         )
 
-    user = db.create_user({
-        "username": user_data.username,
-        "email": user_data.email,
-        "password_hash": get_password_hash(user_data.password),
-        "role": user_data.role,
-        "organization_id": user_data.organization_id,
-        "clearance_level": 1,
-    })
+    user = db.create_user(
+        {
+            "username": user_data.username,
+            "email": user_data.email,
+            "password_hash": get_password_hash(user_data.password),
+            "role": user_data.role,
+            "organization_id": user_data.organization_id,
+            "clearance_level": 1,
+        }
+    )
 
     return UserResponse(
         id=user.id,
@@ -109,11 +107,7 @@ async def register(
 @router.post(
     "/login",
     response_model=Token,
-    dependencies=[Depends(rate_limit(RateLimitConfig(
-        requests=5,
-        window_seconds=60,
-        key_prefix="login"
-    )))],
+    dependencies=[Depends(rate_limit(RateLimitConfig(requests=5, window_seconds=60, key_prefix="login")))],
 )
 async def login(
     credentials: UserLogin,
@@ -160,17 +154,21 @@ async def login(
             },
         )
 
-    access_token = create_access_token({
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role,
-    })
+    access_token = create_access_token(
+        {
+            "sub": user.id,
+            "email": user.email,
+            "role": user.role,
+        }
+    )
 
-    refresh_token = create_refresh_token({
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role,
-    })
+    refresh_token = create_refresh_token(
+        {
+            "sub": user.id,
+            "email": user.email,
+            "role": user.role,
+        }
+    )
 
     db.add_session(user.id, access_token)
 
@@ -207,17 +205,21 @@ async def refresh_token(
                 },
             )
 
-        new_access_token = create_access_token({
-            "sub": user.id,
-            "email": user.email,
-            "role": user.role,
-        })
+        new_access_token = create_access_token(
+            {
+                "sub": user.id,
+                "email": user.email,
+                "role": user.role,
+            }
+        )
 
-        new_refresh_token = create_refresh_token({
-            "sub": user.id,
-            "email": user.email,
-            "role": user.role,
-        })
+        new_refresh_token = create_refresh_token(
+            {
+                "sub": user.id,
+                "email": user.email,
+                "role": user.role,
+            }
+        )
 
         return Token(
             access_token=new_access_token,
@@ -314,9 +316,7 @@ async def change_password(
             },
         )
 
-    db.update_user(user.id, {
-        "password_hash": get_password_hash(password_data.new_password)
-    })
+    db.update_user(user.id, {"password_hash": get_password_hash(password_data.new_password)})
 
     return SuccessResponse(
         success=True,

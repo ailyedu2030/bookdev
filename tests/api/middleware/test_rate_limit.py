@@ -127,7 +127,7 @@ class TestGetClientIdentifier:
         mock_request = MagicMock()
         mock_request.headers = {"X-Forwarded-For": "192.168.1.1, 10.0.0.1"}
         mock_request.client = None
-        with patch.object(rate_limit_settings, 'trust_x_forwarded_for', True):
+        with patch.object(rate_limit_settings, "trust_x_forwarded_for", True):
             assert get_client_identifier(mock_request) == "192.168.1.1"
 
     def test_x_real_ip_header(self):
@@ -135,7 +135,7 @@ class TestGetClientIdentifier:
         mock_request = MagicMock()
         mock_request.headers = {"X-Real-IP": "192.168.1.2"}
         mock_request.client = None
-        with patch.object(rate_limit_settings, 'trust_x_real_ip', True):
+        with patch.object(rate_limit_settings, "trust_x_real_ip", True):
             assert get_client_identifier(mock_request) == "192.168.1.2"
 
     def test_client_host_fallback(self):
@@ -166,8 +166,6 @@ class TestRateLimitDependency:
             mock_request = MagicMock()
             mock_request.headers = {"X-Forwarded-For": "192.168.1.100"}
             await dep(mock_request)
-
-
 
 
 class TestRateLimitMiddleware:
@@ -207,6 +205,7 @@ class TestRateLimitMiddleware:
     async def test_dispatch_returns_429_when_rate_limited(self):
         """Test rate limited response returns 429 status"""
         from starlette.responses import JSONResponse
+
         limiter = InMemoryRateLimiter()
         limiter._storage["anon:blocked"] = SlidingWindowEntry(timestamps=[time.time() - 10] * 30)
         with patch("api.middleware.rate_limit.rate_limiter", limiter):

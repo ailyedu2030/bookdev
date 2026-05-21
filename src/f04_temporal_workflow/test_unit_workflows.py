@@ -32,6 +32,7 @@ from src.f04_temporal_workflow.workflows.mock_client import (
 
 # ─── Fixtures ───────────────────────────────────────────────────────────────
 
+
 @pytest.fixture(autouse=True)
 def reset_client():
     """每个测试前重置客户端"""
@@ -46,6 +47,7 @@ def client():
 
 
 # ─── Test 1: MockTemporalClient 基础 CRUD ──────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_01_client_start_and_get_workflow(client):
@@ -92,6 +94,7 @@ async def test_02_workflow_failure_handling(client):
 
 # ─── Test 2: Activity 注册和执行 ────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_03_activity_basic_execution(client):
     """测试 Activity 基础注册和执行"""
@@ -101,7 +104,9 @@ async def test_03_activity_basic_execution(client):
         return a + b
 
     result = await client.execute_activity(
-        add_numbers, 10, 20,
+        add_numbers,
+        10,
+        20,
         options=ActivityOptions(start_to_close_timeout_seconds=10),
     )
 
@@ -110,6 +115,7 @@ async def test_03_activity_basic_execution(client):
 
 
 # ─── Test 3: RetryPolicy 计算 ──────────────────────────────────────────────
+
 
 def test_04_retry_policy_delays():
     """测试重试策略延迟计算"""
@@ -129,6 +135,7 @@ def test_04_retry_policy_delays():
 
 
 # ─── Test 4: Activity 重试和超时 ────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_05_activity_retry_on_failure(client):
@@ -160,6 +167,7 @@ async def test_05_activity_retry_on_failure(client):
 
 
 # ─── Test 6: Signal 发送和接收 ─────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_06_signal_send_receive(client):
@@ -197,6 +205,7 @@ async def test_06_signal_send_receive(client):
 
 # ─── Test 7: Activity 幂等性 ────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_07_activity_idempotency(client):
     """测试 Activity 幂等性 - 相同输入返回相同结果"""
@@ -210,13 +219,15 @@ async def test_07_activity_idempotency(client):
 
     # 第一次调用
     result1 = await client.execute_activity(
-        idempotent_count, 42,
+        idempotent_count,
+        42,
         options=ActivityOptions(start_to_close_timeout_seconds=10),
     )
 
     # 第二次调用 - 幂等，应返回缓存
     result2 = await client.execute_activity(
-        idempotent_count, 42,
+        idempotent_count,
+        42,
         options=ActivityOptions(start_to_close_timeout_seconds=10),
     )
 
@@ -227,6 +238,7 @@ async def test_07_activity_idempotency(client):
 
 
 # ─── Test 8: 子工作流执行 ──────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_08_child_workflow_execution(client):
@@ -241,7 +253,9 @@ async def test_08_child_workflow_execution(client):
     class ParentCalcWorkflow:
         async def execute(self) -> dict:
             child_result = await client.start_child_workflow(
-                ChildCalcWorkflow, 6, 7,
+                ChildCalcWorkflow,
+                6,
+                7,
             )
             return {"parent": "done", "child": child_result}
 
@@ -253,6 +267,7 @@ async def test_08_child_workflow_execution(client):
 
 
 # ─── Additional: 工作流取消 ─────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_09_workflow_cancellation(client):

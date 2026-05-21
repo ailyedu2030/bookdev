@@ -21,7 +21,7 @@ def calculate_content_hash(content: str, offset: int = 0) -> str:
     Returns:
         str: SHA-256十六进制哈希字符串
     """
-    content_bytes = content.encode('utf-8')
+    content_bytes = content.encode("utf-8")
     return hashlib.sha256(content_bytes).hexdigest()
 
 
@@ -32,6 +32,7 @@ class ContentAddressReference:
 
     用于引用特定内容片段，包含内容哈希和位置信息。
     """
+
     content_hash: str
     offset: int
     length: int
@@ -43,11 +44,7 @@ class ContentAddressReference:
     def __eq__(self, other) -> bool:
         if not isinstance(other, ContentAddressReference):
             return False
-        return (
-            self.content_hash == other.content_hash and
-            self.offset == other.offset and
-            self.length == other.length
-        )
+        return self.content_hash == other.content_hash and self.offset == other.offset and self.length == other.length
 
 
 def create_reference_from_content(content: str, offset: int = 0) -> ContentAddressReference:
@@ -62,11 +59,7 @@ def create_reference_from_content(content: str, offset: int = 0) -> ContentAddre
         ContentAddressReference: 内容地址引用
     """
     content_hash = calculate_content_hash(content)
-    return ContentAddressReference(
-        content_hash=content_hash,
-        offset=offset,
-        length=len(content)
-    )
+    return ContentAddressReference(content_hash=content_hash, offset=offset, length=len(content))
 
 
 def verify_integrity(content: str, stored_hash: str) -> bool:

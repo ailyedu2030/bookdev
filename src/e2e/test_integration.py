@@ -26,11 +26,7 @@ class TestKafkaLogIntegration:
 
         reset_global_chain()
 
-        event_data = {
-            "event_type": "chapter_created",
-            "chapter_id": "ch-001",
-            "timestamp": "2024-01-01T00:00:00Z"
-        }
+        event_data = {"event_type": "chapter_created", "chapter_id": "ch-001", "timestamp": "2024-01-01T00:00:00Z"}
 
         entry = create_log_entry("kafka_event", event_data)
 
@@ -55,7 +51,7 @@ class TestKafkaLogIntegration:
 
         assert verify_chain_integrity(entries) is True
         for i in range(1, len(entries)):
-            assert entries[i].previous_hash == entries[i-1].version_tag
+            assert entries[i].previous_hash == entries[i - 1].version_tag
 
 
 class TestBudgetWorkflowIntegration:
@@ -71,7 +67,7 @@ class TestBudgetWorkflowIntegration:
         content = {
             "title": "人工智能导论",
             "sections": [{"title": "什么是AI", "subsections": ["定义", "历史", "应用"]}],
-            "text": "人工智能是计算机科学的重要分支..."
+            "text": "人工智能是计算机科学的重要分支...",
         }
 
         result = budget.add_content("ch-001", content)
@@ -82,7 +78,7 @@ class TestBudgetWorkflowIntegration:
             chapter_id="ch-001",
             content=content["text"],
             outline={"sections": content["sections"]},
-            check_types=["grammar", "coherence"]
+            check_types=["grammar", "coherence"],
         )
 
         assert check_input.chapter_id == "ch-001"
@@ -100,11 +96,7 @@ class TestBudgetWorkflowIntegration:
 
         assert result.accepted is True
 
-        format_input = FormatCheckInput(
-            chapter_id="ch-002",
-            content=content,
-            format_standard="textbook"
-        )
+        format_input = FormatCheckInput(chapter_id="ch-002", content=content, format_standard="textbook")
 
         assert "#" in format_input.content
         assert format_input.format_standard == "textbook"
@@ -123,11 +115,7 @@ class TestBudgetWorkflowIntegration:
 
         glossary = {"人工智能": "AI", "机器学习": "ML"}
 
-        term_input = TermCheckInput(
-            chapter_id="ch-003",
-            content=content,
-            glossary=glossary
-        )
+        term_input = TermCheckInput(chapter_id="ch-003", content=content, glossary=glossary)
 
         assert term_input.glossary == glossary
         assert "人工智能" in term_input.content
@@ -207,10 +195,7 @@ class TestSemanticTermIntegration:
 
         content_with_term = "人工智能（AI）是重要的技术..."
 
-        result = checker.check_consistency(
-            content_with_term,
-            ["人工智能", "AI"]
-        )
+        result = checker.check_consistency(content_with_term, ["人工智能", "AI"])
 
         assert result is not None
 
@@ -223,7 +208,9 @@ class TestLogicJudgeIntegration:
         """INT-T040: 逻辑分析与LLM评判集成"""
         from f20_llm_judge.judge_service import JudgeService, MockLLMClient
 
-        mock_llm = MockLLMClient(response='{"scores": {"accuracy": 0.9, "clarity": 0.85, "coherence": 0.8}, "overall_score": 0.85}')
+        mock_llm = MockLLMClient(
+            response='{"scores": {"accuracy": 0.9, "clarity": 0.85, "coherence": 0.8}, "overall_score": 0.85}'
+        )
         judge = JudgeService(llm_client=mock_llm)
 
         content = "人工智能是计算机科学的一个重要分支。它使机器能够学习。机器学习是AI的子领域。"
@@ -360,26 +347,20 @@ class TestWorkflowActivityIntegration:
         from f04_temporal_workflow.activities.term_check_activity import TermCheckInput
 
         term_input = TermCheckInput(
-            chapter_id="ch-workflow-1",
-            content="人工智能（AI）的内容...",
-            glossary={"人工智能": "AI"}
+            chapter_id="ch-workflow-1", content="人工智能（AI）的内容...", glossary={"人工智能": "AI"}
         )
 
         assert term_input.chapter_id == "ch-workflow-1"
         assert "AI" in term_input.glossary.values()
 
         format_input = FormatCheckInput(
-            chapter_id="ch-workflow-1",
-            content="# AI简介\n\n这是内容...",
-            format_standard="textbook"
+            chapter_id="ch-workflow-1", content="# AI简介\n\n这是内容...", format_standard="textbook"
         )
 
         assert "#" in format_input.content
 
         security_input = SecurityScanInput(
-            chapter_id="ch-workflow-1",
-            content="正常内容",
-            scan_types=["xss", "injection", "credentials"]
+            chapter_id="ch-workflow-1", content="正常内容", scan_types=["xss", "injection", "credentials"]
         )
 
         assert "xss" in security_input.scan_types

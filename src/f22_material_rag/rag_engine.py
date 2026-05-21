@@ -18,6 +18,7 @@ from f22_material_rag.vector_store import InMemoryVectorStore
 @dataclass
 class RetrievedMaterial:
     """检索到的素材"""
+
     material_id: str
     content: str
     score: float
@@ -46,10 +47,7 @@ class MaterialRAGEngine:
 
         # KG-003: Use environment variable instead of hardcoded mock key
         api_key = os.environ.get("MINIMAX_API_KEY", "")
-        self.embedding_model = embedding_model or MiniMaxEmbeddingClient(
-            api_key=api_key,
-            dimension=self.embedding_dim
-        )
+        self.embedding_model = embedding_model or MiniMaxEmbeddingClient(api_key=api_key, dimension=self.embedding_dim)
         self.vector_store = InMemoryVectorStore(dimension=self.embedding_dim)
         self._materials: dict[str, Material] = {}
         self._embeddings: dict[str, np.ndarray] = {}
@@ -86,7 +84,7 @@ class MaterialRAGEngine:
                 "chapter_id": material.chapter_id,
                 "token_count": material.token_count,
                 "metadata": material.metadata,
-            }
+            },
         )
 
     def retrieve_relevant_materials(
@@ -126,9 +124,7 @@ class MaterialRAGEngine:
             search_results = self._kg_enhance_results(search_results, query)
 
         if deduplicate:
-            search_results = self._deduplicate_results(
-                search_results, similarity_threshold
-            )
+            search_results = self._deduplicate_results(search_results, similarity_threshold)
 
         retrieved = []
         total_tokens = 0
@@ -143,14 +139,16 @@ class MaterialRAGEngine:
             if total_tokens + token_count > max_tokens:
                 continue
 
-            retrieved.append(RetrievedMaterial(
-                material_id=result["id"],
-                content=metadata.get("content", ""),
-                score=result["score"],
-                token_count=token_count,
-                source_chapter_id=metadata.get("chapter_id"),
-                metadata=metadata.get("metadata", {}),
-            ))
+            retrieved.append(
+                RetrievedMaterial(
+                    material_id=result["id"],
+                    content=metadata.get("content", ""),
+                    score=result["score"],
+                    token_count=token_count,
+                    source_chapter_id=metadata.get("chapter_id"),
+                    metadata=metadata.get("metadata", {}),
+                )
+            )
             total_tokens += token_count
 
         return retrieved
@@ -196,14 +194,14 @@ class MaterialRAGEngine:
             return text
 
         truncated = text[:max_chars]
-        last_space = truncated.rfind(' ')
-        last_newline = truncated.rfind('\n')
+        last_space = truncated.rfind(" ")
+        last_newline = truncated.rfind("\n")
 
         # Break at the last space or newline before max_chars
         break_point = max(last_space, last_newline)
         if break_point > max_chars * 0.7:  # Only break if we don't lose too much
             return truncated[:break_point].strip()
-        return truncated.strip() + '...'
+        return truncated.strip() + "..."
 
     def get_material_count(self) -> int:
         """获取素材数量"""
@@ -222,7 +220,7 @@ class MaterialRAGEngine:
             return 0
 
         # Simple approximation: count characters and adjust by language
-        chinese_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
+        chinese_chars = sum(1 for c in text if "\u4e00" <= c <= "\u9fff")
         other_chars = len(text) - chinese_chars
 
         # Rough approximation: Chinese ~1 char/token, English ~3.5 chars/token
@@ -275,10 +273,7 @@ class MaterialRAGEngine:
                             boost += 0.15
 
             boosted_score = result["score"] * boost
-            enhanced_results.append({
-                **result,
-                "score": min(boosted_score, 1.0)
-            })
+            enhanced_results.append({**result, "score": min(boosted_score, 1.0)})
 
         enhanced_results.sort(key=lambda x: x["score"], reverse=True)
         return enhanced_results

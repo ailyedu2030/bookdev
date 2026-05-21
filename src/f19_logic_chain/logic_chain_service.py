@@ -17,6 +17,7 @@ class DependencyType(Enum):
 @dataclass
 class Dependency:
     """依赖关系"""
+
     source: str
     target: str
     dependency_type: DependencyType = DependencyType.SEQUENTIAL
@@ -25,6 +26,7 @@ class Dependency:
 @dataclass
 class Issue:
     """问题"""
+
     type: str
     description: str
     source: str | None = None
@@ -34,6 +36,7 @@ class Issue:
 @dataclass
 class AddDependencyResult:
     """添加依赖结果"""
+
     success: bool
     dependency: Dependency | None = None
     error: str | None = None
@@ -48,17 +51,10 @@ class LogicChainService:
         self._reverse_adjacency: dict[str, list[str]] = {}
 
     def add_dependency(
-        self,
-        source: str,
-        target: str,
-        dependency_type: DependencyType = DependencyType.SEQUENTIAL
+        self, source: str, target: str, dependency_type: DependencyType = DependencyType.SEQUENTIAL
     ) -> AddDependencyResult:
         """添加依赖关系"""
-        dependency = Dependency(
-            source=source,
-            target=target,
-            dependency_type=dependency_type
-        )
+        dependency = Dependency(source=source, target=target, dependency_type=dependency_type)
 
         self._dependencies.append(dependency)
 
@@ -74,17 +70,11 @@ class LogicChainService:
 
     def get_dependencies(self, node_id: str) -> list[Dependency]:
         """获取节点的所有依赖"""
-        return [
-            d for d in self._dependencies
-            if d.source == node_id
-        ]
+        return [d for d in self._dependencies if d.source == node_id]
 
     def get_dependents(self, node_id: str) -> list[Dependency]:
         """获取依赖该节点的所有节点"""
-        return [
-            d for d in self._dependencies
-            if d.target == node_id
-        ]
+        return [d for d in self._dependencies if d.target == node_id]
 
     def get_dependency_chain(self, node_id: str) -> list[str]:
         """获取依赖链"""
@@ -158,20 +148,16 @@ class LogicChainService:
         issues = []
 
         if not self.validate_dependency_graph():
-            issues.append(Issue(
-                type="circular_dependency",
-                description="检测到循环依赖"
-            ))
+            issues.append(Issue(type="circular_dependency", description="检测到循环依赖"))
 
         for source, targets in self._adjacency.items():
             for target in targets:
                 if source == target:
-                    issues.append(Issue(
-                        type="self_reference",
-                        description=f"节点 {source} 引用自身",
-                        source=source,
-                        target=target
-                    ))
+                    issues.append(
+                        Issue(
+                            type="self_reference", description=f"节点 {source} 引用自身", source=source, target=target
+                        )
+                    )
 
         return issues
 
@@ -196,11 +182,7 @@ class LogicChainService:
 
         for dep_data in data.get("dependencies", []):
             dep_type = DependencyType(dep_data.get("dependency_type", "sequential"))
-            self.add_dependency(
-                dep_data["source"],
-                dep_data["target"],
-                dep_type
-            )
+            self.add_dependency(dep_data["source"], dep_data["target"], dep_type)
 
     def generate_logic_chain_document(self) -> str:
         """生成逻辑链文档"""

@@ -34,13 +34,27 @@ class TestListTerms:
 
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.list_terms.return_value = [
-            {"id": "t1", "term": "Term1", "definition": "Def1", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-01T00:00:00"},
-            {"id": "t2", "term": "Term2", "definition": "Def2", "domain": "test", "synonyms": [], "locked": True, "created_at": "2024-01-02T00:00:00"},
+            {
+                "id": "t1",
+                "term": "Term1",
+                "definition": "Def1",
+                "domain": "test",
+                "synonyms": [],
+                "locked": False,
+                "created_at": "2024-01-01T00:00:00",
+            },
+            {
+                "id": "t2",
+                "term": "Term2",
+                "definition": "Def2",
+                "domain": "test",
+                "synonyms": [],
+                "locked": True,
+                "created_at": "2024-01-02T00:00:00",
+            },
         ]
 
-        result = run_async(list_terms(
-            domain=None, locked=None, page=1, per_page=20, user=mock_user, db=mock_db
-        ))
+        result = run_async(list_terms(domain=None, locked=None, page=1, per_page=20, user=mock_user, db=mock_db))
 
         assert result.success is True
         assert len(result.data) == 2
@@ -58,14 +72,36 @@ class TestListTerms:
 
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.list_terms.return_value = [
-            {"id": "t1", "term": "Term1", "definition": "Def1", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-01T00:00:00"},
-            {"id": "t2", "term": "Term2", "definition": "Def2", "domain": "test", "synonyms": [], "locked": True, "created_at": "2024-01-02T00:00:00"},
-            {"id": "t3", "term": "Term3", "definition": "Def3", "domain": "test", "synonyms": [], "locked": True, "created_at": "2024-01-03T00:00:00"},
+            {
+                "id": "t1",
+                "term": "Term1",
+                "definition": "Def1",
+                "domain": "test",
+                "synonyms": [],
+                "locked": False,
+                "created_at": "2024-01-01T00:00:00",
+            },
+            {
+                "id": "t2",
+                "term": "Term2",
+                "definition": "Def2",
+                "domain": "test",
+                "synonyms": [],
+                "locked": True,
+                "created_at": "2024-01-02T00:00:00",
+            },
+            {
+                "id": "t3",
+                "term": "Term3",
+                "definition": "Def3",
+                "domain": "test",
+                "synonyms": [],
+                "locked": True,
+                "created_at": "2024-01-03T00:00:00",
+            },
         ]
 
-        result = run_async(list_terms(
-            domain=None, locked=True, page=1, per_page=20, user=mock_user, db=mock_db
-        ))
+        result = run_async(list_terms(domain=None, locked=True, page=1, per_page=20, user=mock_user, db=mock_db))
 
         assert result.success is True
         assert len(result.data) == 2
@@ -104,7 +140,7 @@ class TestCreateTerm:
             synonyms=[],
         )
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             result = run_async(create_term(term_data, mock_user, mock_db))
 
             assert result.term == "NewTerm"
@@ -178,12 +214,28 @@ class TestUpdateTerm:
         )
 
         mock_db = MagicMock(spec=DatabaseSession)
-        mock_db.get_term.return_value = {"id": "term-123", "term": "Old", "definition": "Old def", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-01T00:00:00"}
-        mock_db.update_term.return_value = {"id": "term-123", "term": "New", "definition": "Old def", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-01T00:00:00"}
+        mock_db.get_term.return_value = {
+            "id": "term-123",
+            "term": "Old",
+            "definition": "Old def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": False,
+            "created_at": "2024-01-01T00:00:00",
+        }
+        mock_db.update_term.return_value = {
+            "id": "term-123",
+            "term": "New",
+            "definition": "Old def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": False,
+            "created_at": "2024-01-01T00:00:00",
+        }
 
         update_data = TermUpdate(term="New")
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             result = run_async(update_term("term-123", update_data, mock_user, mock_db))
 
             assert result.term == "New"
@@ -201,11 +253,19 @@ class TestUpdateTerm:
         )
 
         mock_db = MagicMock(spec=DatabaseSession)
-        mock_db.get_term.return_value = {"id": "term-123", "term": "Locked", "definition": "Def", "domain": "test", "synonyms": [], "locked": True, "created_at": "2024-01-01T00:00:00"}
+        mock_db.get_term.return_value = {
+            "id": "term-123",
+            "term": "Locked",
+            "definition": "Def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": True,
+            "created_at": "2024-01-01T00:00:00",
+        }
 
         update_data = TermUpdate(term="New")
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(update_term("term-123", update_data, mock_user, mock_db))
 
@@ -228,10 +288,27 @@ class TestLockTerm:
         )
 
         mock_db = MagicMock(spec=DatabaseSession)
-        mock_db.get_term.return_value = {"id": "term-123", "term": "ToLock", "definition": "Def", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-01T00:00:00"}
-        mock_db.lock_term.return_value = {"id": "term-123", "term": "ToLock", "definition": "Def", "domain": "test", "synonyms": [], "locked": True, "lock_reason": "Dispute", "created_at": "2024-01-01T00:00:00"}
+        mock_db.get_term.return_value = {
+            "id": "term-123",
+            "term": "ToLock",
+            "definition": "Def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": False,
+            "created_at": "2024-01-01T00:00:00",
+        }
+        mock_db.lock_term.return_value = {
+            "id": "term-123",
+            "term": "ToLock",
+            "definition": "Def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": True,
+            "lock_reason": "Dispute",
+            "created_at": "2024-01-01T00:00:00",
+        }
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             result = run_async(lock_term("term-123", "Dispute", mock_user, mock_db))
 
             assert result.locked is True
@@ -252,10 +329,26 @@ class TestUnlockTerm:
         )
 
         mock_db = MagicMock(spec=DatabaseSession)
-        mock_db.get_term.return_value = {"id": "term-123", "term": "Locked", "definition": "Def", "domain": "test", "synonyms": [], "locked": True, "created_at": "2024-01-01T00:00:00"}
-        mock_db.update_term.return_value = {"id": "term-123", "term": "Locked", "definition": "Def", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-01T00:00:00"}
+        mock_db.get_term.return_value = {
+            "id": "term-123",
+            "term": "Locked",
+            "definition": "Def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": True,
+            "created_at": "2024-01-01T00:00:00",
+        }
+        mock_db.update_term.return_value = {
+            "id": "term-123",
+            "term": "Locked",
+            "definition": "Def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": False,
+            "created_at": "2024-01-01T00:00:00",
+        }
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             result = run_async(unlock_term("term-123", mock_user, mock_db))
 
             assert result.locked is False
@@ -276,10 +369,18 @@ class TestDeleteTerm:
         )
 
         mock_db = MagicMock(spec=DatabaseSession)
-        mock_db.get_term.return_value = {"id": "term-123", "term": "ToDelete", "definition": "Def", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-01T00:00:00"}
+        mock_db.get_term.return_value = {
+            "id": "term-123",
+            "term": "ToDelete",
+            "definition": "Def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": False,
+            "created_at": "2024-01-01T00:00:00",
+        }
         mock_db.delete_term.return_value = True
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             result = run_async(delete_term("term-123", mock_user, mock_db))
 
             assert result.success is True
@@ -296,9 +397,17 @@ class TestDeleteTerm:
         )
 
         mock_db = MagicMock(spec=DatabaseSession)
-        mock_db.get_term.return_value = {"id": "term-123", "term": "Locked", "definition": "Def", "domain": "test", "synonyms": [], "locked": True, "created_at": "2024-01-01T00:00:00"}
+        mock_db.get_term.return_value = {
+            "id": "term-123",
+            "term": "Locked",
+            "definition": "Def",
+            "domain": "test",
+            "synonyms": [],
+            "locked": True,
+            "created_at": "2024-01-01T00:00:00",
+        }
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(delete_term("term-123", mock_user, mock_db))
 
@@ -322,8 +431,24 @@ class TestSearchTerms:
 
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.list_terms.return_value = [
-            {"id": "t1", "term": "TestTerm", "definition": "A test term", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-01T00:00:00"},
-            {"id": "t2", "term": "Other", "definition": "Something else", "domain": "test", "synonyms": [], "locked": False, "created_at": "2024-01-02T00:00:00"},
+            {
+                "id": "t1",
+                "term": "TestTerm",
+                "definition": "A test term",
+                "domain": "test",
+                "synonyms": [],
+                "locked": False,
+                "created_at": "2024-01-01T00:00:00",
+            },
+            {
+                "id": "t2",
+                "term": "Other",
+                "definition": "Something else",
+                "domain": "test",
+                "synonyms": [],
+                "locked": False,
+                "created_at": "2024-01-02T00:00:00",
+            },
         ]
 
         request = TermSearchRequest(query="Test", domain=None, limit=10)
@@ -385,7 +510,7 @@ class TestCreateConcept:
             domain="testing",
         )
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             result = run_async(create_concept(concept_data, mock_user, mock_db))
 
             assert result.name == "New Concept"
@@ -418,7 +543,7 @@ class TestCreateCitation:
             year=2024,
         )
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             result = run_async(create_citation(citation_data, mock_user, mock_db))
 
             assert result.title == "Test Citation"
@@ -441,7 +566,7 @@ class TestVerifyCitation:
 
         mock_db = MagicMock(spec=DatabaseSession)
 
-        with patch('api.routes.terms.require_permission', return_value=lambda u: u):
+        with patch("api.routes.terms.require_permission", return_value=lambda u: u):
             result = run_async(verify_citation("citation-123", mock_user, mock_db))
 
             assert result.verified is True

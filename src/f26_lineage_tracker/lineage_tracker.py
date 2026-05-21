@@ -21,13 +21,7 @@ class DataLineageTracker:
         self._node_index: dict[str, LineageNode] = {}
         self._last_created_node_id: str | None = None
 
-    def track_provenance(
-        self,
-        data_id: str,
-        source: DataSource,
-        transformation: str,
-        metadata: dict[str, Any]
-    ) -> None:
+    def track_provenance(self, data_id: str, source: DataSource, transformation: str, metadata: dict[str, Any]) -> None:
         """记录数据血缘"""
         node_id = f"node_{data_id}"
 
@@ -44,12 +38,12 @@ class DataLineageTracker:
         if source_node_id in self._node_index:
             parent_node_id = source_node_id
             parent_node = self._node_index[parent_node_id]
-            depth = getattr(parent_node, 'depth', 0) + 1
+            depth = getattr(parent_node, "depth", 0) + 1
         elif self._last_created_node_id is not None:
             last_node = self._node_index.get(self._last_created_node_id)
             if last_node and last_node.source.source_id == source.source_id:
                 parent_node_id = self._last_created_node_id
-                depth = getattr(last_node, 'depth', 0) + 1
+                depth = getattr(last_node, "depth", 0) + 1
 
         node_type = self._infer_node_type(transformation)
 
@@ -60,7 +54,7 @@ class DataLineageTracker:
             source=source,
             transformation=transformation,
             metadata=metadata,
-            depth=depth
+            depth=depth,
         )
 
         self._node_index[node_id] = node
@@ -119,7 +113,7 @@ class DataLineageTracker:
             ancestors = nx.ancestors(self.lineage_graph, node_id)
             chain_nodes = [self._node_index[n] for n in ancestors if n in self._node_index]
             chain_nodes.append(self._node_index[node_id])
-            chain_nodes.sort(key=lambda n: n.depth if hasattr(n, 'depth') else 0)
+            chain_nodes.sort(key=lambda n: n.depth if hasattr(n, "depth") else 0)
             return chain_nodes
         except nx.NetworkXError:
             return [self._node_index[node_id]]

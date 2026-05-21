@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DLQMessage:
     """Dead Letter Queue message structure"""
+
     original_event: dict[str, Any]
     error: Exception
     attempts: int
@@ -28,6 +29,7 @@ class DLQMessage:
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior"""
+
     max_retries: int = 3
     base_delay: float = 1.0
     max_delay: float = 60.0
@@ -115,26 +117,22 @@ class DLQHandler:
 
                 if attempt < config.max_retries:
                     delay = self._calculate_delay(attempt)
-                    logger.warning(
-                        f"Attempt {attempt + 1} failed: {e}. "
-                        f"Retrying in {delay:.2f}s..."
-                    )
+                    logger.warning(f"Attempt {attempt + 1} failed: {e}. " f"Retrying in {delay:.2f}s...")
                     await asyncio.sleep(delay)
                 else:
-                    logger.error(
-                        f"All {config.max_retries + 1} attempts failed: {e}"
-                    )
+                    logger.error(f"All {config.max_retries + 1} attempts failed: {e}")
 
         raise last_error
 
     def _calculate_delay(self, attempt: int) -> float:
         """Calculate delay with exponential backoff"""
         config = self.retry_config
-        delay = config.base_delay * (config.exponential_base ** attempt)
+        delay = config.base_delay * (config.exponential_base**attempt)
         delay = min(delay, config.max_delay)
 
         if config.jitter:
             import random
+
             delay = delay * (0.5 + random.random())
 
         return delay
@@ -153,11 +151,10 @@ class DLQHandler:
             os.makedirs(self.DLQ_FALLBACK_DIR, exist_ok=True)
 
             fallback_file = os.path.join(
-                self.DLQ_FALLBACK_DIR,
-                f"dlq_fallback_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
+                self.DLQ_FALLBACK_DIR, f"dlq_fallback_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
             )
 
-            with open(fallback_file, 'w') as f:
+            with open(fallback_file, "w") as f:
                 json.dump(dlq_message, f, indent=2, default=str)
 
             logger.info(f"DLQ message logged to fallback file: {fallback_file}")
@@ -225,16 +222,11 @@ class DLQHandler:
             except Exception as e:
                 last_error = e
                 if attempt < max_dlq_retries:
-                    delay = base_delay * (2 ** attempt)
-                    logger.warning(
-                        f"DLQ send attempt {attempt + 1} failed: {e}. "
-                        f"Retrying in {delay:.2f}s..."
-                    )
+                    delay = base_delay * (2**attempt)
+                    logger.warning(f"DLQ send attempt {attempt + 1} failed: {e}. " f"Retrying in {delay:.2f}s...")
                     await asyncio.sleep(delay)
                 else:
-                    logger.error(
-                        f"All {max_dlq_retries + 1} DLQ send attempts failed: {e}"
-                    )
+                    logger.error(f"All {max_dlq_retries + 1} DLQ send attempts failed: {e}")
                     # Fall through to fallback logging
 
         # INF-005: All retries exhausted, use fallback file logging
@@ -242,8 +234,7 @@ class DLQHandler:
             fallback_path = self._log_to_fallback_file(dlq_message)
             self._stats["total_fallback_logged"] += 1
             logger.warning(
-                f"DLQ send failed after {max_dlq_retries + 1} attempts, "
-                f"message logged to fallback: {fallback_path}"
+                f"DLQ send failed after {max_dlq_retries + 1} attempts, " f"message logged to fallback: {fallback_path}"
             )
         except Exception as fallback_error:
             # Last resort - log the raw message to application log

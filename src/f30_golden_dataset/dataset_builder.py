@@ -13,6 +13,7 @@ from typing import Any
 @dataclass
 class GoldenSample:
     """Golden样本"""
+
     sample_id: str
     quality_level: str
     expected_score: float
@@ -90,7 +91,7 @@ class DatasetBuilder:
             quality_metrics=data.get("quality_metrics", {}),
             metadata=data.get("metadata", {}),
             hallucination_markers=data.get("hallucination_markers", []),
-            regulation_errors=data.get("regulation_errors", [])
+            regulation_errors=data.get("regulation_errors", []),
         )
 
     def load_samples_by_quality(self, quality_level: str) -> list[GoldenSample]:
@@ -106,16 +107,9 @@ class DatasetBuilder:
         if not self._samples:
             self.load_all_samples()
 
-        return [
-            sample for sample in self._samples.values()
-            if sample.quality_level == quality_level
-        ]
+        return [sample for sample in self._samples.values() if sample.quality_level == quality_level]
 
-    def load_samples_by_score_range(
-        self,
-        min_score: float = 0.0,
-        max_score: float = 10.0
-    ) -> list[GoldenSample]:
+    def load_samples_by_score_range(self, min_score: float = 0.0, max_score: float = 10.0) -> list[GoldenSample]:
         """
         按分数范围加载样本
 
@@ -129,10 +123,7 @@ class DatasetBuilder:
         if not self._samples:
             self.load_all_samples()
 
-        return [
-            sample for sample in self._samples.values()
-            if min_score <= sample.expected_score <= max_score
-        ]
+        return [sample for sample in self._samples.values() if min_score <= sample.expected_score <= max_score]
 
     def get_calibration_samples(self) -> list[GoldenSample]:
         """
@@ -171,14 +162,7 @@ class DatasetBuilder:
         Returns:
             是否有效
         """
-        required_fields = [
-            "sample_id",
-            "quality_level",
-            "expected_score",
-            "content",
-            "quality_metrics",
-            "metadata"
-        ]
+        required_fields = ["sample_id", "quality_level", "expected_score", "content", "quality_metrics", "metadata"]
 
         for field in required_fields:
             if field not in sample_data:
@@ -198,10 +182,7 @@ class DatasetBuilder:
             是否成功
         """
         if filepath is None and self._samples_dir:
-            filepath = os.path.join(
-                self._samples_dir,
-                f"{sample.sample_id.lower()}.json"
-            )
+            filepath = os.path.join(self._samples_dir, f"{sample.sample_id.lower()}.json")
 
         if filepath is None:
             return False
@@ -212,7 +193,7 @@ class DatasetBuilder:
             "expected_score": sample.expected_score,
             "content": sample.content,
             "quality_metrics": sample.quality_metrics,
-            "metadata": sample.metadata
+            "metadata": sample.metadata,
         }
 
         with open(filepath, "w", encoding="utf-8") as f:

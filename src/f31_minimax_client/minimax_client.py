@@ -23,6 +23,7 @@ from f31_minimax_client.token_counter import TokenCounter
 @dataclass
 class TokenUsage:
     """Token使用详情"""
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -31,6 +32,7 @@ class TokenUsage:
 @dataclass
 class GenerateResult:
     """生成结果"""
+
     content: str
     finish_reason: str = "stop"
     model: str = "MiniMax-M2.7"
@@ -47,6 +49,7 @@ class GenerateResult:
 
 class MiniMaxClientError(Exception):
     """MiniMax客户端异常"""
+
     pass
 
 
@@ -116,7 +119,7 @@ class MiniMaxClient:
         max_tokens: int = 4000,
         temperature: float = 0.7,
         stream: bool = False,
-        **kwargs
+        **kwargs,
     ) -> GenerateResult:
         """
         生成内容
@@ -158,9 +161,7 @@ class MiniMaxClient:
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    raise MiniMaxClientError(
-                        f"API returned {response.status}: {error_text[:500]}"
-                    )
+                    raise MiniMaxClientError(f"API returned {response.status}: {error_text[:500]}")
 
                 response_data = await response.json()
 
@@ -235,11 +236,7 @@ class MiniMaxClient:
         }
 
     async def generate_with_retry(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        max_retries: int = 3,
-        **kwargs
+        self, system_prompt: str, user_prompt: str, max_retries: int = 3, **kwargs
     ) -> GenerateResult:
         """
         带重试的生成
@@ -269,12 +266,10 @@ class MiniMaxClient:
             except (MiniMaxClientError, aiohttp.ClientError) as e:
                 last_error = e
                 if attempt < max_retries:
-                    wait_time = min(2 ** attempt, 30)
+                    wait_time = min(2**attempt, 30)
                     await asyncio.sleep(wait_time)
 
-        raise MiniMaxClientError(
-            f"All {max_retries + 1} attempts failed. Last error: {last_error}"
-        )
+        raise MiniMaxClientError(f"All {max_retries + 1} attempts failed. Last error: {last_error}")
 
     def count_tokens(self, text: str) -> int:
         """计算Token数"""
@@ -318,12 +313,12 @@ class MiniMaxClient:
         completion_tokens = min(completion_tokens, max_tokens)
 
         # 如果有JSON关键词，尝试返回JSON
-        if ("json" in system_prompt.lower() or "json" in user_prompt.lower()):
+        if "json" in system_prompt.lower() or "json" in user_prompt.lower():
             try:
                 json_match_start = completion.find("{")
                 json_match_end = completion.rfind("}")
                 if json_match_start >= 0 and json_match_end > json_match_start:
-                    json_str = completion[json_match_start:json_match_end + 1]
+                    json_str = completion[json_match_start : json_match_end + 1]
                     json.loads(json_str)
                     completion = json_str
             except (json.JSONDecodeError, ValueError):
@@ -364,10 +359,7 @@ class MiniMaxClient:
 
         topic = "、".join(key_words) if key_words else "相关主题"
 
-        response = (
-            f"关于{topic}的内容如下：\n\n"
-            f"这是基于MiniMax M2.7模型生成的教材内容。"
-        )
+        response = f"关于{topic}的内容如下：\n\n" f"这是基于MiniMax M2.7模型生成的教材内容。"
 
         # 如果用户提示较长，生成更长响应
         if len(user_prompt) > 100:
@@ -407,6 +399,7 @@ class MiniMaxClient:
         ]
 
         import hashlib
+
         seed = int(hashlib.md5(user_prompt.encode()).hexdigest()[:8], 16)
         idx = seed % len(variants)
 

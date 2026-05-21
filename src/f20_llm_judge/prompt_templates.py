@@ -58,7 +58,4 @@ class PromptTemplates:
             格式化后的评判提示
         """
         rubric_str = rubric if rubric else "默认评分标准"
-        return cls.JUDGE_PROMPT.format(
-            content=content,
-            rubric=rubric_str
-        )
+        return cls.JUDGE_PROMPT.format(content=content, rubric=rubric_str)

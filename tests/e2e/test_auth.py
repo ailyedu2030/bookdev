@@ -17,7 +17,7 @@ class TestLoginPage:
         expect(page.locator('input[type="email"]')).toBeVisible()
         expect(page.locator('input[type="password"]')).toBeVisible()
         expect(page.locator('button[type="submit"]')).toBeVisible()
-        expect(page.locator('text=注册')).toBeVisible()
+        expect(page.locator("text=注册")).toBeVisible()
 
     def test_login_page_redirects_authenticated_user(self, authenticated_page: Page):
         """Test that authenticated users are redirected away from login page."""
@@ -29,7 +29,7 @@ class TestLoginPage:
         page.goto("http://localhost:3000/login")
         page.wait_for_load_state("networkidle")
 
-        page.click('text=注册')
+        page.click("text=注册")
         page.wait_for_url("**/register", timeout=5000)
 
         expect(page.locator("text=创建账户")).toBeVisible()
@@ -80,8 +80,8 @@ class TestLogout:
         """Test that user can logout successfully."""
         authenticated_page.wait_for_selector('[class*="ant-dropdown-trigger"]', timeout=5000)
         authenticated_page.click('[class*="ant-dropdown-trigger"]')
-        authenticated_page.wait_for_selector('.ant-dropdown-menu', timeout=5000)
-        authenticated_page.click('text=退出登录')
+        authenticated_page.wait_for_selector(".ant-dropdown-menu", timeout=5000)
+        authenticated_page.click("text=退出登录")
 
         authenticated_page.wait_for_url("**/login", timeout=5000)
         expect(authenticated_page.locator("text=AI教材开发系统")).toBeVisible()
@@ -113,7 +113,7 @@ class TestRegisterPage:
         page.goto("http://localhost:3000/register")
         page.wait_for_load_state("networkidle")
 
-        page.click('text=登录')
+        page.click("text=登录")
         page.wait_for_url("**/login", timeout=5000)
 
         expect(page.locator("text=登录到您的账户")).toBeVisible()

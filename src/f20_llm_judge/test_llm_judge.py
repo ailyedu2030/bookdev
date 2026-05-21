@@ -65,8 +65,13 @@ class TestPromptTemplates:
         templates = PromptTemplates()
         prompt = templates.JUDGE_PROMPT
 
-        for dimension in ["terminology_consistency", "knowledge_accuracy",
-                          "citation_validity", "logical_coherence", "format_compliance"]:
+        for dimension in [
+            "terminology_consistency",
+            "knowledge_accuracy",
+            "citation_validity",
+            "logical_coherence",
+            "format_compliance",
+        ]:
             assert dimension in prompt, f"Dimension '{dimension}' not in prompt"
 
     def test_prompt_template_has_scoring_instructions(self):
@@ -106,18 +111,18 @@ class TestScoringEngine:
             "knowledge_accuracy": 0.85,
             "citation_validity": 0.8,
             "logical_coherence": 0.9,
-            "format_compliance": 1.0
+            "format_compliance": 1.0,
         }
 
         weighted_score = engine.calculate_weighted_score(dimension_scores)
 
         # 验证加权计算正确
         expected = (
-            0.9 * 0.25 +  # terminology
-            0.85 * 0.30 +  # knowledge
-            0.8 * 0.20 +   # citation
-            0.9 * 0.15 +   # logical
-            1.0 * 0.10     # format
+            0.9 * 0.25  # terminology
+            + 0.85 * 0.30  # knowledge
+            + 0.8 * 0.20  # citation
+            + 0.9 * 0.15  # logical
+            + 1.0 * 0.10  # format
         )
         assert abs(weighted_score - expected) < 0.001
 
@@ -144,7 +149,7 @@ class TestScoringEngine:
             "knowledge_accuracy": 0.85,
             "citation_validity": 0.8,
             "logical_coherence": 0.9,
-            "format_compliance": 1.0
+            "format_compliance": 1.0,
         }
 
         with pytest.raises(ValueError):
@@ -157,10 +162,20 @@ class TestScoringEngine:
         engine = ScoringEngine()
 
         for valid_scores in [
-            {"terminology_consistency": 0.0, "knowledge_accuracy": 0.0,
-             "citation_validity": 0.0, "logical_coherence": 0.0, "format_compliance": 0.0},
-            {"terminology_consistency": 1.0, "knowledge_accuracy": 1.0,
-             "citation_validity": 1.0, "logical_coherence": 1.0, "format_compliance": 1.0},
+            {
+                "terminology_consistency": 0.0,
+                "knowledge_accuracy": 0.0,
+                "citation_validity": 0.0,
+                "logical_coherence": 0.0,
+                "format_compliance": 0.0,
+            },
+            {
+                "terminology_consistency": 1.0,
+                "knowledge_accuracy": 1.0,
+                "citation_validity": 1.0,
+                "logical_coherence": 1.0,
+                "format_compliance": 1.0,
+            },
         ]:
             result = engine.calculate_weighted_score(valid_scores)
             assert 0.0 <= result <= 1.0
@@ -175,7 +190,7 @@ class TestScoringEngine:
             "knowledge_accuracy": 0.85,
             "citation_validity": 0.8,
             "logical_coherence": 0.9,
-            "format_compliance": 1.0
+            "format_compliance": 1.0,
         }
 
         with pytest.raises(ValueError):
@@ -220,7 +235,7 @@ class TestScoringEngine:
             "knowledge_accuracy": 0.85,
             "citation_validity": 0.8,
             "logical_coherence": 0.9,
-            "format_compliance": 1.0
+            "format_compliance": 1.0,
         }
 
         is_valid, errors = engine.validate_dimension_scores(valid_scores)
@@ -252,7 +267,7 @@ class TestScoringEngine:
             "knowledge_accuracy": -0.5,
             "citation_validity": 0.8,
             "logical_coherence": 1.5,
-            "format_compliance": 1.0
+            "format_compliance": 1.0,
         }
 
         is_valid, errors = engine.validate_dimension_scores(invalid_scores)
@@ -313,16 +328,18 @@ class TestJudgeService:
     def mock_llm_client(self):
         """模拟LLM客户端"""
         mock = AsyncMock()
-        mock.generate.return_value = json.dumps({
-            "scores": {
-                "terminology_consistency": 0.9,
-                "knowledge_accuracy": 0.85,
-                "citation_validity": 0.8,
-                "logical_coherence": 0.9,
-                "format_compliance": 0.95
-            },
-            "overall_score": 0.88
-        })
+        mock.generate.return_value = json.dumps(
+            {
+                "scores": {
+                    "terminology_consistency": 0.9,
+                    "knowledge_accuracy": 0.85,
+                    "citation_validity": 0.8,
+                    "logical_coherence": 0.9,
+                    "format_compliance": 0.95,
+                },
+                "overall_score": 0.88,
+            }
+        )
         return mock
 
     @pytest.mark.asyncio
@@ -345,7 +362,7 @@ class TestJudgeService:
         """F20-T031: 评判结果包含各维度分数"""
         from f20_llm_judge.judge_service import JudgeService
 
-        mock_llm_client.generate.return_value = '''{
+        mock_llm_client.generate.return_value = """{
             "scores": {
                 "terminology_consistency": 0.92,
                 "knowledge_accuracy": 0.88,
@@ -355,7 +372,7 @@ class TestJudgeService:
             },
             "overall_score": 0.90,
             "reasoning": "内容质量良好"
-        }'''
+        }"""
 
         service = JudgeService(llm_client=mock_llm_client)
         result = await service.judge_content("测试内容")
@@ -371,11 +388,11 @@ class TestJudgeService:
         """F20-T032: 评判结果包含推理说明"""
         from f20_llm_judge.judge_service import JudgeService
 
-        mock_llm_client.generate.return_value = '''{
+        mock_llm_client.generate.return_value = """{
             "scores": {"terminology_consistency": 0.9},
             "overall_score": 0.9,
             "reasoning": "术语使用准确，逻辑清晰"
-        }'''
+        }"""
 
         service = JudgeService(llm_client=mock_llm_client)
         result = await service.judge_content("测试内容")
@@ -424,11 +441,7 @@ class TestJudgeService:
         from f20_llm_judge.judge_service import JudgeService
 
         service = JudgeService(llm_client=mock_llm_client)
-        contents = [
-            "内容1：人工智能的定义",
-            "内容2：机器学习的分类",
-            "内容3：深度学习的应用"
-        ]
+        contents = ["内容1：人工智能的定义", "内容2：机器学习的分类", "内容3：深度学习的应用"]
 
         results = await service.batch_judge(contents)
 
@@ -449,25 +462,23 @@ class TestJudgeService:
             call_count[0] += 1
             if call_count[0] == 2:
                 raise JudgeServiceError("模拟错误")
-            return json.dumps({
-                "scores": {
-                    "terminology_consistency": 0.9,
-                    "knowledge_accuracy": 0.85,
-                    "citation_validity": 0.8,
-                    "logical_coherence": 0.9,
-                    "format_compliance": 0.95
-                },
-                "overall_score": 0.88
-            })
+            return json.dumps(
+                {
+                    "scores": {
+                        "terminology_consistency": 0.9,
+                        "knowledge_accuracy": 0.85,
+                        "citation_validity": 0.8,
+                        "logical_coherence": 0.9,
+                        "format_compliance": 0.95,
+                    },
+                    "overall_score": 0.88,
+                }
+            )
 
         mock_llm_client.generate = fail_on_second
 
         service = JudgeService(llm_client=mock_llm_client)
-        contents = [
-            "内容1",
-            "内容2",
-            "内容3"
-        ]
+        contents = ["内容1", "内容2", "内容3"]
 
         results = await service.batch_judge(contents)
 
@@ -519,7 +530,7 @@ class TestJudgeService:
             timestamp=datetime(2024, 1, 1, 0, 0, 0),
             status=JudgeStatus.COMPLETED,
             model_id="gpt-4",
-            latency_ms=150.0
+            latency_ms=150.0,
         )
 
         d = result.to_dict()
@@ -545,7 +556,7 @@ class TestRubricValidator:
             "knowledge_accuracy": {"weight": 0.30, "criteria": "知识准确性"},
             "citation_validity": {"weight": 0.20, "criteria": "引用有效性"},
             "logical_coherence": {"weight": 0.15, "criteria": "逻辑连贯性"},
-            "format_compliance": {"weight": 0.10, "criteria": "格式合规性"}
+            "format_compliance": {"weight": 0.10, "criteria": "格式合规性"},
         }
 
         assert validator.validate_rubric(valid_rubric) is True
@@ -575,7 +586,7 @@ class TestRubricValidator:
             "knowledge_accuracy": {"weight": 0.5, "criteria": "知识准确性"},
             "citation_validity": {"weight": 0.5, "criteria": "引用有效性"},
             "logical_coherence": {"weight": 0.5, "criteria": "逻辑连贯性"},
-            "format_compliance": {"weight": 0.5, "criteria": "格式合规性"}
+            "format_compliance": {"weight": 0.5, "criteria": "格式合规性"},
         }
 
         assert validator.validate_rubric(invalid_rubric) is False
@@ -591,7 +602,7 @@ class TestRubricValidator:
             "knowledge_accuracy": {"weight": 0.30, "criteria": "知识准确性"},
             "citation_validity": {"weight": 0.20, "criteria": "引用有效性"},
             "logical_coherence": {"weight": 0.15, "criteria": "逻辑连贯性"},
-            "format_compliance": {"weight": 0.10, "criteria": "格式合规性"}
+            "format_compliance": {"weight": 0.10, "criteria": "格式合规性"},
         }
 
         assert validator.validate_rubric(invalid_rubric) is False
@@ -619,7 +630,7 @@ class TestRubricValidator:
             "knowledge_accuracy": {"weight": 0.30, "criteria": "知识准确性"},
             "citation_validity": {"weight": 0.30, "criteria": "引用有效性"},
             "logical_coherence": {"weight": 0.30, "criteria": "逻辑连贯性"},
-            "format_compliance": {"weight": 0.20, "criteria": "格式合规性"}
+            "format_compliance": {"weight": 0.20, "criteria": "格式合规性"},
         }
 
         assert validator.validate_rubric(negative_weight_rubric) is False
@@ -636,7 +647,7 @@ class TestRubricValidator:
             "knowledge_accuracy": {"weight": -0.25, "criteria": "知识准确性"},
             "citation_validity": {"weight": -0.25, "criteria": "引用有效性"},
             "logical_coherence": {"weight": -0.25, "criteria": "逻辑连贯性"},
-            "format_compliance": {"weight": -0.25, "criteria": "格式合规性"}
+            "format_compliance": {"weight": -0.25, "criteria": "格式合规性"},
         }
 
         assert validator.validate_rubric(extreme_rubric) is False
@@ -651,7 +662,7 @@ class TestRubricValidator:
             "knowledge_accuracy": 0.85,
             "citation_validity": 0.8,
             "logical_coherence": 0.9,
-            "format_compliance": 0.95
+            "format_compliance": 0.95,
         }
 
         is_valid, errors = validator.validate_all_dimension_scores(scores)
@@ -684,7 +695,7 @@ class TestRubricValidator:
             "knowledge_accuracy": -0.1,
             "citation_validity": 1.5,
             "logical_coherence": 0.9,
-            "format_compliance": 0.95
+            "format_compliance": 0.95,
         }
 
         is_valid, errors = validator.validate_all_dimension_scores(scores)

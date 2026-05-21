@@ -18,11 +18,13 @@ from f20_llm_judge.scoring_engine import ScoringEngine
 
 class JudgeServiceError(Exception):
     """评判服务异常"""
+
     pass
 
 
 class JudgeStatus(Enum):
     """评判状态"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -32,6 +34,7 @@ class JudgeStatus(Enum):
 @dataclass
 class JudgeResult:
     """评判结果"""
+
     scores: dict[str, float]
     overall_score: float
     reasoning: str
@@ -48,7 +51,7 @@ class JudgeResult:
             "timestamp": self.timestamp.isoformat(),
             "status": self.status.value,
             "model_id": self.model_id,
-            "latency_ms": self.latency_ms
+            "latency_ms": self.latency_ms,
         }
 
 
@@ -63,11 +66,7 @@ class BaseLLMClient:
 class MockLLMClient(BaseLLMClient):
     """模拟LLM客户端（用于测试）"""
 
-    def __init__(
-        self,
-        response: str = None,
-        should_fail: bool = False
-    ):
+    def __init__(self, response: str = None, should_fail: bool = False):
         self._response = response
         self._should_fail = should_fail
 
@@ -79,17 +78,19 @@ class MockLLMClient(BaseLLMClient):
             return self._response
 
         # 默认响应
-        return json.dumps({
-            "scores": {
-                "terminology_consistency": 0.9,
-                "knowledge_accuracy": 0.85,
-                "citation_validity": 0.8,
-                "logical_coherence": 0.9,
-                "format_compliance": 0.95
-            },
-            "overall_score": 0.88,
-            "reasoning": "内容质量良好"
-        })
+        return json.dumps(
+            {
+                "scores": {
+                    "terminology_consistency": 0.9,
+                    "knowledge_accuracy": 0.85,
+                    "citation_validity": 0.8,
+                    "logical_coherence": 0.9,
+                    "format_compliance": 0.95,
+                },
+                "overall_score": 0.88,
+                "reasoning": "内容质量良好",
+            }
+        )
 
 
 class JudgeService:
@@ -99,7 +100,7 @@ class JudgeService:
         self,
         llm_client: BaseLLMClient | None = None,
         scoring_engine: ScoringEngine | None = None,
-        prompt_templates: PromptTemplates | None = None
+        prompt_templates: PromptTemplates | None = None,
     ):
         """
         初始化评判服务
@@ -113,12 +114,7 @@ class JudgeService:
         self._scoring_engine = scoring_engine or ScoringEngine()
         self._prompt_templates = prompt_templates or PromptTemplates()
 
-    async def judge_content(
-        self,
-        content: str,
-        rubric: dict[str, Any] = None,
-        **kwargs
-    ) -> JudgeResult:
+    async def judge_content(self, content: str, rubric: dict[str, Any] = None, **kwargs) -> JudgeResult:
         """
         评判内容质量
 
@@ -154,12 +150,7 @@ class JudgeService:
         except Exception as e:
             raise JudgeServiceError(f"Judge service error: {e}")
 
-    async def batch_judge(
-        self,
-        contents: list[str],
-        rubric: dict[str, Any] = None,
-        **kwargs
-    ) -> list[JudgeResult]:
+    async def batch_judge(self, contents: list[str], rubric: dict[str, Any] = None, **kwargs) -> list[JudgeResult]:
         """
         批量评判内容
 
@@ -218,7 +209,7 @@ class JudgeService:
             overall_score=overall_score,
             reasoning=reasoning,
             timestamp=datetime.utcnow(),
-            status=JudgeStatus.COMPLETED
+            status=JudgeStatus.COMPLETED,
         )
 
     def _extract_json(self, response: str) -> str:
@@ -233,7 +224,7 @@ class JudgeService:
         """
         # 方法1: 尝试直接解析（最简单的情况）
         response = response.strip()
-        if response.startswith('{') and response.endswith('}'):
+        if response.startswith("{") and response.endswith("}"):
             try:
                 json.loads(response)
                 return response
@@ -241,17 +232,17 @@ class JudgeService:
                 pass
 
         # 方法2: 使用括号匹配提取最外层JSON
-        start_idx = response.find('{')
+        start_idx = response.find("{")
         if start_idx != -1:
             # 找到第一个 {
             depth = 0
             for i in range(start_idx, len(response)):
-                if response[i] == '{':
+                if response[i] == "{":
                     depth += 1
-                elif response[i] == '}':
+                elif response[i] == "}":
                     depth -= 1
                     if depth == 0:
-                        return response[start_idx:i+1]
+                        return response[start_idx : i + 1]
 
         # 方法3: 尝试用正则找JSON（处理多行嵌套情况）
         # 匹配以 { 开头，scores 字段存在的内容
@@ -269,10 +260,7 @@ class JudgeService:
         return response
 
 
-def calculate_correlation(
-    llm_scores: list[float],
-    human_scores: list[float]
-) -> float:
+def calculate_correlation(llm_scores: list[float], human_scores: list[float]) -> float:
     """
     计算LLM评分与人工评分的相关性
 
@@ -299,10 +287,7 @@ def calculate_correlation(
     human_mean = sum(human_scores) / n
 
     # 计算协方差（sum of deviations products）
-    covariance = sum(
-        (llm_scores[i] - llm_mean) * (human_scores[i] - human_mean)
-        for i in range(n)
-    )
+    covariance = sum((llm_scores[i] - llm_mean) * (human_scores[i] - human_mean) for i in range(n))
 
     # 计算标准差
     llm_std = (sum((x - llm_mean) ** 2 for x in llm_scores) / n) ** 0.5

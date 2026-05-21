@@ -52,17 +52,14 @@ class StatisticalSamplingEngine:
         z = self.Z_SCORES.get(self.confidence_level, 1.96)
         p = 0.5
 
-        n0 = (z ** 2 * p * (1 - p)) / (self.margin_of_error ** 2)
+        n0 = (z**2 * p * (1 - p)) / (self.margin_of_error**2)
 
         n = n0 / (1 + (n0 - 1) / population_size)
 
         return int(math.ceil(n))
 
     def stratified_sampling(
-        self,
-        chapters: list[Chapter],
-        strata: dict[ChapterType, float],
-        proportional: bool = False
+        self, chapters: list[Chapter], strata: dict[ChapterType, float], proportional: bool = False
     ) -> list[Chapter]:
         """分层抽样，确保每类章节都有代表"""
         if not chapters:
@@ -107,16 +104,9 @@ class StatisticalSamplingEngine:
         if total == 0:
             return {}
 
-        return {
-            ct: count / total
-            for ct, count in type_counts.items()
-        }
+        return {ct: count / total for ct, count in type_counts.items()}
 
-    def systematic_sampling(
-        self,
-        chapters: list[Chapter],
-        sample_size: int | None = None
-    ) -> list[Chapter]:
+    def systematic_sampling(self, chapters: list[Chapter], sample_size: int | None = None) -> list[Chapter]:
         """系统抽样"""
         if not chapters:
             return []
@@ -142,18 +132,14 @@ class StatisticalSamplingEngine:
 
         return result
 
-    def cluster_sampling(
-        self,
-        chapters: list[Chapter],
-        cluster_size: int = 5
-    ) -> list[Chapter]:
+    def cluster_sampling(self, chapters: list[Chapter], cluster_size: int = 5) -> list[Chapter]:
         """整群抽样"""
         if not chapters or cluster_size <= 0:
             return []
 
         clusters: list[list[Chapter]] = []
         for i in range(0, len(chapters), cluster_size):
-            cluster = chapters[i:i + cluster_size]
+            cluster = chapters[i : i + cluster_size]
             if cluster:
                 clusters.append(cluster)
 
@@ -161,6 +147,7 @@ class StatisticalSamplingEngine:
             return []
 
         import random
+
         random.seed(42)
 
         selected_clusters = random.sample(clusters, min(2, len(clusters)))

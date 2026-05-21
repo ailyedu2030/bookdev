@@ -312,13 +312,15 @@ class MockLineageTracker:
     async def record(self, source_id: str, target_id: str, operation: str, metadata: dict[str, Any] = None) -> None:
         if metadata is None:
             metadata = {}
-        self._lineage.append({
-            "source_id": source_id,
-            "target_id": target_id,
-            "operation": operation,
-            "timestamp": datetime.now(UTC).isoformat(),
-            "metadata": metadata,
-        })
+        self._lineage.append(
+            {
+                "source_id": source_id,
+                "target_id": target_id,
+                "operation": operation,
+                "timestamp": datetime.now(UTC).isoformat(),
+                "metadata": metadata,
+            }
+        )
 
     async def trace(self, target_id: str) -> list[dict[str, Any]]:
         return [r for r in self._lineage if r["target_id"] == target_id]
@@ -328,7 +330,11 @@ class MockGraphRAG:
     """F27: GraphRAG 问答。"""
 
     async def query(self, question: str, kg_context: dict[str, Any] | None = None) -> dict[str, Any]:
-        return {"answer": f"Mock GraphRAG answer for: {question[:60]}", "sources": ["kg_node_1", "kg_node_2"], "confidence": 0.89}
+        return {
+            "answer": f"Mock GraphRAG answer for: {question[:60]}",
+            "sources": ["kg_node_1", "kg_node_2"],
+            "confidence": 0.89,
+        }
 
 
 class MockConfigCenter:
@@ -357,18 +363,22 @@ class MockMonitoringDashboard:
     async def record_metric(self, name: str, value: float, tags: dict[str, str] = None) -> None:
         if tags is None:
             tags = {}
-        self._metrics.append({
-            "name": name,
-            "value": value,
-            "tags": tags,
-            "timestamp": datetime.now(UTC).isoformat(),
-        })
+        self._metrics.append(
+            {
+                "name": name,
+                "value": value,
+                "tags": tags,
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+        )
 
     async def get_metrics(self) -> list[dict[str, Any]]:
         return self._metrics
 
     async def stage_latency(self, stage: str) -> float | None:
-        latencies = [m["value"] for m in self._metrics if m["name"] == "stage_latency" and m["tags"].get("stage") == stage]
+        latencies = [
+            m["value"] for m in self._metrics if m["name"] == "stage_latency" and m["tags"].get("stage") == stage
+        ]
         return sum(latencies) / len(latencies) if latencies else None
 
 
@@ -535,9 +545,7 @@ class TextbookPipeline:
         except Exception as e:
             status = "FAILED"
             logger.error(f"[Pipeline:{pipeline_id}] Failed: {e}")
-            self.state.failed_stages.append(
-                self.state.current_stage or PipelineStage.INITIALIZATION
-            )
+            self.state.failed_stages.append(self.state.current_stage or PipelineStage.INITIALIZATION)
 
         finished_at = datetime.now(UTC)
         output = self._build_output(textbook_config)
@@ -660,20 +668,24 @@ class TextbookPipeline:
             result.status = PipelineStageStatus.COMPLETED
 
             self.state.completed_stages.append(stage)
-            await self.log.append({
-                "type": "stage_completed",
-                "stage": stage.value,
-                "modules": result.modules_executed,
-            })
+            await self.log.append(
+                {
+                    "type": "stage_completed",
+                    "stage": stage.value,
+                    "modules": result.modules_executed,
+                }
+            )
 
         except Exception as e:
             result.status = PipelineStageStatus.FAILED
             result.errors.append(str(e))
-            await self.log.append({
-                "type": "stage_failed",
-                "stage": stage.value,
-                "error": str(e),
-            })
+            await self.log.append(
+                {
+                    "type": "stage_failed",
+                    "stage": stage.value,
+                    "error": str(e),
+                }
+            )
             raise
 
         finally:
@@ -691,12 +703,15 @@ class TextbookPipeline:
                 {"stage": stage.value},
             )
 
-            await self.event_bus.publish("stage.completed", {
-                "stage": stage.value,
-                "status": result.status.value,
-                "duration": result.duration_seconds,
-                "modules": result.modules_executed,
-            })
+            await self.event_bus.publish(
+                "stage.completed",
+                {
+                    "stage": stage.value,
+                    "status": result.status.value,
+                    "duration": result.duration_seconds,
+                    "modules": result.modules_executed,
+                },
+            )
 
             if stage_config and stage_config.checkpoint_after:
                 await self._create_checkpoint(stage)
@@ -761,11 +776,14 @@ class TextbookPipeline:
                 elapsed,
                 {"stage": stage.value},
             )
-            await self.event_bus.publish("module.completed", {
-                "module_id": module_id,
-                "stage": stage.value,
-                "latency": elapsed,
-            })
+            await self.event_bus.publish(
+                "module.completed",
+                {
+                    "module_id": module_id,
+                    "stage": stage.value,
+                    "latency": elapsed,
+                },
+            )
             return result
         except Exception as e:
             elapsed = time.monotonic() - module_start
@@ -774,12 +792,15 @@ class TextbookPipeline:
                 1,
                 {"stage": stage.value, "error": type(e).__name__},
             )
-            await self.event_bus.publish("module.failed", {
-                "module_id": module_id,
-                "stage": stage.value,
-                "error": str(e),
-                "latency": elapsed,
-            })
+            await self.event_bus.publish(
+                "module.failed",
+                {
+                    "module_id": module_id,
+                    "stage": stage.value,
+                    "error": str(e),
+                    "latency": elapsed,
+                },
+            )
             raise
 
     # ── Module Handlers ─────────────────────────────────────────────────
@@ -831,10 +852,17 @@ class TextbookPipeline:
         }
 
     # 基础设施层 handlers
-    async def _h_init_eventbus(self, stage, cfg): return {"status": "INITIALIZED"}
-    async def _h_init_immutable_log(self, stage, cfg): return {"status": "INITIALIZED", "entry_count": 0}
-    async def _h_config_center(self, stage, cfg): return await self.config_center.load()
-    async def _h_monitoring_init(self, stage, cfg): return {"dashboard": "ready", "metrics_count": 0}
+    async def _h_init_eventbus(self, stage, cfg):
+        return {"status": "INITIALIZED"}
+
+    async def _h_init_immutable_log(self, stage, cfg):
+        return {"status": "INITIALIZED", "entry_count": 0}
+
+    async def _h_config_center(self, stage, cfg):
+        return await self.config_center.load()
+
+    async def _h_monitoring_init(self, stage, cfg):
+        return {"dashboard": "ready", "metrics_count": 0}
 
     # 协调层 handlers
     async def _h_context_budget(self, stage, cfg):
@@ -863,25 +891,30 @@ class TextbookPipeline:
             chapters = cfg.get("chapters", [])
             results = []
             for ch in chapters:
-                results.append({
-                    "chapter_id": ch.get("chapter_id", "unknown"),
-                    "title": ch.get("title", "Untitled"),
-                    "status": "COMPLETED",
-                    "content": self._mock_chapter_content(ch, cfg),
-                    "quality": {"grade": "B", "overall_score": self.mock.mock_quality_score},
-                    "security": {"status": "PASS"},
-                })
+                results.append(
+                    {
+                        "chapter_id": ch.get("chapter_id", "unknown"),
+                        "title": ch.get("title", "Untitled"),
+                        "status": "COMPLETED",
+                        "content": self._mock_chapter_content(ch, cfg),
+                        "quality": {"grade": "B", "overall_score": self.mock.mock_quality_score},
+                        "security": {"status": "PASS"},
+                    }
+                )
             return {"chapters": results, "total": len(results)}
         return {"status": "NOOP"}
 
     async def _h_knowledge_graph(self, stage, cfg):
         chapters = cfg.get("chapters", [])
         for ch in chapters:
-            await self.kg.add_node(ch.get("chapter_id", "unknown"), {
-                "title": ch.get("title", "Untitled"),
-                "order": ch.get("order", 0),
-                "learning_objectives": ch.get("learning_objectives", []),
-            })
+            await self.kg.add_node(
+                ch.get("chapter_id", "unknown"),
+                {
+                    "title": ch.get("title", "Untitled"),
+                    "order": ch.get("order", 0),
+                    "learning_objectives": ch.get("learning_objectives", []),
+                },
+            )
         for i in range(len(chapters) - 1):
             await self.kg.add_edge(
                 chapters[i].get("chapter_id", f"ch{i}"),
@@ -896,9 +929,7 @@ class TextbookPipeline:
         return await self.rag.retrieve(subject, top_k=self.mock.mock_rag_k)
 
     async def _h_model_router(self, stage, cfg):
-        model = await self.router.route(
-            "outline" if stage == PipelineStage.OUTLINE_GENERATION else "chapter_writing"
-        )
+        model = await self.router.route("outline" if stage == PipelineStage.OUTLINE_GENERATION else "chapter_writing")
         return {"selected_model": model, "task_type": stage.value}
 
     async def _h_graph_rag(self, stage, cfg):
@@ -999,10 +1030,13 @@ class TextbookPipeline:
             f"checkpoint_{stage.value}",
             self.state.to_dict(),
         )
-        await self.event_bus.publish("checkpoint.created", {
-            "stage": stage.value,
-            "completed": [s.value for s in self.state.completed_stages],
-        })
+        await self.event_bus.publish(
+            "checkpoint.created",
+            {
+                "stage": stage.value,
+                "completed": [s.value for s in self.state.completed_stages],
+            },
+        )
 
     def _build_output(self, textbook_config: dict[str, Any]) -> dict[str, Any]:
         chapter_results = []
@@ -1034,25 +1068,24 @@ class TextbookPipeline:
                 "overall_grade": "B" if avg_score >= 70 else "C",
                 "overall_risk": "LOW",
             },
-            "metrics": [
-                {"name": m["name"], "value": m["value"], "tags": m["tags"]}
-                for m in self.monitoring._metrics
-            ],
+            "metrics": [{"name": m["name"], "value": m["value"], "tags": m["tags"]} for m in self.monitoring._metrics],
         }
 
     def _mock_outline(self, textbook_config: dict[str, Any]) -> dict[str, Any]:
         chapters = textbook_config.get("chapters", [])
         outline = []
         for i, ch in enumerate(chapters, 1):
-            outline.append({
-                "chapter_number": i,
-                "chapter_id": ch.get("chapter_id", f"ch{i}"),
-                "title": ch.get("title", f"Chapter {i}"),
-                "sections": [
-                    {"section_number": f"{i}.{j}", "title": f"Section {j}: {ch.get('title', 'Topic')} Overview"}
-                    for j in range(1, 4)
-                ],
-            })
+            outline.append(
+                {
+                    "chapter_number": i,
+                    "chapter_id": ch.get("chapter_id", f"ch{i}"),
+                    "title": ch.get("title", f"Chapter {i}"),
+                    "sections": [
+                        {"section_number": f"{i}.{j}", "title": f"Section {j}: {ch.get('title', 'Topic')} Overview"}
+                        for j in range(1, 4)
+                    ],
+                }
+            )
         return {"textbook_outline": outline, "total_chapters": len(chapters)}
 
     def _mock_chapter_content(self, chapter_config: dict[str, Any], textbook_config: dict[str, Any]) -> str:

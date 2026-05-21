@@ -8,36 +8,12 @@ class PIIDetector:
     """PII个人身份信息检测器"""
 
     PII_PATTERNS: dict[str, tuple[re.Pattern, float, str]] = {
-        "id_card": (
-            re.compile(r"\b\d{17}[\dXx]\b"),
-            0.9,
-            "身份证号"
-        ),
-        "phone_cn": (
-            re.compile(r"\b1[3-9]\d{9}\b"),
-            0.8,
-            "手机号"
-        ),
-        "phone_formatted": (
-            re.compile(r"\b\d{3}[-\s]?\d{4}[-\s]?\d{4}\b"),
-            0.7,
-            "格式化电话"
-        ),
-        "email": (
-            re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
-            0.8,
-            "邮箱"
-        ),
-        "bank_card": (
-            re.compile(r"\b\d{16,19}\b"),
-            0.9,
-            "银行卡号"
-        ),
-        "passport": (
-            re.compile(r"\b[A-Z]\d{8,9}\b"),
-            0.9,
-            "护照号"
-        ),
+        "id_card": (re.compile(r"\b\d{17}[\dXx]\b"), 0.9, "身份证号"),
+        "phone_cn": (re.compile(r"\b1[3-9]\d{9}\b"), 0.8, "手机号"),
+        "phone_formatted": (re.compile(r"\b\d{3}[-\s]?\d{4}[-\s]?\d{4}\b"), 0.7, "格式化电话"),
+        "email": (re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"), 0.8, "邮箱"),
+        "bank_card": (re.compile(r"\b\d{16,19}\b"), 0.9, "银行卡号"),
+        "passport": (re.compile(r"\b[A-Z]\d{8,9}\b"), 0.9, "护照号"),
     }
 
     NAME_KEYWORDS = ["的", "是", "先生", "女士", "小姐"]
@@ -70,8 +46,10 @@ class PIIDetector:
 
         name_pattern = re.compile(r"[\u4e00-\u9fa5]{2,4}(?:先生|女士|小姐|的)")
         for match in name_pattern.finditer(content):
-            if any(kw in content[max(0, match.start()-10):match.end()+10]
-                   for kw in ["身份证", "电话", "手机", "邮箱", "银行"]):
+            if any(
+                kw in content[max(0, match.start() - 10) : match.end() + 10]
+                for kw in ["身份证", "电话", "手机", "邮箱", "银行"]
+            ):
                 results.append((match.group(), "姓名+PII", 0.9, match.start()))
 
         return results

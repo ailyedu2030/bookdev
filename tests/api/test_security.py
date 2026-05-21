@@ -9,14 +9,10 @@ Tests for security endpoints:
 """
 
 
-
-
 class TestContentScan:
     """Tests for content safety scanning"""
 
-    def test_security_scan_safe_content(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_security_scan_safe_content(self, test_client, test_db, editor_authenticated):
         """Test scanning safe content"""
         token = editor_authenticated["access_token"]
 
@@ -38,9 +34,7 @@ class TestContentScan:
         assert "is_safe" in data
         assert "confidence_score" in data
 
-    def test_security_scan_with_pii(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_security_scan_with_pii(self, test_client, test_db, editor_authenticated):
         """Test scanning content with PII categories"""
         token = editor_authenticated["access_token"]
 
@@ -60,9 +54,7 @@ class TestContentScan:
         data = response.json()
         assert data["success"] is True
 
-    def test_security_scan_empty_content(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_security_scan_empty_content(self, test_client, test_db, editor_authenticated):
         """Test scanning empty content"""
         token = editor_authenticated["access_token"]
 
@@ -87,9 +79,7 @@ class TestContentScan:
 
         assert response.status_code == 401
 
-    def test_security_scan_viewer_forbidden(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_security_scan_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot scan content"""
         token = test_user_authenticated["access_token"]
 
@@ -108,9 +98,7 @@ class TestContentScan:
 class TestDOIVerification:
     """Tests for DOI verification"""
 
-    def test_doi_verification_valid(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_doi_verification_valid(self, test_client, test_db, editor_authenticated):
         """Test verifying valid DOI"""
         token = editor_authenticated["access_token"]
 
@@ -129,9 +117,7 @@ class TestDOIVerification:
         assert "valid" in data
         assert data["doi"] == "10.1234/example"
 
-    def test_doi_verification_invalid(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_doi_verification_invalid(self, test_client, test_db, editor_authenticated):
         """Test verifying invalid DOI format"""
         token = editor_authenticated["access_token"]
 
@@ -148,9 +134,7 @@ class TestDOIVerification:
         data = response.json()
         assert data["success"] is True
 
-    def test_doi_verification_missing(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_doi_verification_missing(self, test_client, test_db, editor_authenticated):
         """Test verifying without DOI"""
         token = editor_authenticated["access_token"]
 
@@ -175,9 +159,7 @@ class TestDOIVerification:
 
         assert response.status_code == 401
 
-    def test_doi_verification_viewer_forbidden(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_doi_verification_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot verify DOI"""
         token = test_user_authenticated["access_token"]
 
@@ -196,9 +178,7 @@ class TestDOIVerification:
 class TestRegulationVerification:
     """Tests for regulation verification"""
 
-    def test_regulation_verification_valid(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_regulation_verification_valid(self, test_client, test_db, editor_authenticated):
         """Test verifying content against regulations"""
         token = editor_authenticated["access_token"]
 
@@ -221,9 +201,7 @@ class TestRegulationVerification:
         assert "matched_laws" in data
         assert "confidence" in data
 
-    def test_regulation_verification_empty_content(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_regulation_verification_empty_content(self, test_client, test_db, editor_authenticated):
         """Test verifying empty content"""
         token = editor_authenticated["access_token"]
 
@@ -250,9 +228,7 @@ class TestRegulationVerification:
 
         assert response.status_code == 401
 
-    def test_regulation_verification_viewer_forbidden(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_regulation_verification_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot verify regulations"""
         token = test_user_authenticated["access_token"]
 
@@ -271,9 +247,7 @@ class TestRegulationVerification:
 class TestSemanticScan:
     """Tests for semantic scanning"""
 
-    def test_semantic_scan_consistent_content(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_semantic_scan_consistent_content(self, test_client, test_db, editor_authenticated):
         """Test scanning consistent content"""
         token = editor_authenticated["access_token"]
 
@@ -297,9 +271,7 @@ class TestSemanticScan:
         assert "score" in data
         assert "summary" in data
 
-    def test_semantic_scan_with_threshold(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_semantic_scan_with_threshold(self, test_client, test_db, editor_authenticated):
         """Test semantic scan with custom threshold"""
         token = editor_authenticated["access_token"]
 
@@ -319,9 +291,7 @@ class TestSemanticScan:
         data = response.json()
         assert data["success"] is True
 
-    def test_semantic_scan_empty_threshold(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_semantic_scan_empty_threshold(self, test_client, test_db, editor_authenticated):
         """Test semantic scan with empty content"""
         token = editor_authenticated["access_token"]
 
@@ -346,9 +316,7 @@ class TestSemanticScan:
 
         assert response.status_code == 401
 
-    def test_semantic_scan_viewer_forbidden(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_semantic_scan_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot perform semantic scan"""
         token = test_user_authenticated["access_token"]
 
@@ -367,9 +335,7 @@ class TestSemanticScan:
 class TestMaterialSecurity:
     """Tests for material security registration"""
 
-    def test_register_material(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_register_material(self, test_client, test_db, editor_authenticated):
         """Test registering material with content hash"""
         token = editor_authenticated["access_token"]
 
@@ -386,9 +352,7 @@ class TestMaterialSecurity:
         data = response.json()
         assert data["success"] is True
 
-    def test_verify_material(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_verify_material(self, test_client, test_db, editor_authenticated):
         """Test verifying registered material"""
         token = editor_authenticated["access_token"]
 
@@ -411,9 +375,7 @@ class TestMaterialSecurity:
         assert "registered" in data
         assert "verified" in data
 
-    def test_verify_material_unregistered(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_verify_material_unregistered(self, test_client, test_db, editor_authenticated):
         """Test verifying unregistered material"""
         token = editor_authenticated["access_token"]
 
@@ -430,9 +392,7 @@ class TestMaterialSecurity:
 class TestBatchScan:
     """Tests for batch content scanning"""
 
-    def test_batch_scan(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_batch_scan(self, test_client, test_db, editor_authenticated):
         """Test batch scanning multiple contents"""
         token = editor_authenticated["access_token"]
 
@@ -459,9 +419,7 @@ class TestBatchScan:
         assert "unsafe_count" in data
         assert len(data["results"]) == 3
 
-    def test_batch_scan_empty_list(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_batch_scan_empty_list(self, test_client, test_db, editor_authenticated):
         """Test batch scanning with empty list"""
         token = editor_authenticated["access_token"]
 
@@ -482,9 +440,7 @@ class TestBatchScan:
 class TestConceptIntegrity:
     """Tests for concept integrity verification"""
 
-    def test_verify_concept_integrity(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_verify_concept_integrity(self, test_client, test_db, editor_authenticated):
         """Test verifying concept integrity"""
         token = editor_authenticated["access_token"]
 

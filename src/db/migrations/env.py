@@ -68,6 +68,7 @@ async def run_async_migrations() -> None:
 def run_migrations_online() -> None:
     """在 'online' 模式下运行迁移"""
     import asyncio
+
     asyncio.run(run_async_migrations())
 
 

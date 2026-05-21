@@ -221,8 +221,7 @@ async def delete_node(
     del _in_memory_nodes[node_id]
 
     edges_to_remove = [
-        eid for eid, edge in _in_memory_edges.items()
-        if edge["source_id"] == node_id or edge["target_id"] == node_id
+        eid for eid, edge in _in_memory_edges.items() if edge["source_id"] == node_id or edge["target_id"] == node_id
     ]
     for eid in edges_to_remove:
         del _in_memory_edges[eid]
@@ -392,8 +391,8 @@ async def query_graph(
 
     return GraphQueryResponse(
         success=True,
-        nodes=[NodeResponse(**n) for n in matched_nodes[:query_request.limit]],
-        edges=[EdgeResponse(**e) for e in matched_edges[:query_request.limit]],
+        nodes=[NodeResponse(**n) for n in matched_nodes[: query_request.limit]],
+        edges=[EdgeResponse(**e) for e in matched_edges[: query_request.limit]],
         total_nodes=len(matched_nodes),
         total_edges=len(matched_edges),
     )
@@ -445,7 +444,7 @@ async def initialize_graph_sample_data(
             "node_type": "chapter",
             "properties": {
                 "title": chapter.get("title", f"Chapter {i+1}"),
-                "order": chapter.get("order_num", i+1),
+                "order": chapter.get("order_num", i + 1),
             },
             "created_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat(),

@@ -22,6 +22,7 @@ EVENTS = {
 
 class InvalidEventTypeError(ValueError):
     """无效事件类型异常"""
+
     pass
 
 
@@ -44,10 +45,7 @@ class Event:
         event_id: str | None = None,
     ):
         if event_type not in EVENTS:
-            raise InvalidEventTypeError(
-                f"Invalid event type: {event_type}. "
-                f"Must be one of: {sorted(EVENTS)}"
-            )
+            raise InvalidEventTypeError(f"Invalid event type: {event_type}. " f"Must be one of: {sorted(EVENTS)}")
 
         self.event_type = event_type
         self.timestamp = timestamp
@@ -56,12 +54,15 @@ class Event:
 
     def to_json(self) -> str:
         """序列化为JSON字符串"""
-        return json.dumps({
-            "event_id": self.event_id,
-            "event_type": self.event_type,
-            "timestamp": self.timestamp.isoformat(),
-            "payload": self.payload,
-        }, ensure_ascii=False)
+        return json.dumps(
+            {
+                "event_id": self.event_id,
+                "event_type": self.event_type,
+                "timestamp": self.timestamp.isoformat(),
+                "payload": self.payload,
+            },
+            ensure_ascii=False,
+        )
 
     @classmethod
     def from_json(cls, json_str: str) -> "Event":

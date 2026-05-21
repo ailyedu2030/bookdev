@@ -16,10 +16,7 @@ class TestRegulationVerification:
 
         verifier = RegulationVerifier()
 
-        result = await verifier.verify(
-            law_name="人工智能法",
-            article_num=28
-        )
+        result = await verifier.verify(law_name="人工智能法", article_num=28)
 
         assert result.law_exists is True
         assert result.article_exists is True
@@ -31,10 +28,7 @@ class TestRegulationVerification:
 
         verifier = RegulationVerifier()
 
-        result = await verifier.verify(
-            law_name="完全不存在的法",
-            article_num=1
-        )
+        result = await verifier.verify(law_name="完全不存在的法", article_num=1)
 
         assert result.is_valid is False
         assert "WHITELIST_VIOLATION" in result.reason
@@ -49,7 +43,7 @@ class TestRegulationVerification:
         # 人工智能法共72条
         result = await verifier.verify(
             law_name="人工智能法",
-            article_num=100  # 超出范围
+            article_num=100,  # 超出范围
         )
 
         assert result.is_valid is False
@@ -63,9 +57,7 @@ class TestRegulationVerification:
         verifier = RegulationVerifier()
 
         result = await verifier.verify(
-            law_name="人工智能法",
-            article_num=28,
-            cited_content="人工智能企业应当对算法进行备案..."
+            law_name="人工智能法", article_num=28, cited_content="人工智能企业应当对算法进行备案..."
         )
 
         assert result.tier1_passed is True
@@ -79,10 +71,7 @@ class TestRegulationVerification:
 
         verifier = RegulationVerifier()
 
-        result = await verifier.verify_citation(
-            citation="根据相关规定",
-            context="一般性描述"
-        )
+        result = await verifier.verify_citation(citation="根据相关规定", context="一般性描述")
 
         assert result.is_valid is False
         assert "VAGUE_REFERENCE" in result.reason
@@ -95,9 +84,7 @@ class TestRegulationVerification:
         verifier = RegulationVerifier()
 
         result = await verifier.verify_content_relevance(
-            law_name="人工智能法",
-            article_num=28,
-            cited_content="完全不相关的内容" * 100
+            law_name="人工智能法", article_num=28, cited_content="完全不相关的内容" * 100
         )
 
         assert result.score < 0.5
@@ -121,11 +108,7 @@ class TestRegulationVerification:
 
         manager = WhitelistManager()
 
-        result = manager.add_law(
-            name="新法规",
-            total_articles=50,
-            issuing_body="全国人民代表大会"
-        )
+        result = manager.add_law(name="新法规", total_articles=50, issuing_body="全国人民代表大会")
 
         assert result is True
         assert "新法规" in manager.get_whitelisted_laws()
@@ -147,11 +130,7 @@ class TestRegulationVerification:
         from f08_regulation_verification.whitelist_manager import WhitelistManager
 
         manager = WhitelistManager()
-        manager.add_law(
-            name="测试法规",
-            total_articles=30,
-            issuing_body="测试机构"
-        )
+        manager.add_law(name="测试法规", total_articles=30, issuing_body="测试机构")
 
         info = manager.get_law_info("测试法规")
         assert info is not None
@@ -165,11 +144,7 @@ class TestRegulationVerification:
 
         manager = WhitelistManager()
 
-        result = manager.add_law(
-            name="人工智能法",
-            total_articles=100,
-            issuing_body="全国人民代表大会"
-        )
+        result = manager.add_law(name="人工智能法", total_articles=100, issuing_body="全国人民代表大会")
 
         assert result is False
 
@@ -179,11 +154,7 @@ class TestRegulationVerification:
         from f08_regulation_verification.whitelist_manager import WhitelistManager
 
         manager = WhitelistManager()
-        manager.add_law(
-            name="临时法规",
-            total_articles=20,
-            issuing_body="测试机构"
-        )
+        manager.add_law(name="临时法规", total_articles=20, issuing_body="测试机构")
         assert "临时法规" in manager.get_whitelisted_laws()
 
         result = manager.remove_law("临时法规")
@@ -235,10 +206,7 @@ class TestSecurityTests:
 
         verifier = RegulationVerifier()
 
-        result = await verifier.verify(
-            law_name="完全不存在的法",
-            article_num=1
-        )
+        result = await verifier.verify(law_name="完全不存在的法", article_num=1)
 
         assert result.is_valid is False
         assert "WHITELIST_VIOLATION" in result.reason
@@ -252,7 +220,7 @@ class TestSecurityTests:
 
         result = await verifier.verify(
             law_name="人工智能法",
-            article_num=999  # 不存在的条款
+            article_num=999,  # 不存在的条款
         )
 
         assert result.is_valid is False
@@ -266,9 +234,7 @@ class TestSecurityTests:
         verifier = RegulationVerifier()
 
         result = await verifier.verify_content_relevance(
-            law_name="人工智能法",
-            article_num=28,
-            cited_content="故意扭曲的完全不相关的引用内容" * 50
+            law_name="人工智能法", article_num=28, cited_content="故意扭曲的完全不相关的引用内容" * 50
         )
 
         assert result.score < 0.3
@@ -280,17 +246,10 @@ class TestSecurityTests:
 
         verifier = RegulationVerifier()
 
-        vague_phrases = [
-            "根据相关规定",
-            "按照有关法律法规",
-            "依据有关政策"
-        ]
+        vague_phrases = ["根据相关规定", "按照有关法律法规", "依据有关政策"]
 
         for phrase in vague_phrases:
-            result = await verifier.verify_citation(
-                citation=phrase,
-                context="任何描述"
-            )
+            result = await verifier.verify_citation(citation=phrase, context="任何描述")
             assert result.is_valid is False
             assert "VAGUE_REFERENCE" in result.reason
 
@@ -306,9 +265,7 @@ class TestIntegrationTests:
         verifier = RegulationVerifier()
 
         result = await verifier.verify(
-            law_name="人工智能法",
-            article_num=28,
-            cited_content="人工智能企业应当对算法进行备案..."
+            law_name="人工智能法", article_num=28, cited_content="人工智能企业应当对算法进行备案..."
         )
 
         assert result.law_exists is True
@@ -324,10 +281,7 @@ class TestIntegrationTests:
         manager = WhitelistManager()
         verifier = RegulationVerifier(whitelist_manager=manager)
 
-        result = await verifier.verify(
-            law_name="数据安全法",
-            article_num=45
-        )
+        result = await verifier.verify(law_name="数据安全法", article_num=45)
 
         assert result.law_exists is True
 
@@ -342,8 +296,7 @@ class TestRegulationVerifierUncovered:
 
         verifier = RegulationVerifier()
         result = await verifier.verify_citation(
-            citation="根据《人工智能法》第十五条规定",
-            context="人工智能企业应当遵守相关法规"
+            citation="根据《人工智能法》第十五条规定", context="人工智能企业应当遵守相关法规"
         )
 
         assert result.is_valid is True
@@ -355,13 +308,11 @@ class TestRegulationVerifierUncovered:
 
         verifier = RegulationVerifier()
         result = await verifier.verify_content_relevance(
-            law_name="人工智能法",
-            article_num=28,
-            cited_content="人工智能企业在备案时应当提供算法说明"
+            law_name="人工智能法", article_num=28, cited_content="人工智能企业在备案时应当提供算法说明"
         )
 
-        assert hasattr(result, 'is_valid')
-        assert hasattr(result, 'score')
+        assert hasattr(result, "is_valid")
+        assert hasattr(result, "score")
 
     @pytest.mark.asyncio
     async def test_calculate_content_similarity_with_partial_match(self):
@@ -370,9 +321,7 @@ class TestRegulationVerifierUncovered:
 
         verifier = RegulationVerifier()
         score = verifier._calculate_content_similarity(
-            cited_content="人工智能企业在备案时应当提供算法",
-            law_name="人工智能法",
-            article_num=28
+            cited_content="人工智能企业在备案时应当提供算法", law_name="人工智能法", article_num=28
         )
         assert 0 < score <= 1.0
 
@@ -400,9 +349,5 @@ class TestRegulationVerifierUncovered:
         from f08_regulation_verification.regulation_verifier import RegulationVerifier
 
         verifier = RegulationVerifier()
-        score = verifier._calculate_content_similarity(
-            cited_content="任何内容",
-            law_name="测试法律",
-            article_num=999
-        )
+        score = verifier._calculate_content_similarity(cited_content="任何内容", law_name="测试法律", article_num=999)
         assert score == 0.0

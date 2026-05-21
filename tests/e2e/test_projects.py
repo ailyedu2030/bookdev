@@ -194,7 +194,7 @@ class TestProjectNavigation:
         authenticated_page.goto("http://localhost:3000/projects/1")
         authenticated_page.wait_for_load_state("networkidle")
 
-        authenticated_page.click('.ant-list-item:first-child')
+        authenticated_page.click(".ant-list-item:first-child")
         authenticated_page.wait_for_url("**/chapters/**", timeout=5000)
 
         expect(authenticated_page.locator("h1, .ant-card-head")).toBeVisible()

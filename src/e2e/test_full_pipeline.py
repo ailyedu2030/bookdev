@@ -92,7 +92,7 @@ async def run_e2e_test():
         resp = await client.generate(
             system_prompt="你是一个教材编写助手。请简洁回答。",
             user_prompt="请用一句话定义什么是人工智能。",
-            max_tokens=100
+            max_tokens=100,
         )
         result.api_calls += 1
         result.total_tokens += resp.usage.total_tokens
@@ -108,7 +108,8 @@ async def run_e2e_test():
         from f32_pg_knowledge_graph.connection_pool import ConnectionPool
         from f32_pg_knowledge_graph.pg_adapter import PGAdapter
         from f32_pg_knowledge_graph.pg_knowledge_graph import PGKnowledgeGraph as RealPGKnowledgeGraph
-        pool = ConnectionPool(dsn='dbname=textbook user=jackie host=localhost')
+
+        pool = ConnectionPool(dsn="dbname=textbook user=jackie host=localhost")
         pool.initialize()
         adapter = PGAdapter(pool=pool)
         adapter.connect()
@@ -145,18 +146,22 @@ async def run_e2e_test():
                 system_prompt=f"你是教材编写专家。正在编写《人工智能导论》章节：{title}。请用学术风格撰写。",
                 user_prompt=prompt,
                 max_tokens=400,
-                temperature=0.6
+                temperature=0.6,
             )
             result.api_calls += 1
             result.total_tokens += resp.usage.total_tokens
             content = resp.content
             content_hash = calculate_content_hash(content)
-            generated_sections.append({"id": sec_id, "title": title, "content": content[:80], "hash": content_hash[:16]})
+            generated_sections.append(
+                {"id": sec_id, "title": title, "content": content[:80], "hash": content_hash[:16]}
+            )
             print(f"   {title}: {len(content)}字, {resp.usage.total_tokens}t")
         else:
             content = f"[Mock] {title} 的教材内容..."
             content_hash = calculate_content_hash(content)
-            generated_sections.append({"id": sec_id, "title": title, "content": content[:80], "hash": content_hash[:16]})
+            generated_sections.append(
+                {"id": sec_id, "title": title, "content": content[:80], "hash": content_hash[:16]}
+            )
 
     result.add_stage("内容生成", len(generated_sections) == 2, f"{len(generated_sections)} 节")
 
@@ -196,7 +201,9 @@ async def run_e2e_test():
 
     cit = CitationIntegrityManager()
     cit.register_unverified_citation("10.1234/test.2024", calculate_content_hash("AI definition"))
-    cit_result = cit.verify_citation_integrity("10.1234/test.2024", calculate_content_hash("AI definition"), "AI定义内容")
+    cit_result = cit.verify_citation_integrity(
+        "10.1234/test.2024", calculate_content_hash("AI definition"), "AI定义内容"
+    )
     result.add_stage("引用完整性", cit_result is not None, str(cit_result.status)[:20])
 
     # ==================== Stage 7: 质量评分 ====================
@@ -231,14 +238,16 @@ async def run_e2e_test():
     print("\n▶ Stage 10: Golden Dataset 验证")
 
     gdb = DatasetBuilder()
-    gdb.add_sample({
-        "sample_id": "gd-e2e-001",
-        "quality_level": "high",
-        "expected_score": 9.0,
-        "content": json.dumps(generated_sections, ensure_ascii=False),
-        "quality_metrics": {"accuracy": 0.95, "clarity": 0.9},
-        "metadata": {"source": "e2e_test"}
-    })
+    gdb.add_sample(
+        {
+            "sample_id": "gd-e2e-001",
+            "quality_level": "high",
+            "expected_score": 9.0,
+            "content": json.dumps(generated_sections, ensure_ascii=False),
+            "quality_metrics": {"accuracy": 0.95, "clarity": 0.9},
+            "metadata": {"source": "e2e_test"},
+        }
+    )
     samples = gdb.load_all_samples()
     result.add_stage("GoldenDataset", len(samples) > 0, f"{len(samples)} 样本")
 
@@ -253,17 +262,17 @@ async def run_e2e_test():
     # ==================== Stage 12: 日志完整性 ====================
     print("\n▶ Stage 12: 日志完整性")
 
-    log.append("e2e_test_end", {
-        "stages_passed": sum(1 for s in result.stages if s["passed"]),
-        "total_stages": len(result.stages),
-        "api_calls": result.api_calls,
-        "total_tokens": result.total_tokens
-    })
-    entries = log.get_entries()
-    chain_valid = all(
-        entries[i].previous_hash == entries[i-1].version_tag
-        for i in range(1, len(entries))
+    log.append(
+        "e2e_test_end",
+        {
+            "stages_passed": sum(1 for s in result.stages if s["passed"]),
+            "total_stages": len(result.stages),
+            "api_calls": result.api_calls,
+            "total_tokens": result.total_tokens,
+        },
     )
+    entries = log.get_entries()
+    chain_valid = all(entries[i].previous_hash == entries[i - 1].version_tag for i in range(1, len(entries)))
     result.add_stage("日志完整性", chain_valid, f"{len(entries)} 条, 链完整")
 
     # ==================== 清理 ====================
@@ -348,10 +357,14 @@ def test_e2e_judge_and_risk():
     mock_llm = MockLLMClient(response='{"scores": {"accuracy": 0.8, "clarity": 0.8}, "overall_score": 0.85}')
     judge = JudgeService(llm_client=mock_llm)
 
-    scores = asyncio.run(judge.batch_judge([
-        "内容A" * 50,
-        "内容B" * 50,
-    ]))
+    scores = asyncio.run(
+        judge.batch_judge(
+            [
+                "内容A" * 50,
+                "内容B" * 50,
+            ]
+        )
+    )
     assert len(scores) == 2
 
     risk = RiskClassifier()

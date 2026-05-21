@@ -157,12 +157,14 @@ def _identify_issues(scores: dict[str, float]) -> list[dict[str, str]]:
 
     for criterion, (threshold, message) in thresholds.items():
         if scores.get(criterion, 100) < threshold:
-            issues.append({
-                "criterion": criterion,
-                "score": scores[criterion],
-                "threshold": threshold,
-                "suggestion": message,
-            })
+            issues.append(
+                {
+                    "criterion": criterion,
+                    "score": scores[criterion],
+                    "threshold": threshold,
+                    "suggestion": message,
+                }
+            )
 
     return issues
 

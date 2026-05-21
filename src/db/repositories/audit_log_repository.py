@@ -98,12 +98,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
     ) -> Sequence[AuditLog]:
         """获取最近N小时的审计日志"""
         since = datetime.utcnow() - timedelta(hours=hours)
-        stmt = (
-            select(AuditLog)
-            .where(AuditLog.created_at >= since)
-            .order_by(AuditLog.created_at.desc())
-            .limit(limit)
-        )
+        stmt = select(AuditLog).where(AuditLog.created_at >= since).order_by(AuditLog.created_at.desc()).limit(limit)
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
@@ -173,9 +168,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
             signature=signature,
         )
 
-    async def count_by_event_type(
-        self, event_type: str, *, since: datetime | None = None
-    ) -> int:
+    async def count_by_event_type(self, event_type: str, *, since: datetime | None = None) -> int:
         """统计特定事件类型的日志数量"""
         if since:
             stmt = (
@@ -192,9 +185,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
             return result.scalar_one()
         return await self.count(filters={"event_type": event_type})
 
-    async def count_by_user(
-        self, user_id: uuid.UUID, *, since: datetime | None = None
-    ) -> int:
+    async def count_by_user(self, user_id: uuid.UUID, *, since: datetime | None = None) -> int:
         """统计用户的日志数量"""
         if since:
             stmt = (
@@ -223,12 +214,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         if since:
             conditions.append(AuditLog.created_at >= since)
 
-        stmt = (
-            select(AuditLog)
-            .where(and_(*conditions))
-            .order_by(AuditLog.created_at.desc())
-            .limit(limit)
-        )
+        stmt = select(AuditLog).where(and_(*conditions)).order_by(AuditLog.created_at.desc()).limit(limit)
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
@@ -244,12 +230,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         if since:
             conditions.append(AuditLog.created_at >= since)
 
-        stmt = (
-            select(AuditLog)
-            .where(and_(*conditions))
-            .order_by(AuditLog.created_at.desc())
-            .limit(limit)
-        )
+        stmt = select(AuditLog).where(and_(*conditions)).order_by(AuditLog.created_at.desc()).limit(limit)
         result = await self._session.execute(stmt)
         return result.scalars().all()
 

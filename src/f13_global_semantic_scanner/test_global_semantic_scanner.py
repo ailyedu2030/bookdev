@@ -17,6 +17,7 @@ import pytest
 # TopicTracker Tests
 # ============================================================
 
+
 class TestTopicTracker:
     """话题追踪器测试"""
 
@@ -142,6 +143,7 @@ class TestTopicTracker:
 # CombinationAnalyzer Tests
 # ============================================================
 
+
 class TestCombinationAnalyzer:
     """组合敏感分析器测试"""
 
@@ -255,6 +257,7 @@ class TestCombinationAnalyzer:
 # GlobalSemanticScanner Tests
 # ============================================================
 
+
 class TestGlobalSemanticScanner:
     """全局语义扫描器测试"""
 
@@ -285,10 +288,7 @@ class TestGlobalSemanticScanner:
         from f13_global_semantic_scanner.semantic_scanner import GlobalSemanticScanner
 
         scanner = GlobalSemanticScanner()
-        content = (
-            "本章内容涵盖领土争端、主权争议以及意识形态分歧。"
-            "此外还讨论了历史观和民族文化认同等问题。"
-        )
+        content = "本章内容涵盖领土争端、主权争议以及意识形态分歧。" "此外还讨论了历史观和民族文化认同等问题。"
         results = scanner.scan_chapter("ch02", content)
 
         assert len(results) >= 2, f"Expected >=2 results, got {len(results)}"
@@ -335,9 +335,7 @@ class TestGlobalSemanticScanner:
         risks = scanner.get_cross_chapter_risks()
         assert len(risks) >= 1
         # 台海出现在3章，应有跨章节风险记录
-        assert any("台海" in str(r.get("topic", "")) or
-                   len(r.get("chapters", [])) >= 2
-                   for r in risks)
+        assert any("台海" in str(r.get("topic", "")) or len(r.get("chapters", [])) >= 2 for r in risks)
 
     def test_generate_scan_report(self):
         """F13-T026: 生成扫描报告"""
@@ -397,6 +395,7 @@ class TestGlobalSemanticScanner:
 # ============================================================
 # 安全测试
 # ============================================================
+
 
 class TestCoverageGaps:
     """补充覆盖率缺口测试"""
@@ -596,11 +595,7 @@ class TestTopicTrackerUncovered:
 
         tracker = TopicTracker()
 
-        tracker._topics["test_topic"] = {
-            "chapters": {},
-            "total_weight": 0.0,
-            "frequency": 0
-        }
+        tracker._topics["test_topic"] = {"chapters": {}, "total_weight": 0.0, "frequency": 0}
 
         score = tracker.get_risk_score("test_topic")
 

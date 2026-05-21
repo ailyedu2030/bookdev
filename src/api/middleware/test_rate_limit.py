@@ -125,6 +125,7 @@ class TestGetClientIdentifier:
     def test_x_forwarded_for_header(self):
         """Test extraction from X-Forwarded-For header when trust is enabled"""
         from api.middleware.rate_limit import rate_limit_settings
+
         original = rate_limit_settings.trust_x_forwarded_for
         rate_limit_settings.trust_x_forwarded_for = True
         try:
@@ -138,6 +139,7 @@ class TestGetClientIdentifier:
     def test_x_real_ip_header(self):
         """Test extraction from X-Real-IP header when trust is enabled"""
         from api.middleware.rate_limit import rate_limit_settings
+
         original = rate_limit_settings.trust_x_real_ip
         rate_limit_settings.trust_x_real_ip = True
         try:
@@ -178,8 +180,6 @@ class TestRateLimitDependency:
             await dep(mock_request)
 
 
-
-
 class TestRateLimitMiddleware:
     """Tests for RateLimitMiddleware class"""
 
@@ -217,6 +217,7 @@ class TestRateLimitMiddleware:
     async def test_dispatch_returns_429_when_rate_limited(self):
         """Test rate limited response returns 429 status"""
         from starlette.responses import JSONResponse
+
         limiter = InMemoryRateLimiter()
         limiter._storage["anon:blocked"] = SlidingWindowEntry(timestamps=[time.time() - 10] * 30)
         with patch("api.middleware.rate_limit.rate_limiter", limiter):

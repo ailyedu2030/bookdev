@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Activity 函数 ─────────────────────────────────────────────────────────
 
+
 @TemporalActivity.defn(
     name="GenerateChapterContent",
     idempotent=True,
@@ -68,16 +69,18 @@ async def generate_chapter_outline(
 
     outline = []
     for i, obj in enumerate(learning_objectives, 1):
-        outline.append({
-            "section": f"{i}.{chr(96 + i)})",
-            "heading": f"Section {i}: {obj[:60]}",
-            "subsections": [
-                f"Introduction to {obj[:40]}",
-                f"Core Concepts of {obj[:40]}",
-                "Practical Applications",
-                "Summary and Review",
-            ],
-        })
+        outline.append(
+            {
+                "section": f"{i}.{chr(96 + i)})",
+                "heading": f"Section {i}: {obj[:60]}",
+                "subsections": [
+                    f"Introduction to {obj[:40]}",
+                    f"Core Concepts of {obj[:40]}",
+                    "Practical Applications",
+                    "Summary and Review",
+                ],
+            }
+        )
 
     return {
         "chapter_id": chapter_id,
@@ -130,6 +133,7 @@ async def batch_generate_chapters(
 
 # ─── 内部内容构建 ──────────────────────────────────────────────────────────
 
+
 def _build_chapter_content(
     chapter_id: str,
     title: str,
@@ -169,6 +173,7 @@ def _build_chapter_content(
 
 
 # ─── Activity 类 (用于工作流集成) ──────────────────────────────────────────
+
 
 class ContentGeneration:
     """内容生成活动集合"""

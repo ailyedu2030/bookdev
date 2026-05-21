@@ -167,9 +167,7 @@ class TextbookChapterWorkflow:
 
             # ── Step 3: 生成章节内容 (支持重写) ──────────────────────────
             while rewrite_count <= max_rewrites:
-                logger.info(
-                    f"[ChapterWorkflow:{chapter_id}] Step 3: Generating content (attempt {rewrite_count + 1})"
-                )
+                logger.info(f"[ChapterWorkflow:{chapter_id}] Step 3: Generating content (attempt {rewrite_count + 1})")
 
                 # TEMP-013: 使用内容哈希作为幂等性key，而不是尝试次数
                 content_key = f"content-{chapter_id}-{hashlib.sha256(title.encode()).hexdigest()[:16]}"
@@ -210,9 +208,7 @@ class TextbookChapterWorkflow:
 
                 # 检查是否需要重写
                 if quality_result["grade"] in ("A", "B"):
-                    logger.info(
-                        f"[ChapterWorkflow:{chapter_id}] Quality passed (Grade: {quality_result['grade']})"
-                    )
+                    logger.info(f"[ChapterWorkflow:{chapter_id}] Quality passed (Grade: {quality_result['grade']})")
                     break
 
                 rewrite_count += 1
@@ -294,7 +290,7 @@ class TextbookChapterWorkflow:
                         "chapter_id": chapter_id,
                         "heartbeat_count": self._heartbeat_count,
                         "workflow_id": workflow_id,
-                    }
+                    },
                 )
                 logger.debug(f"[ChapterWorkflow:{chapter_id}] Heartbeat #{self._heartbeat_count}")
             except Exception as e:

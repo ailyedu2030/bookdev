@@ -139,17 +139,16 @@ class RealKafkaProducer:
                 last_error = e
                 if attempt < self.retries:
                     # Exponential backoff
-                    delay = (self.retry_backoff_ms / 1000) * (2 ** attempt)
+                    delay = (self.retry_backoff_ms / 1000) * (2**attempt)
                     logger.warning(
                         f"Send attempt {attempt + 1} failed for topic {topic}, key={key}: {e}. "
                         f"Retrying in {delay:.2f}s..."
                     )
                     import asyncio
+
                     await asyncio.sleep(delay)
                 else:
-                    logger.error(
-                        f"All {self.retries + 1} send attempts failed for topic {topic}, key={key}: {e}"
-                    )
+                    logger.error(f"All {self.retries + 1} send attempts failed for topic {topic}, key={key}: {e}")
 
         # All retries exhausted
         return {
@@ -160,11 +159,7 @@ class RealKafkaProducer:
             "attempt": self.retries + 1,
         }
 
-    async def send_batch(
-        self,
-        topic: str,
-        messages: list
-    ) -> dict[str, Any]:
+    async def send_batch(self, topic: str, messages: list) -> dict[str, Any]:
         """
         Send batch of messages to Kafka topic
 
@@ -206,34 +201,36 @@ class RealKafkaProducer:
                 )
                 if send_result.get("success"):
                     results["succeeded"] += 1
-                    results["results"].append({
-                        "key": msg_key,
-                        "success": True,
-                    })
+                    results["results"].append(
+                        {
+                            "key": msg_key,
+                            "success": True,
+                        }
+                    )
                 else:
                     results["failed"] += 1
-                    results["results"].append({
-                        "key": msg_key,
-                        "success": False,
-                        "error": send_result.get("error", "Unknown error"),
-                    })
+                    results["results"].append(
+                        {
+                            "key": msg_key,
+                            "success": False,
+                            "error": send_result.get("error", "Unknown error"),
+                        }
+                    )
                     logger.warning(
-                        f"Batch send partial failure: {results['succeeded']}/{results['total']} "
-                        f"succeeded so far"
+                        f"Batch send partial failure: {results['succeeded']}/{results['total']} " f"succeeded so far"
                     )
             except Exception as e:
                 results["failed"] += 1
-                results["results"].append({
-                    "key": msg_key,
-                    "success": False,
-                    "error": str(e),
-                })
-                logger.error(
-                    f"Failed to send batch message to {topic}, key={msg_key}: {e}"
+                results["results"].append(
+                    {
+                        "key": msg_key,
+                        "success": False,
+                        "error": str(e),
+                    }
                 )
+                logger.error(f"Failed to send batch message to {topic}, key={msg_key}: {e}")
                 logger.warning(
-                    f"Batch send partial failure: {results['succeeded']}/{results['total']} "
-                    f"succeeded so far"
+                    f"Batch send partial failure: {results['succeeded']}/{results['total']} " f"succeeded so far"
                 )
 
         logger.info(

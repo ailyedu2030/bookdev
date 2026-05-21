@@ -22,11 +22,7 @@ class ConsistencyChecker:
         self.glossary = glossary
         self._definition_history: dict[str, list[str]] = {}
 
-    def check_consistency(
-        self,
-        term_name: str,
-        new_definition: str | None = None
-    ) -> ConsistencyStatus:
+    def check_consistency(self, term_name: str, new_definition: str | None = None) -> ConsistencyStatus:
         """检查术语一致性
 
         Args:
@@ -99,11 +95,13 @@ class ConsistencyChecker:
         for term_name, definitions in term_definitions_map.items():
             unique_definitions = set(definitions)
             if len(unique_definitions) > 1:
-                conflicts.append({
-                    "term": term_name,
-                    "definitions": list(unique_definitions),
-                    "count": len(unique_definitions),
-                })
+                conflicts.append(
+                    {
+                        "term": term_name,
+                        "definitions": list(unique_definitions),
+                        "count": len(unique_definitions),
+                    }
+                )
 
         return conflicts
 
@@ -122,11 +120,13 @@ class ConsistencyChecker:
         for term in terms:
             status = self.check_consistency(term.term)
             if status == ConsistencyStatus.INCONSISTENT:
-                inconsistencies.append({
-                    "term_id": term.id,
-                    "term": term.term,
-                    "definition": term.definition,
-                })
+                inconsistencies.append(
+                    {
+                        "term_id": term.id,
+                        "term": term.term,
+                        "definition": term.definition,
+                    }
+                )
 
         return {
             "domain": domain,

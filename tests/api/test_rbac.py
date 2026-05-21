@@ -23,9 +23,7 @@ from tests.api.conftest import (
 class TestViewerPermissions:
     """Tests for viewer role permissions"""
 
-    def test_viewer_can_read_projects(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_can_read_projects(self, test_client, test_db, test_user_authenticated):
         """Test viewer can read projects"""
         token = test_user_authenticated["access_token"]
         user = test_user_authenticated["user"]
@@ -39,9 +37,7 @@ class TestViewerPermissions:
 
         assert response.status_code == 200
 
-    def test_viewer_cannot_create_projects(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_cannot_create_projects(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot create projects"""
         token = test_user_authenticated["access_token"]
 
@@ -56,9 +52,7 @@ class TestViewerPermissions:
 
         assert response.status_code == 403
 
-    def test_viewer_cannot_update_projects(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_cannot_update_projects(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot update projects"""
         token = test_user_authenticated["access_token"]
         user = test_user_authenticated["user"]
@@ -76,9 +70,7 @@ class TestViewerPermissions:
 
         assert response.status_code == 403
 
-    def test_viewer_cannot_delete_projects(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_cannot_delete_projects(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot delete projects"""
         token = test_user_authenticated["access_token"]
         user = test_user_authenticated["user"]
@@ -95,9 +87,7 @@ class TestViewerPermissions:
 
         assert response.status_code == 403
 
-    def test_viewer_can_read_chapters(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_can_read_chapters(self, test_client, test_db, test_user_authenticated):
         """Test viewer can read chapters"""
         token = test_user_authenticated["access_token"]
         user = test_user_authenticated["user"]
@@ -112,9 +102,7 @@ class TestViewerPermissions:
 
         assert response.status_code == 200
 
-    def test_viewer_cannot_create_chapters(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_cannot_create_chapters(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot create chapters"""
         token = test_user_authenticated["access_token"]
         user = test_user_authenticated["user"]
@@ -136,9 +124,7 @@ class TestViewerPermissions:
 
         assert response.status_code == 403
 
-    def test_viewer_cannot_update_chapters(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_cannot_update_chapters(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot update chapters"""
         token = test_user_authenticated["access_token"]
         user = test_user_authenticated["user"]
@@ -157,9 +143,7 @@ class TestViewerPermissions:
 
         assert response.status_code == 403
 
-    def test_viewer_can_read_terms(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_can_read_terms(self, test_client, test_db, test_user_authenticated):
         """Test viewer can read terms"""
         token = test_user_authenticated["access_token"]
 
@@ -172,9 +156,7 @@ class TestViewerPermissions:
 
         assert response.status_code == 200
 
-    def test_viewer_cannot_create_terms(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_viewer_cannot_create_terms(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot create terms"""
         token = test_user_authenticated["access_token"]
 
@@ -196,9 +178,7 @@ class TestViewerPermissions:
 class TestAuthorPermissions:
     """Tests for author role permissions"""
 
-    def test_author_can_create_own_chapter(
-        self, test_client, test_db, author_authenticated
-    ):
+    def test_author_can_create_own_chapter(self, test_client, test_db, author_authenticated):
         """Test author can create their own chapters"""
         token = author_authenticated["access_token"]
         user = author_authenticated["user"]
@@ -220,17 +200,13 @@ class TestAuthorPermissions:
 
         assert response.status_code == 201
 
-    def test_author_can_update_own_chapter(
-        self, test_client, test_db, author_authenticated
-    ):
+    def test_author_can_update_own_chapter(self, test_client, test_db, author_authenticated):
         """Test author can update their own chapters"""
         token = author_authenticated["access_token"]
         user = author_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        chapter = create_test_chapter(
-            test_db, project_id=project["id"], author_id=user.id
-        )
+        chapter = create_test_chapter(test_db, project_id=project["id"], author_id=user.id)
 
         response = test_client.put(
             f"/api/chapters/{chapter['id']}",
@@ -243,17 +219,13 @@ class TestAuthorPermissions:
 
         assert response.status_code == 200
 
-    def test_author_can_update_others_chapters(
-        self, test_client, test_db, author_authenticated
-    ):
+    def test_author_can_update_others_chapters(self, test_client, test_db, author_authenticated):
         """Test author CAN update other authors' chapters due to RBAC permissions"""
         token = author_authenticated["access_token"]
 
         other_user_id = generate_uuid()
         project = create_test_project(test_db, owner_id=other_user_id)
-        chapter = create_test_chapter(
-            test_db, project_id=project["id"], author_id=other_user_id
-        )
+        chapter = create_test_chapter(test_db, project_id=project["id"], author_id=other_user_id)
 
         response = test_client.put(
             f"/api/chapters/{chapter['id']}",
@@ -266,17 +238,13 @@ class TestAuthorPermissions:
 
         assert response.status_code == 200
 
-    def test_author_cannot_approve_chapters(
-        self, test_client, test_db, author_authenticated
-    ):
+    def test_author_cannot_approve_chapters(self, test_client, test_db, author_authenticated):
         """Test author cannot approve chapters"""
         token = author_authenticated["access_token"]
         user = author_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        chapter = create_test_chapter(
-            test_db, project_id=project["id"], author_id=user.id, status="reviewing"
-        )
+        chapter = create_test_chapter(test_db, project_id=project["id"], author_id=user.id, status="reviewing")
 
         response = test_client.post(
             f"/api/chapters/{chapter['id']}/approve",
@@ -289,9 +257,7 @@ class TestAuthorPermissions:
 
         assert response.status_code == 403
 
-    def test_author_can_search_terms(
-        self, test_client, test_db, author_authenticated
-    ):
+    def test_author_can_search_terms(self, test_client, test_db, author_authenticated):
         """Test author can search terms"""
         token = author_authenticated["access_token"]
 
@@ -309,9 +275,7 @@ class TestAuthorPermissions:
 class TestEditorPermissions:
     """Tests for editor role permissions"""
 
-    def test_editor_can_create_chapters(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_editor_can_create_chapters(self, test_client, test_db, editor_authenticated):
         """Test editor can create chapters"""
         token = editor_authenticated["access_token"]
         user = editor_authenticated["user"]
@@ -333,9 +297,7 @@ class TestEditorPermissions:
 
         assert response.status_code == 201
 
-    def test_editor_can_update_any_chapter(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_editor_can_update_any_chapter(self, test_client, test_db, editor_authenticated):
         """Test editor can update any chapter"""
         token = editor_authenticated["access_token"]
 
@@ -354,9 +316,7 @@ class TestEditorPermissions:
 
         assert response.status_code == 200
 
-    def test_editor_can_lock_terms(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_editor_can_lock_terms(self, test_client, test_db, editor_authenticated):
         """Test editor can lock terms"""
         token = editor_authenticated["access_token"]
 
@@ -373,9 +333,7 @@ class TestEditorPermissions:
 
         assert response.status_code == 200
 
-    def test_editor_cannot_delete_projects(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_editor_cannot_delete_projects(self, test_client, test_db, editor_authenticated):
         """Test editor cannot delete projects"""
         token = editor_authenticated["access_token"]
         user = editor_authenticated["user"]
@@ -392,9 +350,7 @@ class TestEditorPermissions:
 
         assert response.status_code == 403
 
-    def test_editor_can_scan_content(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_editor_can_scan_content(self, test_client, test_db, editor_authenticated):
         """Test editor can scan content"""
         token = editor_authenticated["access_token"]
 
@@ -413,17 +369,13 @@ class TestEditorPermissions:
 class TestReviewerPermissions:
     """Tests for reviewer role permissions"""
 
-    def test_reviewer_can_approve_chapters(
-        self, test_client, test_db, reviewer_authenticated
-    ):
+    def test_reviewer_can_approve_chapters(self, test_client, test_db, reviewer_authenticated):
         """Test reviewer can approve chapters"""
         token = reviewer_authenticated["access_token"]
         user = reviewer_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        chapter = create_test_chapter(
-            test_db, project_id=project["id"], status="reviewing"
-        )
+        chapter = create_test_chapter(test_db, project_id=project["id"], status="reviewing")
 
         response = test_client.post(
             f"/api/chapters/{chapter['id']}/approve",
@@ -436,17 +388,13 @@ class TestReviewerPermissions:
 
         assert response.status_code == 200
 
-    def test_reviewer_can_reject_chapters(
-        self, test_client, test_db, reviewer_authenticated
-    ):
+    def test_reviewer_can_reject_chapters(self, test_client, test_db, reviewer_authenticated):
         """Test reviewer can reject chapters"""
         token = reviewer_authenticated["access_token"]
         user = reviewer_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=user.id)
-        chapter = create_test_chapter(
-            test_db, project_id=project["id"], status="reviewing"
-        )
+        chapter = create_test_chapter(test_db, project_id=project["id"], status="reviewing")
 
         response = test_client.post(
             f"/api/chapters/{chapter['id']}/reject",
@@ -459,9 +407,7 @@ class TestReviewerPermissions:
 
         assert response.status_code == 200
 
-    def test_reviewer_can_submit_for_review(
-        self, test_client, test_db, reviewer_authenticated
-    ):
+    def test_reviewer_can_submit_for_review(self, test_client, test_db, reviewer_authenticated):
         """Test reviewer can submit chapters for review"""
         token = reviewer_authenticated["access_token"]
         user = reviewer_authenticated["user"]
@@ -480,9 +426,7 @@ class TestReviewerPermissions:
 
         assert response.status_code == 200
 
-    def test_reviewer_cannot_create_chapters(
-        self, test_client, test_db, reviewer_authenticated
-    ):
+    def test_reviewer_cannot_create_chapters(self, test_client, test_db, reviewer_authenticated):
         """Test reviewer cannot create chapters"""
         token = reviewer_authenticated["access_token"]
         user = reviewer_authenticated["user"]
@@ -508,9 +452,7 @@ class TestReviewerPermissions:
 class TestAdminPermissions:
     """Tests for admin role permissions"""
 
-    def test_admin_can_list_users(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_can_list_users(self, test_client, test_db, test_admin_authenticated):
         """Test admin can list users"""
         token = test_admin_authenticated["access_token"]
 
@@ -521,9 +463,7 @@ class TestAdminPermissions:
 
         assert response.status_code == 200
 
-    def test_admin_can_create_users(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_can_create_users(self, test_client, test_db, test_admin_authenticated):
         """Test admin can create users"""
         token = test_admin_authenticated["access_token"]
 
@@ -543,19 +483,19 @@ class TestAdminPermissions:
 
         assert response.status_code == 201
 
-    def test_admin_can_update_user_roles(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_can_update_user_roles(self, test_client, test_db, test_admin_authenticated):
         """Test admin can update user roles"""
         token = test_admin_authenticated["access_token"]
         test_admin_authenticated["user"]
 
-        target_user = test_db.create_user({
-            "username": "targetuser",
-            "email": "target@example.com",
-            "password": "password123",
-            "role": "viewer",
-        })
+        target_user = test_db.create_user(
+            {
+                "username": "targetuser",
+                "email": "target@example.com",
+                "password": "password123",
+                "role": "viewer",
+            }
+        )
 
         response = test_client.put(
             f"/api/admin/users/{target_user.id}/role",
@@ -568,19 +508,19 @@ class TestAdminPermissions:
 
         assert response.status_code == 200
 
-    def test_admin_can_delete_users(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_can_delete_users(self, test_client, test_db, test_admin_authenticated):
         """Test admin can delete users"""
         token = test_admin_authenticated["access_token"]
         test_admin_authenticated["user"]
 
-        target_user = test_db.create_user({
-            "username": "todelete",
-            "email": "todelete@example.com",
-            "password": "password123",
-            "role": "viewer",
-        })
+        target_user = test_db.create_user(
+            {
+                "username": "todelete",
+                "email": "todelete@example.com",
+                "password": "password123",
+                "role": "viewer",
+            }
+        )
 
         response = test_client.delete(
             f"/api/admin/users/{target_user.id}",
@@ -592,9 +532,7 @@ class TestAdminPermissions:
 
         assert response.status_code == 200
 
-    def test_admin_cannot_delete_self(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_cannot_delete_self(self, test_client, test_db, test_admin_authenticated):
         """Test admin cannot delete their own account"""
         token = test_admin_authenticated["access_token"]
         admin = test_admin_authenticated["user"]
@@ -609,9 +547,7 @@ class TestAdminPermissions:
 
         assert response.status_code == 400
 
-    def test_admin_can_view_roles(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_can_view_roles(self, test_client, test_db, test_admin_authenticated):
         """Test admin can view all roles"""
         token = test_admin_authenticated["access_token"]
 
@@ -622,9 +558,7 @@ class TestAdminPermissions:
 
         assert response.status_code == 200
 
-    def test_admin_can_view_permissions(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_can_view_permissions(self, test_client, test_db, test_admin_authenticated):
         """Test admin can view all permissions"""
         token = test_admin_authenticated["access_token"]
 
@@ -635,9 +569,7 @@ class TestAdminPermissions:
 
         assert response.status_code == 200
 
-    def test_admin_can_get_stats(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_can_get_stats(self, test_client, test_db, test_admin_authenticated):
         """Test admin can get admin statistics"""
         token = test_admin_authenticated["access_token"]
 
@@ -655,9 +587,7 @@ class TestAdminPermissions:
 class TestPermissionHierarchy:
     """Tests for permission hierarchy enforcement"""
 
-    def test_higher_role_can_do_lower_role_actions(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_higher_role_can_do_lower_role_actions(self, test_client, test_db, test_admin_authenticated):
         """Test that higher roles can perform lower role actions"""
         token = test_admin_authenticated["access_token"]
 
@@ -670,9 +600,7 @@ class TestPermissionHierarchy:
 
         assert response.status_code == 200
 
-    def test_content_admin_can_manage_content(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_content_admin_can_manage_content(self, test_client, test_db, test_admin_authenticated):
         """Test content admin can manage content"""
         token = test_admin_authenticated["access_token"]
         user = test_admin_authenticated["user"]
@@ -698,9 +626,7 @@ class TestPermissionHierarchy:
 class TestCrossRoleScenarios:
     """Tests for cross-role interaction scenarios"""
 
-    def test_author_submits_reviewer_approves(
-        self, test_client, test_db, author_authenticated, reviewer_authenticated
-    ):
+    def test_author_submits_reviewer_approves(self, test_client, test_db, author_authenticated, reviewer_authenticated):
         """Test author submits, reviewer approves workflow"""
         author_token = author_authenticated["access_token"]
         reviewer_token = reviewer_authenticated["access_token"]
@@ -708,9 +634,7 @@ class TestCrossRoleScenarios:
         reviewer_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=author_user.id)
-        chapter = create_test_chapter(
-            test_db, project_id=project["id"], author_id=author_user.id
-        )
+        chapter = create_test_chapter(test_db, project_id=project["id"], author_id=author_user.id)
 
         submit_response = test_client.post(
             f"/api/chapters/{chapter['id']}/review",
@@ -733,7 +657,8 @@ class TestCrossRoleScenarios:
         assert approve_response.status_code == 200
 
     def test_unauthorized_user_cannot_access_protected_resources(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test unauthorized access is properly rejected"""
         protected_endpoints = [

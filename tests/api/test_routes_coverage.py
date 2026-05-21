@@ -13,9 +13,7 @@ from unittest.mock import MagicMock, patch
 class TestAdminRoutesEdgeCases:
     """Edge case tests for admin routes to boost coverage"""
 
-    def test_list_users_page_2_with_no_more_users(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_list_users_page_2_with_no_more_users(self, test_client, test_db, test_admin_authenticated):
         """Test listing users on page 2 when no more users exist"""
         token = test_admin_authenticated["access_token"]
 
@@ -29,18 +27,18 @@ class TestAdminRoutesEdgeCases:
         assert isinstance(data, list)
         assert len(data) == 0
 
-    def test_list_users_role_and_search_combined(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_list_users_role_and_search_combined(self, test_client, test_db, test_admin_authenticated):
         """Test filtering by role and searching at the same time"""
         token = test_admin_authenticated["access_token"]
 
-        test_db.create_user({
-            "username": "specialadmin",
-            "email": "special.admin@example.com",
-            "password": "pass123",
-            "role": "system_admin",
-        })
+        test_db.create_user(
+            {
+                "username": "specialadmin",
+                "email": "special.admin@example.com",
+                "password": "pass123",
+                "role": "system_admin",
+            }
+        )
 
         response = test_client.get(
             "/api/admin/users?role_filter=system_admin&search=special",
@@ -51,9 +49,7 @@ class TestAdminRoutesEdgeCases:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_get_user_does_not_exist(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_user_does_not_exist(self, test_client, test_admin_authenticated):
         """Test getting non-existent user returns 404"""
         token = test_admin_authenticated["access_token"]
         fake_id = "00000000-0000-0000-0000-000000000000"
@@ -65,9 +61,7 @@ class TestAdminRoutesEdgeCases:
 
         assert response.status_code == 404
 
-    def test_delete_user_does_not_exist(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_delete_user_does_not_exist(self, test_client, test_admin_authenticated):
         """Test deleting non-existent user returns 404"""
         token = test_admin_authenticated["access_token"]
         fake_id = "00000000-0000-0000-0000-000000000000"
@@ -82,9 +76,7 @@ class TestAdminRoutesEdgeCases:
 
         assert response.status_code == 404
 
-    def test_delete_user_self_forbidden(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_delete_user_self_forbidden(self, test_client, test_db, test_admin_authenticated):
         """Test that admin cannot delete themselves"""
         token = test_admin_authenticated["access_token"]
         admin = test_admin_authenticated["user"]
@@ -101,9 +93,7 @@ class TestAdminRoutesEdgeCases:
         data = response.json()
         assert "CANNOT_DELETE_SELF" in str(data)
 
-    def test_update_user_role_self_forbidden(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_update_user_role_self_forbidden(self, test_client, test_db, test_admin_authenticated):
         """Test that admin cannot modify their own role"""
         token = test_admin_authenticated["access_token"]
         admin = test_admin_authenticated["user"]
@@ -121,9 +111,7 @@ class TestAdminRoutesEdgeCases:
         data = response.json()
         assert "CANNOT_MODIFY_OWN_ROLE" in str(data)
 
-    def test_update_user_role_does_not_exist(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_update_user_role_does_not_exist(self, test_client, test_admin_authenticated):
         """Test updating role of non-existent user returns 404"""
         token = test_admin_authenticated["access_token"]
         fake_id = "00000000-0000-0000-0000-000000000000"
@@ -139,17 +127,17 @@ class TestAdminRoutesEdgeCases:
 
         assert response.status_code == 404
 
-    def test_update_user_with_no_data(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_update_user_with_no_data(self, test_client, test_db, test_admin_authenticated):
         """Test updating user with empty data returns 400"""
         token = test_admin_authenticated["access_token"]
-        target_user = test_db.create_user({
-            "username": "updateme",
-            "email": "update@example.com",
-            "password": "pass123",
-            "role": "viewer",
-        })
+        target_user = test_db.create_user(
+            {
+                "username": "updateme",
+                "email": "update@example.com",
+                "password": "pass123",
+                "role": "viewer",
+            }
+        )
 
         response = test_client.put(
             f"/api/admin/users/{target_user.id}",
@@ -162,17 +150,17 @@ class TestAdminRoutesEdgeCases:
 
         assert response.status_code == 400
 
-    def test_update_user_with_only_username(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_update_user_with_only_username(self, test_client, test_db, test_admin_authenticated):
         """Test updating user with only username field"""
         token = test_admin_authenticated["access_token"]
-        target_user = test_db.create_user({
-            "username": "original",
-            "email": "original@example.com",
-            "password": "pass123",
-            "role": "viewer",
-        })
+        target_user = test_db.create_user(
+            {
+                "username": "original",
+                "email": "original@example.com",
+                "password": "pass123",
+                "role": "viewer",
+            }
+        )
 
         response = test_client.put(
             f"/api/admin/users/{target_user.id}",
@@ -185,17 +173,17 @@ class TestAdminRoutesEdgeCases:
 
         assert response.status_code == 200
 
-    def test_create_user_duplicate_username(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_create_user_duplicate_username(self, test_client, test_db, test_admin_authenticated):
         """Test creating user with duplicate username"""
         token = test_admin_authenticated["access_token"]
-        test_db.create_user({
-            "username": "existinguser",
-            "email": "existing@example.com",
-            "password": "pass123",
-            "role": "viewer",
-        })
+        test_db.create_user(
+            {
+                "username": "existinguser",
+                "email": "existing@example.com",
+                "password": "pass123",
+                "role": "viewer",
+            }
+        )
 
         test_client.post(
             "/api/admin/users",
@@ -210,9 +198,7 @@ class TestAdminRoutesEdgeCases:
             },
         )
 
-    def test_admin_stats_with_projects_and_chapters(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_stats_with_projects_and_chapters(self, test_client, test_db, test_admin_authenticated):
         """Test admin stats with actual projects and chapters"""
         token = test_admin_authenticated["access_token"]
         test_admin_authenticated["user"]
@@ -235,30 +221,34 @@ class TestAdminRoutesEdgeCases:
         assert "draft" in data["data"]["projects_by_status"]
         assert "published" in data["data"]["projects_by_status"]
 
-    def test_admin_stats_users_by_role(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_stats_users_by_role(self, test_client, test_db, test_admin_authenticated):
         """Test admin stats grouping users by role"""
         token = test_admin_authenticated["access_token"]
 
-        test_db.create_user({
-            "username": "user1",
-            "email": "user1@example.com",
-            "password": "pass123",
-            "role": "viewer",
-        })
-        test_db.create_user({
-            "username": "user2",
-            "email": "user2@example.com",
-            "password": "pass123",
-            "role": "viewer",
-        })
-        test_db.create_user({
-            "username": "user3",
-            "email": "user3@example.com",
-            "password": "pass123",
-            "role": "editor",
-        })
+        test_db.create_user(
+            {
+                "username": "user1",
+                "email": "user1@example.com",
+                "password": "pass123",
+                "role": "viewer",
+            }
+        )
+        test_db.create_user(
+            {
+                "username": "user2",
+                "email": "user2@example.com",
+                "password": "pass123",
+                "role": "viewer",
+            }
+        )
+        test_db.create_user(
+            {
+                "username": "user3",
+                "email": "user3@example.com",
+                "password": "pass123",
+                "role": "editor",
+            }
+        )
 
         response = test_client.get(
             "/api/admin/stats",
@@ -275,7 +265,8 @@ class TestMonitorRoutesEdgeCases:
     """Edge case tests for monitor routes to boost coverage"""
 
     def test_health_check_all_components_healthy(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check when all components are healthy"""
         mock_dashboard = MagicMock()
@@ -299,7 +290,8 @@ class TestMonitorRoutesEdgeCases:
                     assert data["status"] == "healthy"
 
     def test_health_check_one_component_unhealthy(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check when one component is unhealthy"""
         mock_dashboard = MagicMock()
@@ -323,7 +315,8 @@ class TestMonitorRoutesEdgeCases:
                     assert data["status"] == "healthy"
 
     def test_health_check_dashboard_import_error(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check when dashboard import fails"""
         mock_log_instance = MagicMock()
@@ -334,7 +327,9 @@ class TestMonitorRoutesEdgeCases:
 
         with patch("f01_immutable_log.immutable_log.ImmutableLog", return_value=mock_log_instance):
             with patch("f02_context_budget.context_budget_manager.ContextBudgetManager", return_value=mock_budget):
-                with patch("f28_monitoring_dashboard.monitoring_dashboard.MonitoringDashboard", side_effect=ImportError):
+                with patch(
+                    "f28_monitoring_dashboard.monitoring_dashboard.MonitoringDashboard", side_effect=ImportError
+                ):
                     response = test_client.get("/api/monitor/health")
 
                     assert response.status_code == 200
@@ -342,9 +337,7 @@ class TestMonitorRoutesEdgeCases:
                     assert data["status"] == "healthy"
                     assert data["components"] == {}
 
-    def test_metrics_with_dashboard_module(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_with_dashboard_module(self, test_client, test_admin_authenticated):
         """Test metrics when dashboard module is available"""
         token = test_admin_authenticated["access_token"]
 
@@ -355,10 +348,13 @@ class TestMonitorRoutesEdgeCases:
         mock_dashboard.get_metrics.return_value = mock_metrics
 
         with patch("f28_monitoring_dashboard.monitoring_dashboard.MonitoringDashboard", return_value=mock_dashboard):
-            with patch.dict("sys.modules", {
-                "f31_minimax_client": None,
-                "f31_minimax_client.cost_tracker": None,
-            }):
+            with patch.dict(
+                "sys.modules",
+                {
+                    "f31_minimax_client": None,
+                    "f31_minimax_client.cost_tracker": None,
+                },
+            ):
                 response = test_client.get(
                     "/api/monitor/metrics",
                     headers={"Authorization": f"Bearer {token}"},
@@ -368,9 +364,7 @@ class TestMonitorRoutesEdgeCases:
                 data = response.json()
                 assert data["success"] is True
 
-    def test_metrics_with_context_budget_module(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_with_context_budget_module(self, test_client, test_admin_authenticated):
         """Test metrics when context budget module is available"""
         token = test_admin_authenticated["access_token"]
 
@@ -378,12 +372,15 @@ class TestMonitorRoutesEdgeCases:
         mock_budget.get_total_usage.return_value = 75000
         mock_budget.max_tokens = 200000
 
-        with patch.dict("sys.modules", {
-            "f28_monitoring_dashboard": None,
-            "f28_monitoring_dashboard.monitoring_dashboard": None,
-            "f31_minimax_client": None,
-            "f31_minimax_client.cost_tracker": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f28_monitoring_dashboard": None,
+                "f28_monitoring_dashboard.monitoring_dashboard": None,
+                "f31_minimax_client": None,
+                "f31_minimax_client.cost_tracker": None,
+            },
+        ):
             with patch("f02_context_budget.context_budget_manager.ContextBudgetManager", return_value=mock_budget):
                 response = test_client.get(
                     "/api/monitor/metrics",
@@ -395,9 +392,7 @@ class TestMonitorRoutesEdgeCases:
                 assert "context_budget" in data["data"]
                 assert data["data"]["context_budget"]["total_tokens"] == 75000
 
-    def test_logs_with_immutable_log_and_filters(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_logs_with_immutable_log_and_filters(self, test_client, test_admin_authenticated):
         """Test logs endpoint with ImmutableLog and multiple filters"""
         token = test_admin_authenticated["access_token"]
 
@@ -440,9 +435,7 @@ class TestMonitorRoutesEdgeCases:
             assert len(data) == 1
             assert data[0]["event_type"] == "PROJECT_CREATE"
 
-    def test_logs_pagination_page_2(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_logs_pagination_page_2(self, test_client, test_admin_authenticated):
         """Test logs pagination with page 2"""
         token = test_admin_authenticated["access_token"]
 
@@ -462,9 +455,7 @@ class TestMonitorRoutesEdgeCases:
             data = response.json()
             assert len(data) == 10
 
-    def test_alerts_with_severity_and_resolved_filters(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_alerts_with_severity_and_resolved_filters(self, test_client, test_admin_authenticated):
         """Test alerts with severity and resolved filters"""
         token = test_admin_authenticated["access_token"]
 
@@ -495,9 +486,7 @@ class TestMonitorRoutesEdgeCases:
             response.json()
             mock_dashboard.get_alerts.assert_called_once_with(severity="error", resolved=False)
 
-    def test_workflow_stats_with_mock_client(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_workflow_stats_with_mock_client(self, test_client, test_admin_authenticated):
         """Test workflow stats when temporal module is not available"""
         token = test_admin_authenticated["access_token"]
 
@@ -513,9 +502,7 @@ class TestMonitorRoutesEdgeCases:
         assert "total_workflows" in stats
         assert "running" in stats
 
-    def test_dashboard_summary_with_mock(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_dashboard_summary_with_mock(self, test_client, test_admin_authenticated):
         """Test dashboard summary with mock dashboard"""
         token = test_admin_authenticated["access_token"]
 
@@ -544,9 +531,7 @@ class TestMonitorRoutesEdgeCases:
             assert data["data"]["active_workflows"] == 8
             assert len(data["data"]["recent_activity"]) == 2
 
-    def test_append_log_with_immutable_log(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_append_log_with_immutable_log(self, test_client, test_admin_authenticated):
         """Test append log when ImmutableLog is available"""
         token = test_admin_authenticated["access_token"]
         test_admin_authenticated["user"]
@@ -572,9 +557,7 @@ class TestMonitorRoutesEdgeCases:
 class TestSecurityRoutesEdgeCases:
     """Edge case tests for security routes to boost coverage"""
 
-    def test_scan_content_with_profanity_category(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_scan_content_with_profanity_category(self, test_client, test_db, editor_authenticated):
         """Test scanning content with profanity category"""
         token = editor_authenticated["access_token"]
 
@@ -594,9 +577,7 @@ class TestSecurityRoutesEdgeCases:
         data = response.json()
         assert data["success"] is True
 
-    def test_scan_content_with_hate_speech_category(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_scan_content_with_hate_speech_category(self, test_client, test_db, editor_authenticated):
         """Test scanning content with hate speech category"""
         token = editor_authenticated["access_token"]
 
@@ -614,9 +595,7 @@ class TestSecurityRoutesEdgeCases:
 
         assert response.status_code == 200
 
-    def test_scan_content_with_pii_category(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_scan_content_with_pii_category(self, test_client, test_db, editor_authenticated):
         """Test scanning content with pii category"""
         token = editor_authenticated["access_token"]
 
@@ -634,9 +613,7 @@ class TestSecurityRoutesEdgeCases:
 
         assert response.status_code == 200
 
-    def test_scan_content_mock_fallback(
-        self, test_client, test_db, editor_authenticated
-    ):
+    def test_scan_content_mock_fallback(self, test_client, test_db, editor_authenticated):
         """Test scanning content falls back to mock when module unavailable"""
         token = editor_authenticated["access_token"]
 
@@ -655,9 +632,7 @@ class TestSecurityRoutesEdgeCases:
             assert data["success"] is True
             assert data["is_safe"] is True
 
-    def test_doi_verify_mock_fallback(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_doi_verify_mock_fallback(self, test_client, test_db, content_admin_authenticated):
         """Test DOI verification falls back to mock"""
         token = content_admin_authenticated["access_token"]
 
@@ -675,13 +650,14 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["valid"] is True
 
-    def test_regulation_verify_mock_fallback(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_regulation_verify_mock_fallback(self, test_client, test_db, content_admin_authenticated):
         """Test regulation verification falls back to mock"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {"f08_regulation_verification": None, "f08_regulation_verification.regulation_verifier": None}):
+        with patch.dict(
+            "sys.modules",
+            {"f08_regulation_verification": None, "f08_regulation_verification.regulation_verifier": None},
+        ):
             response = test_client.post(
                 "/api/security/regulation/verify",
                 json={"content": "Content to verify"},
@@ -695,13 +671,13 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["valid"] is True
 
-    def test_semantic_scan_mock_fallback(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_semantic_scan_mock_fallback(self, test_client, test_db, content_admin_authenticated):
         """Test semantic scan falls back to mock"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {"f13_global_semantic_scanner": None, "f13_global_semantic_scanner.semantic_scanner": None}):
+        with patch.dict(
+            "sys.modules", {"f13_global_semantic_scanner": None, "f13_global_semantic_scanner.semantic_scanner": None}
+        ):
             response = test_client.post(
                 "/api/security/semantic/scan",
                 json={"content": "Content to scan"},
@@ -715,9 +691,7 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["score"] == 1.0
 
-    def test_register_material_mock_fallback(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_register_material_mock_fallback(self, test_client, test_db, content_admin_authenticated):
         """Test register material falls back to mock"""
         token = content_admin_authenticated["access_token"]
 
@@ -735,9 +709,7 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["success"] is True
 
-    def test_verify_material_mock_fallback(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_verify_material_mock_fallback(self, test_client, test_db, content_admin_authenticated):
         """Test verify material falls back to mock"""
         token = content_admin_authenticated["access_token"]
 
@@ -751,9 +723,7 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["registered"] is False
 
-    def test_concept_verify_mock_fallback(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_concept_verify_mock_fallback(self, test_client, test_db, content_admin_authenticated):
         """Test concept verify falls back to mock"""
         token = content_admin_authenticated["access_token"]
 
@@ -771,9 +741,7 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["valid"] is True
 
-    def test_batch_scan_multiple_items(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_batch_scan_multiple_items(self, test_client, test_db, content_admin_authenticated):
         """Test batch scan with multiple items"""
         token = content_admin_authenticated["access_token"]
 
@@ -793,9 +761,7 @@ class TestSecurityRoutesEdgeCases:
             assert data["safe_count"] == 3
             assert data["unsafe_count"] == 0
 
-    def test_batch_scan_empty_list(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_batch_scan_empty_list(self, test_client, test_db, content_admin_authenticated):
         """Test batch scan with empty list"""
         token = content_admin_authenticated["access_token"]
 
@@ -817,9 +783,7 @@ class TestSecurityRoutesEdgeCases:
 class TestListPermissionsDetailed:
     """Detailed tests for list permissions endpoint"""
 
-    def test_list_permissions_includes_projects_resource(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_list_permissions_includes_projects_resource(self, test_client, test_admin_authenticated):
         """Test that permissions list includes projects resource"""
         token = test_admin_authenticated["access_token"]
 
@@ -833,9 +797,7 @@ class TestListPermissionsDetailed:
         assert "resources" in data
         assert "projects" in data["resources"]
 
-    def test_list_permissions_includes_chapters_resource(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_list_permissions_includes_chapters_resource(self, test_client, test_admin_authenticated):
         """Test that permissions list includes chapters resource"""
         token = test_admin_authenticated["access_token"]
 
@@ -848,9 +810,7 @@ class TestListPermissionsDetailed:
         data = response.json()
         assert "chapters" in data["resources"]
 
-    def test_list_permissions_excludes_wildcard(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_list_permissions_excludes_wildcard(self, test_client, test_admin_authenticated):
         """Test that wildcard permission is excluded from resources"""
         token = test_admin_authenticated["access_token"]
 
@@ -869,9 +829,7 @@ class TestListPermissionsDetailed:
 class TestRolesDetailed:
     """Detailed tests for roles endpoint"""
 
-    def test_list_roles_sorted_correctly(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_list_roles_sorted_correctly(self, test_client, test_admin_authenticated):
         """Test that roles are sorted by level descending"""
         token = test_admin_authenticated["access_token"]
 
@@ -885,9 +843,7 @@ class TestRolesDetailed:
         levels = [r["level"] for r in data]
         assert levels == sorted(levels, reverse=True)
 
-    def test_list_roles_has_system_admin_highest(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_list_roles_has_system_admin_highest(self, test_client, test_admin_authenticated):
         """Test that system_admin has the highest level"""
         token = test_admin_authenticated["access_token"]
 
@@ -905,9 +861,7 @@ class TestRolesDetailed:
 class TestAdminStatsDetailed:
     """Detailed tests for admin stats"""
 
-    def test_admin_stats_empty_chapters(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_stats_empty_chapters(self, test_client, test_db, test_admin_authenticated):
         """Test admin stats with no chapters"""
         token = test_admin_authenticated["access_token"]
 
@@ -921,9 +875,7 @@ class TestAdminStatsDetailed:
         assert data["data"]["total_chapters"] == 0
         assert data["data"]["chapters_by_status"] == {}
 
-    def test_admin_stats_empty_projects(
-        self, test_client, test_db, test_admin_authenticated
-    ):
+    def test_admin_stats_empty_projects(self, test_client, test_db, test_admin_authenticated):
         """Test admin stats with no projects"""
         token = test_admin_authenticated["access_token"]
 

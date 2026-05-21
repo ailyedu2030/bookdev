@@ -25,6 +25,7 @@ class NodeType(Enum):
 @dataclass
 class BaseNode:
     """节点基类"""
+
     id: str
     title: str
     order: int = 0
@@ -44,6 +45,7 @@ class BaseNode:
 @dataclass
 class ChapterNode(BaseNode):
     """章节点"""
+
     id: str
     title: str
     order: int
@@ -56,16 +58,19 @@ class ChapterNode(BaseNode):
 
     def to_dict(self):
         d = super().to_dict()
-        d.update({
-            "word_count": self.word_count,
-            "version": self.version,
-        })
+        d.update(
+            {
+                "word_count": self.word_count,
+                "version": self.version,
+            }
+        )
         return d
 
 
 @dataclass
 class SectionNode(BaseNode):
     """节节点"""
+
     id: str
     title: str
     order: int
@@ -78,16 +83,19 @@ class SectionNode(BaseNode):
 
     def to_dict(self):
         d = super().to_dict()
-        d.update({
-            "parent_chapter_id": self.parent_chapter_id,
-            "word_count": self.word_count,
-        })
+        d.update(
+            {
+                "parent_chapter_id": self.parent_chapter_id,
+                "word_count": self.word_count,
+            }
+        )
         return d
 
 
 @dataclass
 class SubsectionNode(BaseNode):
     """小节节点"""
+
     id: str
     title: str
     order: int
@@ -100,16 +108,19 @@ class SubsectionNode(BaseNode):
 
     def to_dict(self):
         d = super().to_dict()
-        d.update({
-            "parent_section_id": self.parent_section_id,
-            "content": self.content,
-        })
+        d.update(
+            {
+                "parent_section_id": self.parent_section_id,
+                "content": self.content,
+            }
+        )
         return d
 
 
 @dataclass
 class ConceptNode:
     """概念节点"""
+
     id: str
     name: str
     definition: str
@@ -139,6 +150,7 @@ class ConceptNode:
 @dataclass
 class TermNode:
     """术语节点"""
+
     id: str
     term: str
     definition: str

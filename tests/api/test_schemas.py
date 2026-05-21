@@ -322,9 +322,7 @@ class TestCommonSchemas:
 
     def test_error_response_valid(self):
         """Test valid ErrorResponse schema"""
-        response = ErrorResponse(
-            error={"code": "NOT_FOUND", "message": "Resource not found"}
-        )
+        response = ErrorResponse(error={"code": "NOT_FOUND", "message": "Resource not found"})
         assert response.success is False
         assert response.error.code == "NOT_FOUND"
 

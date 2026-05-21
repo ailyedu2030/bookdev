@@ -43,6 +43,7 @@ security = HTTPBearer(auto_error=False)
 @dataclass
 class User:
     """User model for dependency injection"""
+
     id: str
     username: str
     email: str
@@ -55,6 +56,7 @@ class User:
 @dataclass
 class TokenData:
     """JWT token payload data"""
+
     sub: str
     email: str
     role: str
@@ -156,11 +158,13 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     to_encode = data.copy()
     now = datetime.now(UTC)
     expire = now + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({
-        "exp": int(expire.timestamp()),
-        "iat": int(now.timestamp()),
-        "type": "access",
-    })
+    to_encode.update(
+        {
+            "exp": int(expire.timestamp()),
+            "iat": int(now.timestamp()),
+            "type": "access",
+        }
+    )
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -169,11 +173,13 @@ def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
     now = datetime.now(UTC)
     expire = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({
-        "exp": int(expire.timestamp()),
-        "iat": int(now.timestamp()),
-        "type": "refresh",
-    })
+    to_encode.update(
+        {
+            "exp": int(expire.timestamp()),
+            "iat": int(now.timestamp()),
+            "type": "refresh",
+        }
+    )
     return jwt.encode(to_encode, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -390,6 +396,7 @@ class DatabaseSession:
         user_id = generate_uuid()
         if "password" in user_data:
             from api.deps import get_password_hash
+
             password_hash = get_password_hash(user_data["password"])
         elif "password_hash" in user_data:
             password_hash = user_data["password_hash"]
@@ -485,10 +492,7 @@ class DatabaseSession:
         return self._chapters.get(chapter_id)
 
     def list_chapters_by_project(self, project_id: str) -> list[dict]:
-        return [
-            c for c in self._chapters.values()
-            if c.get("project_id") == project_id
-        ]
+        return [c for c in self._chapters.values() if c.get("project_id") == project_id]
 
     def update_chapter(self, chapter_id: str, update_data: dict) -> dict | None:
         if chapter_id in self._chapters:

@@ -22,11 +22,7 @@ class ImpactAnalyzer:
 
         if node_id not in self.tracker._node_index:
             return ImpactReport(
-                source_id=source_id,
-                affected_nodes=[],
-                total_affected=0,
-                max_depth=0,
-                critical_paths=[]
+                source_id=source_id, affected_nodes=[], total_affected=0, max_depth=0, critical_paths=[]
             )
 
         affected_nodes: list[str] = []
@@ -35,11 +31,7 @@ class ImpactAnalyzer:
 
         if node_id not in self.tracker.lineage_graph:
             return ImpactReport(
-                source_id=source_id,
-                affected_nodes=[],
-                total_affected=0,
-                max_depth=0,
-                critical_paths=[]
+                source_id=source_id, affected_nodes=[], total_affected=0, max_depth=0, critical_paths=[]
             )
 
         try:
@@ -50,7 +42,7 @@ class ImpactAnalyzer:
                     node = self.tracker._node_index[desc_id]
                     affected_nodes.append(desc_id)
 
-                    if hasattr(node, 'depth'):
+                    if hasattr(node, "depth"):
                         max_depth = max(max_depth, node.depth)
 
             if affected_nodes:
@@ -68,14 +60,10 @@ class ImpactAnalyzer:
             total_affected=len(affected_nodes),
             max_depth=max_depth,
             critical_paths=critical_paths,
-            metadata={"analysis_type": "downstream_impact"}
+            metadata={"analysis_type": "downstream_impact"},
         )
 
-    def _find_critical_paths(
-        self,
-        source_id: str,
-        target_ids: list[str]
-    ) -> list[list[str]]:
+    def _find_critical_paths(self, source_id: str, target_ids: list[str]) -> list[list[str]]:
         """查找关键路径"""
         paths: list[list[str]] = []
 
@@ -83,11 +71,7 @@ class ImpactAnalyzer:
             for target_id in target_ids[:5]:
                 if source_id != target_id:
                     try:
-                        path = nx.shortest_path(
-                            self.tracker.lineage_graph,
-                            source_id,
-                            target_id
-                        )
+                        path = nx.shortest_path(self.tracker.lineage_graph, source_id, target_id)
                         paths.append(path)
                     except nx.NetworkXNoPath:
                         continue
@@ -102,13 +86,7 @@ class ImpactAnalyzer:
         node_id = f"node_{data_id}"
 
         if node_id not in self.tracker._node_index:
-            return ImpactReport(
-                source_id=data_id,
-                affected_nodes=[],
-                total_affected=0,
-                max_depth=0,
-                critical_paths=[]
-            )
+            return ImpactReport(source_id=data_id, affected_nodes=[], total_affected=0, max_depth=0, critical_paths=[])
 
         affected_nodes: list[str] = []
 
@@ -127,7 +105,7 @@ class ImpactAnalyzer:
             total_affected=len(affected_nodes),
             max_depth=0,
             critical_paths=[],
-            metadata={"analysis_type": "upstream_impact"}
+            metadata={"analysis_type": "upstream_impact"},
         )
 
 

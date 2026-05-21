@@ -137,6 +137,7 @@ class TestDatabaseConnectionFunctions:
         """Test close_db disposes engine and clears globals."""
         import db
         from db import close_db
+
         db._engine = mock_engine
         db._async_session_maker = MagicMock()
 
@@ -151,6 +152,7 @@ class TestDatabaseConnectionFunctions:
         """Test close_db handles uninitialized state gracefully."""
         import db
         from db import close_db
+
         db._engine = None
         db._async_session_maker = None
 

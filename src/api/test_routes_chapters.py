@@ -35,14 +35,36 @@ class TestListChapters:
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.get_project.return_value = {"id": "project-123"}
         mock_db.list_chapters_by_project.return_value = [
-            {"id": "c1", "title": "Chapter 1", "status": "draft", "project_id": "project-123", "order_num": 1, "word_count": 0, "content": "", "content_hash": "abc", "version": "1.0", "created_at": "2024-01-01T00:00:00"},
-            {"id": "c2", "title": "Chapter 2", "status": "published", "project_id": "project-123", "order_num": 2, "word_count": 1000, "content": "content", "content_hash": "def", "version": "1.0", "created_at": "2024-01-02T00:00:00"},
+            {
+                "id": "c1",
+                "title": "Chapter 1",
+                "status": "draft",
+                "project_id": "project-123",
+                "order_num": 1,
+                "word_count": 0,
+                "content": "",
+                "content_hash": "abc",
+                "version": "1.0",
+                "created_at": "2024-01-01T00:00:00",
+            },
+            {
+                "id": "c2",
+                "title": "Chapter 2",
+                "status": "published",
+                "project_id": "project-123",
+                "order_num": 2,
+                "word_count": 1000,
+                "content": "content",
+                "content_hash": "def",
+                "version": "1.0",
+                "created_at": "2024-01-02T00:00:00",
+            },
         ]
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
-            result = run_async(list_chapters(
-                "project-123", page=1, per_page=20, status_filter=None, user=mock_user, db=mock_db
-            ))
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
+            result = run_async(
+                list_chapters("project-123", page=1, per_page=20, status_filter=None, user=mock_user, db=mock_db)
+            )
 
             assert result.success is True
             assert len(result.data) == 2
@@ -61,11 +83,11 @@ class TestListChapters:
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.get_project.return_value = None
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
-                run_async(list_chapters(
-                    "nonexistent", page=1, per_page=20, status_filter=None, user=mock_user, db=mock_db
-                ))
+                run_async(
+                    list_chapters("nonexistent", page=1, per_page=20, status_filter=None, user=mock_user, db=mock_db)
+                )
 
             assert exc_info.value.status_code == 404
             assert "PROJECT_NOT_FOUND" in str(exc_info.value.detail)
@@ -107,7 +129,7 @@ class TestCreateChapter:
             order_num=1,
         )
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
             result = run_async(create_chapter(chapter_data, mock_user, mock_db))
 
             assert result.title == "New Chapter"
@@ -141,7 +163,7 @@ class TestGetChapter:
             "created_at": "2024-01-01T00:00:00",
         }
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
             result = run_async(get_chapter("chapter-123", mock_user, mock_db))
 
             assert result.id == "chapter-123"
@@ -160,7 +182,7 @@ class TestGetChapter:
         mock_db = MagicMock(spec=DatabaseSession)
         mock_db.get_chapter.return_value = None
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
             with pytest.raises(HTTPException) as exc_info:
                 run_async(get_chapter("nonexistent", mock_user, mock_db))
 
@@ -210,8 +232,8 @@ class TestUpdateChapter:
 
         update_data = ChapterUpdate(title="New Title")
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
-            with patch('api.routes.chapters.hash_content', return_value="hash123"):
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
+            with patch("api.routes.chapters.hash_content", return_value="hash123"):
                 result = run_async(update_chapter("chapter-123", update_data, mock_user, mock_db))
 
                 assert result.title == "New Title"
@@ -235,7 +257,7 @@ class TestDeleteChapter:
         mock_db.get_chapter.return_value = {"id": "chapter-123"}
         mock_db.delete_chapter.return_value = True
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
             result = run_async(delete_chapter("chapter-123", mock_user, mock_db))
 
             assert result.success is True
@@ -262,7 +284,7 @@ class TestSubmitForReview:
 
         review_data = ReviewSubmit(chapter_id="chapter-123", comments="Please review")
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
             result = run_async(submit_for_review("chapter-123", review_data, mock_user, mock_db))
 
             assert result.status == "submitted"
@@ -289,7 +311,7 @@ class TestApproveChapter:
 
         approval_data = ReviewApprove(chapter_id="chapter-123", comments="Approved")
 
-        with patch('api.routes.chapters.require_role', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_role", return_value=lambda u: u):
             result = run_async(approve_chapter("chapter-123", approval_data, mock_user, mock_db))
 
             assert result.status == "approved"
@@ -316,7 +338,7 @@ class TestRejectChapter:
 
         rejection_data = ReviewReject(chapter_id="chapter-123", comments="Needs revision")
 
-        with patch('api.routes.chapters.require_role', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_role", return_value=lambda u: u):
             result = run_async(reject_chapter("chapter-123", rejection_data, mock_user, mock_db))
 
             assert result.status == "rejected"
@@ -356,7 +378,7 @@ class TestCreateSection:
             order_num=1,
         )
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
             result = run_async(create_section(section_data, mock_user, mock_db))
 
             assert result.title == "New Section"
@@ -389,10 +411,8 @@ class TestGenerateChapterContent:
 
         request = ChapterGenerateRequest(chapter_id="chapter-123", prompt="Generate content", force_regenerate=False)
 
-        with patch('api.routes.chapters.require_permission', return_value=lambda u: u):
-            result = run_async(generate_chapter_content(
-                "chapter-123", request, mock_background, mock_user, mock_db
-            ))
+        with patch("api.routes.chapters.require_permission", return_value=lambda u: u):
+            result = run_async(generate_chapter_content("chapter-123", request, mock_background, mock_user, mock_db))
 
             assert result.status == "generating"
             mock_background.add_task.assert_called_once()

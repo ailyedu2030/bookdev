@@ -11,10 +11,10 @@ from threading import Lock
 
 class RateLimiter:
     """
-    滑动窗口速率限制器
+     滑动窗口速率限制器
 
-    INF-013: Separated 'check' and 'record' operations to prevent
-   虚假计数 when check passes but no actual request is sent.
+     INF-013: Separated 'check' and 'record' operations to prevent
+    虚假计数 when check passes but no actual request is sent.
     """
 
     def __init__(self, max_rpm: int = 60):
@@ -34,9 +34,7 @@ class RateLimiter:
         """Clean expired timestamps from the window"""
         now = time.monotonic()
         cutoff = now - self._window_seconds
-        self._request_timestamps = [
-            ts for ts in self._request_timestamps if ts > cutoff
-        ]
+        self._request_timestamps = [ts for ts in self._request_timestamps if ts > cutoff]
 
     def can_proceed(self) -> bool:
         """

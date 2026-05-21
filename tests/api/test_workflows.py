@@ -116,6 +116,7 @@ class TestGetWorkflow:
     def test_get_workflow_success(self, test_client, test_db, test_admin_authenticated):
         """Test getting workflow by ID after creation"""
         from api.routes.workflows import _workflows_store
+
         token = test_admin_authenticated["access_token"]
         project_id = generate_uuid()
         chapter_id = generate_uuid()
@@ -183,6 +184,7 @@ class TestSignalWorkflow:
     def test_signal_completed_workflow_fails(self, test_client, test_db, test_admin_authenticated):
         """Test signaling a completed workflow returns 400"""
         from api.routes.workflows import _workflows_store
+
         token = test_admin_authenticated["access_token"]
         workflow_id = generate_uuid()
         _workflows_store[workflow_id] = {
@@ -210,6 +212,7 @@ class TestSignalWorkflow:
     def test_signal_running_workflow_success(self, test_client, test_db, test_admin_authenticated):
         """Test signaling a running workflow succeeds"""
         from api.routes.workflows import _workflows_store
+
         token = test_admin_authenticated["access_token"]
         workflow_id = "test-signal-running"
 
@@ -257,6 +260,7 @@ class TestCancelWorkflow:
     def test_cancel_running_workflow_success(self, test_client, test_db, test_admin_authenticated):
         """Test canceling a running workflow succeeds"""
         from api.routes.workflows import _workflows_store
+
         token = test_admin_authenticated["access_token"]
         workflow_id = "test-cancel-running"
 
@@ -285,6 +289,7 @@ class TestCancelWorkflow:
     def test_cancel_completed_workflow_fails(self, test_client, test_db, test_admin_authenticated):
         """Test canceling a completed workflow returns 400"""
         from api.routes.workflows import _workflows_store
+
         token = test_admin_authenticated["access_token"]
         workflow_id = "test-cancel-completed"
 
@@ -332,6 +337,7 @@ class TestTerminateWorkflow:
     def test_terminate_running_workflow_success(self, test_client, test_db, test_admin_authenticated):
         """Test terminating a running workflow succeeds"""
         from api.routes.workflows import _workflows_store
+
         token = test_admin_authenticated["access_token"]
         workflow_id = "test-terminate-running"
 
@@ -375,6 +381,7 @@ class TestGetWorkflowHistory:
     def test_get_workflow_history_success(self, test_client, test_db, test_admin_authenticated):
         """Test getting history of existing workflow"""
         from api.routes.workflows import _workflows_store
+
         token = test_admin_authenticated["access_token"]
         workflow_id = "test-wf-history-123"
 

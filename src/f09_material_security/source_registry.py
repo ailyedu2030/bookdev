@@ -44,16 +44,10 @@ class MaterialSourceRegistry:
     async def register_source(self, source: SourceInfo) -> SourceRegistrationResult:
         """注册来源"""
         if source.name in self._registered_sources:
-            return SourceRegistrationResult(
-                registered=False,
-                reason="Source already registered"
-            )
+            return SourceRegistrationResult(registered=False, reason="Source already registered")
 
         self._registered_sources[source.name] = source
-        return SourceRegistrationResult(
-            registered=True,
-            source_id=source.name
-        )
+        return SourceRegistrationResult(registered=True, source_id=source.name)
 
     async def verify_source(self, source_name: str) -> bool:
         """核实来源"""
@@ -75,10 +69,7 @@ class MaterialSourceRegistry:
         if source_name in self._registered_sources:
             return self._registered_sources[source_name]
         if source_name in self.WHITELIST_SOURCES:
-            return SourceInfo(
-                name=source_name,
-                trust_level="WHITELIST"
-            )
+            return SourceInfo(name=source_name, trust_level="WHITELIST")
         return None
 
     def get_all_sources(self) -> list[SourceInfo]:

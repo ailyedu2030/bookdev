@@ -15,6 +15,7 @@ import pytest
 @dataclass
 class BudgetResult:
     """预算操作结果"""
+
     accepted: bool
     rejection_reason: str | None = None
     evicted_material: str | None = None

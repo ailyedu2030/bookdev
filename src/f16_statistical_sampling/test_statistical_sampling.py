@@ -38,7 +38,9 @@ class TestSampleSizeCalculation:
 
         engine = StatisticalSamplingEngine(confidence_level=0.99, margin_of_error=0.05)
 
-        sample_size_95 = StatisticalSamplingEngine(confidence_level=0.95, margin_of_error=0.05).calculate_sample_size(10000)
+        sample_size_95 = StatisticalSamplingEngine(confidence_level=0.95, margin_of_error=0.05).calculate_sample_size(
+            10000
+        )
         sample_size_99 = engine.calculate_sample_size(population_size=10000)
 
         assert sample_size_99 > sample_size_95
@@ -59,7 +61,9 @@ class TestSampleSizeCalculation:
 
         engine = StatisticalSamplingEngine(confidence_level=0.95, margin_of_error=0.03)
 
-        sample_size_5pct = StatisticalSamplingEngine(confidence_level=0.95, margin_of_error=0.05).calculate_sample_size(10000)
+        sample_size_5pct = StatisticalSamplingEngine(confidence_level=0.95, margin_of_error=0.05).calculate_sample_size(
+            10000
+        )
         sample_size_3pct = engine.calculate_sample_size(population_size=10000)
 
         assert sample_size_3pct > sample_size_5pct
@@ -163,9 +167,7 @@ class TestConfidenceCalculator:
         sample_size = 100
         confidence_level = 0.95
 
-        result = calculator.calculate_confidence_interval(
-            sample_mean, sample_std, sample_size, confidence_level
-        )
+        result = calculator.calculate_confidence_interval(sample_mean, sample_std, sample_size, confidence_level)
 
         assert result.lower_bound < sample_mean < result.upper_bound
         assert result.confidence_level == 0.95
@@ -190,11 +192,7 @@ class TestConfidenceCalculator:
 
         calculator = ConfidenceCalculator()
 
-        margin = calculator.calculate_margin_of_error(
-            sample_proportion=0.5,
-            sample_size=400,
-            confidence_level=0.95
-        )
+        margin = calculator.calculate_margin_of_error(sample_proportion=0.5, sample_size=400, confidence_level=0.95)
 
         assert margin > 0
         assert margin < 0.5
@@ -206,9 +204,7 @@ class TestConfidenceCalculator:
         calculator = ConfidenceCalculator()
 
         n = calculator.sample_size_from_margin_of_error(
-            margin_of_error=0.05,
-            population_proportion=0.5,
-            confidence_level=0.95
+            margin_of_error=0.05, population_proportion=0.5, confidence_level=0.95
         )
 
         assert n > 0
@@ -575,10 +571,7 @@ class TestCoverageGapConfidenceCalculator:
 
         calculator = ConfidenceCalculator()
         n = calculator.calculate_required_sample_size(
-            population_size=1000,
-            confidence_level=0.95,
-            margin_of_error=0.05,
-            population_proportion=0.5
+            population_size=1000, confidence_level=0.95, margin_of_error=0.05, population_proportion=0.5
         )
         assert n > 0
         assert n <= 1000
@@ -603,10 +596,7 @@ class TestCoverageGapConfidenceCalculator:
         from f16_statistical_sampling.confidence_calculator import ConfidenceCalculator
 
         calculator = ConfidenceCalculator()
-        n = calculator.calculate_required_sample_size(
-            population_size=5000,
-            confidence_level=0.99
-        )
+        n = calculator.calculate_required_sample_size(population_size=5000, confidence_level=0.99)
         assert n > 0
 
     def test_calculate_standard_error(self):
@@ -879,7 +869,12 @@ class TestIntegrationTests:
         validator = SampleValidator()
 
         chapters = [
-            Chapter(id=f"ch{i}", title=f"章节{i}", chapter_type=ChapterType.THEORY if i % 2 == 0 else ChapterType.PRACTICE, word_count=2000)
+            Chapter(
+                id=f"ch{i}",
+                title=f"章节{i}",
+                chapter_type=ChapterType.THEORY if i % 2 == 0 else ChapterType.PRACTICE,
+                word_count=2000,
+            )
             for i in range(1, 21)
         ]
 
@@ -892,10 +887,7 @@ class TestIntegrationTests:
         assert len(sample) <= len(chapters)
 
         sample_means = [c.word_count for c in sample]
-        result = validator.validate_representativeness(
-            [c.word_count for c in chapters],
-            sample_means
-        )
+        result = validator.validate_representativeness([c.word_count for c in chapters], sample_means)
 
         assert result.score >= 0
 
@@ -970,8 +962,7 @@ class TestF16CoverageGapsRemaining:
 
         engine = StatisticalSamplingEngine()
         chapters = [
-            Chapter(id=f"ch{i}", title=f"章节{i}", chapter_type=ChapterType.THEORY, word_count=1000)
-            for i in range(10)
+            Chapter(id=f"ch{i}", title=f"章节{i}", chapter_type=ChapterType.THEORY, word_count=1000) for i in range(10)
         ]
 
         result = engine.systematic_sampling(chapters, sample_size=0)
@@ -984,8 +975,7 @@ class TestF16CoverageGapsRemaining:
 
         engine = StatisticalSamplingEngine()
         chapters = [
-            Chapter(id=f"ch{i}", title=f"章节{i}", chapter_type=ChapterType.THEORY, word_count=1000)
-            for i in range(3)
+            Chapter(id=f"ch{i}", title=f"章节{i}", chapter_type=ChapterType.THEORY, word_count=1000) for i in range(3)
         ]
 
         result = engine.systematic_sampling(chapters, sample_size=10)

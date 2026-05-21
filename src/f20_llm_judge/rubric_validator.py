@@ -54,10 +54,7 @@ class RubricValidator:
 
     def _weights_sum_to_one(self, rubric: dict[str, Any]) -> bool:
         """检查权重和是否为1"""
-        total_weight = sum(
-            rubric[dim_key].get("weight", 0)
-            for dim_key in self._dimensions.keys()
-        )
+        total_weight = sum(rubric[dim_key].get("weight", 0) for dim_key in self._dimensions.keys())
         return abs(total_weight - 1.0) < 0.001
 
     def _weights_in_valid_range(self, rubric: dict[str, Any]) -> bool:
@@ -81,10 +78,7 @@ class RubricValidator:
         """
         return 0.0 <= score <= 1.0
 
-    def validate_all_dimension_scores(
-        self,
-        scores: dict[str, float]
-    ) -> tuple[bool, list[str]]:
+    def validate_all_dimension_scores(self, scores: dict[str, float]) -> tuple[bool, list[str]]:
         """
         验证所有维度分数
 
@@ -103,15 +97,10 @@ class RubricValidator:
 
             score = scores[dim_key]
             if not self.validate_dimension_score(score):
-                errors.append(
-                    f"Score for {dim_key} out of range: {score}"
-                )
+                errors.append(f"Score for {dim_key} out of range: {score}")
 
         return len(errors) == 0, errors
 
     def get_dimension_descriptions(self) -> dict[str, str]:
         """获取所有维度的描述"""
-        return {
-            dim_key: dim_config["description"]
-            for dim_key, dim_config in self._dimensions.items()
-        }
+        return {dim_key: dim_config["description"] for dim_key, dim_config in self._dimensions.items()}

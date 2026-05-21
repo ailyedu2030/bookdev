@@ -129,12 +129,14 @@ async def signal_workflow(
 
     if "signals" not in workflow:
         workflow["signals"] = []
-    workflow["signals"].append({
-        "signal_name": signal_request.signal_name,
-        "payload": signal_request.payload,
-        "timestamp": datetime.utcnow().isoformat(),
-        "sent_by": user.id,
-    })
+    workflow["signals"].append(
+        {
+            "signal_name": signal_request.signal_name,
+            "payload": signal_request.payload,
+            "timestamp": datetime.utcnow().isoformat(),
+            "sent_by": user.id,
+        }
+    )
 
     _workflows_store[workflow_id] = workflow
 

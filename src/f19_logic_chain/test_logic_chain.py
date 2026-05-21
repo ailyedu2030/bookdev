@@ -11,7 +11,6 @@ F19: 逻辑链文档服务 - TDD RED阶段测试
 """
 
 
-
 class TestLogicChainService:
     """逻辑链服务测试"""
 

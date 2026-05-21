@@ -11,9 +11,9 @@ class TokenCounter:
     """Token计数器 - 基于启发式规则估算Token数"""
 
     # 近似换算系数
-    CHINESE_CHAR_TOKENS = 1.5   # 每个中文字符 ≈ 1.5 tokens
+    CHINESE_CHAR_TOKENS = 1.5  # 每个中文字符 ≈ 1.5 tokens
     ENGLISH_CHARS_PER_TOKEN = 4  # 每4个英文字符 ≈ 1 token
-    CODE_CHARS_PER_TOKEN = 3.5   # 代码每3.5字符 ≈ 1 token
+    CODE_CHARS_PER_TOKEN = 3.5  # 代码每3.5字符 ≈ 1 token
 
     def __init__(self, max_context_tokens: int = 200_000):
         """
@@ -42,11 +42,11 @@ class TokenCounter:
         text = text.strip()
 
         # 分离中文和非中文字符
-        chinese_chars = len(re.findall(r'[\u4e00-\u9fff\u3400-\u4dbf]', text))
-        non_chinese = re.sub(r'[\u4e00-\u9fff\u3400-\u4dbf]', '', text)
+        chinese_chars = len(re.findall(r"[\u4e00-\u9fff\u3400-\u4dbf]", text))
+        non_chinese = re.sub(r"[\u4e00-\u9fff\u3400-\u4dbf]", "", text)
 
         # 非中文部分按英文规则计数
-        non_chinese_stripped = re.sub(r'\s+', ' ', non_chinese).strip()
+        non_chinese_stripped = re.sub(r"\s+", " ", non_chinese).strip()
         non_chinese_chars = len(non_chinese_stripped)
 
         # 计算Token数

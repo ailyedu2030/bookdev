@@ -134,11 +134,7 @@ class TestContentSecurityFilter(unittest.TestCase):
     # ========== F23-T005: 批量处理 ==========
     def test_batch_scanning(self):
         """F23-T005: 批量扫描"""
-        contents = [
-            "正常内容",
-            "包含脏话damn",
-            "李四手机13912345678"
-        ]
+        contents = ["正常内容", "包含脏话damn", "李四手机13912345678"]
         results = self.filter.scan_batch(contents)
 
         self.assertEqual(len(results), 3)
@@ -284,6 +280,7 @@ class TestAsyncContentFilter(unittest.TestCase):
 
     def test_async_filter_content(self):
         """异步单条过滤"""
+
         async def run():
             result = await self.filter.async_filter_content("安全内容")
             self.assertTrue(result.is_safe)
@@ -292,6 +289,7 @@ class TestAsyncContentFilter(unittest.TestCase):
 
     def test_async_batch_scan(self):
         """异步批量扫描"""
+
         async def run():
             contents = ["内容1", "脏话damn", "安全内容"]
             results = await self.filter.async_scan_batch(contents)

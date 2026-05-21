@@ -24,36 +24,36 @@ class WhitelistManager:
             issuing_body="全国人民代表大会",
             effective_date="2026-01-01",
             total_articles=72,
-            source="国家法规数据库"
+            source="国家法规数据库",
         ),
         "数据安全法": LawInfo(
             name="数据安全法",
             issuing_body="全国人民代表大会",
             effective_date="2021-09-01",
             total_articles=55,
-            source="国家法规数据库"
+            source="国家法规数据库",
         ),
         "个人信息保护法": LawInfo(
             name="个人信息保护法",
             issuing_body="全国人民代表大会",
             effective_date="2021-11-01",
             total_articles=74,
-            source="国家法规数据库"
+            source="国家法规数据库",
         ),
         "网络安全法": LawInfo(
             name="网络安全法",
             issuing_body="全国人民代表大会",
             effective_date="2017-06-01",
             total_articles=70,
-            source="国家法规数据库"
+            source="国家法规数据库",
         ),
         "电子商务法": LawInfo(
             name="电子商务法",
             issuing_body="全国人民代表大会",
             effective_date="2019-01-01",
             total_articles=89,
-            source="国家法规数据库"
-        )
+            source="国家法规数据库",
+        ),
     }
 
     def __init__(self):
@@ -95,7 +95,7 @@ class WhitelistManager:
             issuing_body=issuing_body,
             effective_date=effective_date,
             total_articles=total_articles,
-            source="Custom"
+            source="Custom",
         )
         return True
 

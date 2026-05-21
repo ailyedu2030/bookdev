@@ -26,9 +26,7 @@ class TermRepository(BaseRepository[Term]):
         """根据术语获取术语记录"""
         return await self.get_one(term=term)
 
-    async def get_by_domain(
-        self, domain: str, *, locked: bool | None = None
-    ) -> Sequence[Term]:
+    async def get_by_domain(self, domain: str, *, locked: bool | None = None) -> Sequence[Term]:
         """根据领域获取术语"""
         filters = {"domain": domain}
         if locked is not None:
@@ -43,9 +41,7 @@ class TermRepository(BaseRepository[Term]):
         """获取所有未锁定的术语"""
         return await self.find_all(filters={"locked": False}, order_by="term")
 
-    async def search_by_term(
-        self, term_query: str, *, limit: int = 20
-    ) -> Sequence[Term]:
+    async def search_by_term(self, term_query: str, *, limit: int = 20) -> Sequence[Term]:
         """搜索术语"""
         stmt = (
             select(Term)
@@ -61,16 +57,9 @@ class TermRepository(BaseRepository[Term]):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def search_by_definition(
-        self, definition_query: str, *, limit: int = 20
-    ) -> Sequence[Term]:
+    async def search_by_definition(self, definition_query: str, *, limit: int = 20) -> Sequence[Term]:
         """根据定义内容搜索术语"""
-        stmt = (
-            select(Term)
-            .where(Term.definition.ilike(f"%{definition_query}%"))
-            .order_by(Term.term)
-            .limit(limit)
-        )
+        stmt = select(Term).where(Term.definition.ilike(f"%{definition_query}%")).order_by(Term.term).limit(limit)
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
@@ -99,9 +88,7 @@ class TermRepository(BaseRepository[Term]):
         """解锁术语"""
         return await self.update(term_id, locked=False)
 
-    async def add_synonym(
-        self, term_id: uuid.UUID, synonym: str
-    ) -> Term | None:
+    async def add_synonym(self, term_id: uuid.UUID, synonym: str) -> Term | None:
         """添加同义词"""
         term = await self.get_by_id(term_id)
         if term:
@@ -114,9 +101,7 @@ class TermRepository(BaseRepository[Term]):
             return term
         return None
 
-    async def remove_synonym(
-        self, term_id: uuid.UUID, synonym: str
-    ) -> Term | None:
+    async def remove_synonym(self, term_id: uuid.UUID, synonym: str) -> Term | None:
         """移除同义词"""
         term = await self.get_by_id(term_id)
         if term:
@@ -129,9 +114,7 @@ class TermRepository(BaseRepository[Term]):
             return term
         return None
 
-    async def find_similar_terms(
-        self, term_id: uuid.UUID, threshold: float = 0.7, limit: int = 100
-    ) -> Sequence[Term]:
+    async def find_similar_terms(self, term_id: uuid.UUID, threshold: float = 0.7, limit: int = 100) -> Sequence[Term]:
         """查找相似术语 - 使用SQL层面操作避免N+1查询,添加limit限制"""
         term = await self.get_by_id(term_id)
         if not term or not term.synonyms:
@@ -161,11 +144,7 @@ class TermRepository(BaseRepository[Term]):
         else:
             conditions.append(Term.domain == term.domain)
 
-        stmt = (
-            select(Term)
-            .where(and_(*conditions))
-            .limit(limit)
-        )
+        stmt = select(Term).where(and_(*conditions)).limit(limit)
 
         result = await self._session.execute(stmt)
         return result.scalars().all()
@@ -181,9 +160,7 @@ class ConceptRepository(BaseRepository[Concept]):
         """根据名称获取概念"""
         return await self.get_one(name=name)
 
-    async def get_by_domain(
-        self, domain: str, *, locked: bool | None = None
-    ) -> Sequence[Concept]:
+    async def get_by_domain(self, domain: str, *, locked: bool | None = None) -> Sequence[Concept]:
         """根据领域获取概念"""
         filters = {"domain": domain}
         if locked is not None:
@@ -198,9 +175,7 @@ class ConceptRepository(BaseRepository[Concept]):
         """获取所有未锁定的概念"""
         return await self.find_all(filters={"locked": False}, order_by="name")
 
-    async def search_by_name(
-        self, name_query: str, *, limit: int = 20
-    ) -> Sequence[Concept]:
+    async def search_by_name(self, name_query: str, *, limit: int = 20) -> Sequence[Concept]:
         """搜索概念"""
         stmt = (
             select(Concept)
@@ -216,15 +191,10 @@ class ConceptRepository(BaseRepository[Concept]):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def search_by_definition(
-        self, definition_query: str, *, limit: int = 20
-    ) -> Sequence[Concept]:
+    async def search_by_definition(self, definition_query: str, *, limit: int = 20) -> Sequence[Concept]:
         """根据定义内容搜索概念"""
         stmt = (
-            select(Concept)
-            .where(Concept.definition.ilike(f"%{definition_query}%"))
-            .order_by(Concept.name)
-            .limit(limit)
+            select(Concept).where(Concept.definition.ilike(f"%{definition_query}%")).order_by(Concept.name).limit(limit)
         )
         result = await self._session.execute(stmt)
         return result.scalars().all()
@@ -254,24 +224,18 @@ class ConceptRepository(BaseRepository[Concept]):
         """解锁概念"""
         return await self.update(concept_id, locked=False)
 
-    async def get_by_source_chapter(
-        self, chapter_id: uuid.UUID
-    ) -> Sequence[Concept]:
+    async def get_by_source_chapter(self, chapter_id: uuid.UUID) -> Sequence[Concept]:
         """获取源自特定章节的概念"""
         return await self.find_all(
             filters={"source_chapter_id": chapter_id},
             order_by="name",
         )
 
-    async def add_related_term(
-        self, concept_id: uuid.UUID, term: str
-    ) -> Concept | None:
+    async def add_related_term(self, concept_id: uuid.UUID, term: str) -> Concept | None:
         """添加关联术语"""
         concept = await self.get_by_id(concept_id)
         if concept:
-            current_terms = (
-                list(concept.related_terms) if concept.related_terms else []
-            )
+            current_terms = list(concept.related_terms) if concept.related_terms else []
             if term not in current_terms:
                 current_terms.append(term)
                 concept.related_terms = current_terms
@@ -280,15 +244,11 @@ class ConceptRepository(BaseRepository[Concept]):
             return concept
         return None
 
-    async def remove_related_term(
-        self, concept_id: uuid.UUID, term: str
-    ) -> Concept | None:
+    async def remove_related_term(self, concept_id: uuid.UUID, term: str) -> Concept | None:
         """移除关联术语"""
         concept = await self.get_by_id(concept_id)
         if concept:
-            current_terms = (
-                list(concept.related_terms) if concept.related_terms else []
-            )
+            current_terms = list(concept.related_terms) if concept.related_terms else []
             if term in current_terms:
                 current_terms.remove(term)
                 concept.related_terms = current_terms

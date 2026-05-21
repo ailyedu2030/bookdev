@@ -8,6 +8,7 @@ from typing import Any
 
 class FilterAction(Enum):
     """过滤动作"""
+
     PASS = "PASS"
     WARN = "WARN"
     BLOCK = "BLOCK"
@@ -16,6 +17,7 @@ class FilterAction(Enum):
 
 class ViolationType(Enum):
     """违规类型"""
+
     PROFANITY = "profanity"
     HATE_SPEECH = "hate_speech"
     PII = "pii"
@@ -27,6 +29,7 @@ class ViolationType(Enum):
 @dataclass
 class Violation:
     """违规记录"""
+
     type: str
     category: str
     severity: float
@@ -43,13 +46,14 @@ class Violation:
             "matched_content": self.matched_content,
             "position": self.position,
             "length": self.length,
-            "description": self.description
+            "description": self.description,
         }
 
 
 @dataclass
 class FilterResult:
     """内容安全过滤结果"""
+
     is_safe: bool = True
     confidence_score: float = 1.0
     categories: list[str] = field(default_factory=list)
@@ -66,15 +70,11 @@ class FilterResult:
             "violations": [v.to_dict() for v in self.violations],
             "action": self.action,
             "details": self.details,
-            "processing_time_ms": self.processing_time_ms
+            "processing_time_ms": self.processing_time_ms,
         }
 
     def add_violation(
-        self,
-        violation_type: ViolationType,
-        matched_content: str,
-        severity: float = 0.5,
-        description: str = ""
+        self, violation_type: ViolationType, matched_content: str, severity: float = 0.5, description: str = ""
     ):
         """添加违规记录"""
         violation = Violation(
@@ -82,7 +82,7 @@ class FilterResult:
             category=violation_type.value,
             severity=severity,
             matched_content=matched_content,
-            description=description
+            description=description,
         )
         self.violations.append(violation)
         if violation_type.value not in self.categories:

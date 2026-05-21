@@ -38,29 +38,14 @@ class ContentRelevanceResult:
 class RegulationVerifier:
     """法规核实引擎 - 三级核实"""
 
-    VAGUE_REFERENCE_PHRASES = [
-        "根据相关规定",
-        "按照有关法律法规",
-        "依据有关政策",
-        "根据有关规定",
-        "按照相关规定"
-    ]
+    VAGUE_REFERENCE_PHRASES = ["根据相关规定", "按照有关法律法规", "依据有关政策", "根据有关规定", "按照相关规定"]
 
     def __init__(self, whitelist_manager: WhitelistManager | None = None):
         self.whitelist_manager = whitelist_manager or WhitelistManager()
 
-    async def verify(
-        self,
-        law_name: str,
-        article_num: int,
-        cited_content: str | None = None
-    ) -> RegulationResult:
+    async def verify(self, law_name: str, article_num: int, cited_content: str | None = None) -> RegulationResult:
         """三级核实流程"""
-        result = RegulationResult(
-            is_valid=False,
-            law_name=law_name,
-            article_num=article_num
-        )
+        result = RegulationResult(is_valid=False, law_name=law_name, article_num=article_num)
 
         tier1_passed = await self._verify_law_exists(law_name)
         result.tier1_passed = tier1_passed
@@ -79,9 +64,7 @@ class RegulationVerifier:
             return result
 
         if cited_content:
-            relevance_result = await self.verify_content_relevance(
-                law_name, article_num, cited_content
-            )
+            relevance_result = await self.verify_content_relevance(law_name, article_num, cited_content)
             result.tier3_score = relevance_result.score
             result.is_valid = relevance_result.is_valid
             result.reason = relevance_result.reason
@@ -90,42 +73,26 @@ class RegulationVerifier:
 
         return result
 
-    async def verify_citation(
-        self,
-        citation: str,
-        context: str
-    ) -> RegulationResult:
+    async def verify_citation(self, citation: str, context: str) -> RegulationResult:
         """验证引用格式"""
         citation_stripped = citation.strip()
 
         for phrase in self.VAGUE_REFERENCE_PHRASES:
             if phrase in citation_stripped:
                 return RegulationResult(
-                    is_valid=False,
-                    law_name="",
-                    article_num=0,
-                    reason=f"VAGUE_REFERENCE: '{phrase}' is too vague"
+                    is_valid=False, law_name="", article_num=0, reason=f"VAGUE_REFERENCE: '{phrase}' is too vague"
                 )
 
-        return RegulationResult(
-            is_valid=True,
-            law_name="",
-            article_num=0
-        )
+        return RegulationResult(is_valid=True, law_name="", article_num=0)
 
     async def verify_content_relevance(
-        self,
-        law_name: str,
-        article_num: int,
-        cited_content: str
+        self, law_name: str, article_num: int, cited_content: str
     ) -> ContentRelevanceResult:
         """Tier 3: 验证内容相关性"""
         score = self._calculate_content_similarity(cited_content, law_name, article_num)
 
         return ContentRelevanceResult(
-            is_valid=score >= 0.5,
-            score=score,
-            reason="" if score >= 0.5 else "Content relevance too low"
+            is_valid=score >= 0.5, score=score, reason="" if score >= 0.5 else "Content relevance too low"
         )
 
     async def _verify_law_exists(self, law_name: str) -> bool:
@@ -138,12 +105,7 @@ class RegulationVerifier:
         await asyncio.sleep(0.001)
         return self.whitelist_manager.validate_article_number(law_name, article_num)
 
-    def _calculate_content_similarity(
-        self,
-        cited_content: str,
-        law_name: str,
-        article_num: int
-    ) -> float:
+    def _calculate_content_similarity(self, cited_content: str, law_name: str, article_num: int) -> float:
         """计算内容相似度 - 增强的相似度计算
 
         VM-016: 使用更复杂的相似度计算，防止被简单关键词绕过
@@ -165,7 +127,7 @@ class RegulationVerifier:
             kw_lower = kw.lower()
             if kw_lower in content_lower:
                 # 检查是否是完整词匹配（避免子串匹配）
-                if re.search(r'\b' + re.escape(kw_lower) + r'\b', content_lower):
+                if re.search(r"\b" + re.escape(kw_lower) + r"\b", content_lower):
                     matched_keywords += 1
                 else:
                     # 对于多字符关键词，如果包含也算匹配
@@ -189,7 +151,7 @@ class RegulationVerifier:
 
             # 如果关键词按顺序出现（位置递增），说明内容相关度高
             if len(positions) >= 2:
-                ordered_bonus = 0.1 if all(positions[i] < positions[i+1] for i in range(len(positions)-1)) else 0
+                ordered_bonus = 0.1 if all(positions[i] < positions[i + 1] for i in range(len(positions) - 1)) else 0
             else:
                 ordered_bonus = 0
         else:
@@ -218,7 +180,7 @@ class RegulationVerifier:
             "数据安全法": {
                 21: ["数据安全", "保护", "监管"],
                 27: ["重要数据", "处理"],
-            }
+            },
         }
 
         if law_name in keyword_map and article_num in keyword_map[law_name]:

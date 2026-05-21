@@ -34,6 +34,7 @@ class ReferenceType(Enum):
 @dataclass
 class Edge:
     """边基类"""
+
     edge_type: str
     source: str
     target: str
@@ -50,9 +51,4 @@ class Edge:
 
 def create_edge(edge_type: str, source: str, target: str, **properties) -> Edge:
     """边工厂函数"""
-    return Edge(
-        edge_type=edge_type,
-        source=source,
-        target=target,
-        properties=properties
-    )
+    return Edge(edge_type=edge_type, source=source, target=target, properties=properties)

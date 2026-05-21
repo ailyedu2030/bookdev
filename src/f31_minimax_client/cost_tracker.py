@@ -12,6 +12,7 @@ from datetime import datetime
 @dataclass
 class UsageStats:
     """使用统计"""
+
     total_prompt_tokens: int = 0
     total_completion_tokens: int = 0
     total_tokens: int = 0

@@ -37,6 +37,7 @@ class Citation:
 
 class CitationValidationError(Exception):
     """引用格式验证错误"""
+
     pass
 
 
@@ -69,13 +70,7 @@ class FactRegistry:
         """注册新事实，返回fact_hash"""
         fact_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        fact = Fact(
-            fact_hash=fact_hash,
-            content=content,
-            source_refs=source_refs,
-            versions=[],
-            is_verified=False
-        )
+        fact = Fact(fact_hash=fact_hash, content=content, source_refs=source_refs, versions=[], is_verified=False)
 
         self._facts[fact_hash] = fact
         return fact_hash
@@ -98,18 +93,14 @@ class FactRegistry:
         old_fact = self._facts[fact_hash]
         new_hash = hashlib.sha256(new_content.encode()).hexdigest()
 
-        old_fact.versions.append({
-            "content": new_content,
-            "reason": reason,
-            "timestamp": datetime.now(UTC).isoformat()
-        })
+        old_fact.versions.append({"content": new_content, "reason": reason, "timestamp": datetime.now(UTC).isoformat()})
 
         new_fact = Fact(
             fact_hash=new_hash,
             content=new_content,
             source_refs=old_fact.source_refs.copy(),
             versions=old_fact.versions.copy(),
-            is_verified=False
+            is_verified=False,
         )
 
         self._facts[new_hash] = new_fact
@@ -124,11 +115,7 @@ class FactRegistry:
         history = [{"content": fact.content, "version": 0}]
 
         for i, version in enumerate(fact.versions):
-            history.append({
-                "content": version["content"],
-                "reason": version["reason"],
-                "version": i + 1
-            })
+            history.append({"content": version["content"], "reason": version["reason"], "version": i + 1})
 
         return history
 
@@ -140,9 +127,14 @@ class FactRegistry:
 class DOIVerifier:
     """DOI验证器"""
 
-    DOI_PREFIX_PATTERN = re.compile(r'^10\.\d{4,}/[^\s]+$')
+    DOI_PREFIX_PATTERN = re.compile(r"^10\.\d{4,}/[^\s]+$")
 
-    def __init__(self, timeout_seconds: float = 5.0, fact_registry: FactRegistry | None = None, crossref_client: CrossRefClient | None = None):
+    def __init__(
+        self,
+        timeout_seconds: float = 5.0,
+        fact_registry: FactRegistry | None = None,
+        crossref_client: CrossRefClient | None = None,
+    ):
         self.timeout_seconds = timeout_seconds
         self._fact_registry = fact_registry or FactRegistry()
         # Reuse the provided CrossRefClient or create one
@@ -155,7 +147,7 @@ class DOIVerifier:
                 exists=False,
                 doi=doi,
                 reason="INVALID_FORMAT: DOI must match pattern 10.XXXX/...",
-                status=DOIValidationStatus.INVALID_FORMAT
+                status=DOIValidationStatus.INVALID_FORMAT,
             )
 
         try:
@@ -163,34 +155,21 @@ class DOIVerifier:
 
             if metadata is None:
                 return DOIResult(
-                    exists=False,
-                    doi=doi,
-                    reason="DOI not found in CrossRef",
-                    status=DOIValidationStatus.NOT_FOUND
+                    exists=False, doi=doi, reason="DOI not found in CrossRef", status=DOIValidationStatus.NOT_FOUND
                 )
 
-            return DOIResult(
-                exists=True,
-                doi=doi,
-                metadata=metadata,
-                status=DOIValidationStatus.EXISTS
-            )
+            return DOIResult(exists=True, doi=doi, metadata=metadata, status=DOIValidationStatus.EXISTS)
 
         except asyncio.TimeoutError:
             return DOIResult(
                 exists=False,
                 doi=doi,
                 reason="TIMEOUT: DOI verification timed out",
-                status=DOIValidationStatus.NOT_FOUND
+                status=DOIValidationStatus.NOT_FOUND,
             )
         except (ValueError, TypeError, KeyError) as e:
             # Only catch expected exceptions, not system-exiting ones like KeyboardInterrupt, SystemExit
-            return DOIResult(
-                exists=False,
-                doi=doi,
-                reason=f"ERROR: {str(e)}",
-                status=DOIValidationStatus.NOT_FOUND
-            )
+            return DOIResult(exists=False, doi=doi, reason=f"ERROR: {str(e)}", status=DOIValidationStatus.NOT_FOUND)
 
     def _is_valid_doi_format(self, doi: str) -> bool:
         """验证DOI格式"""
@@ -200,49 +179,30 @@ class DOIVerifier:
 
     async def _fetch_doi_metadata(self, doi: str) -> dict[str, Any] | None:
         """从CrossRef获取DOI元数据"""
-        metadata = await asyncio.wait_for(
-            self._crossref_client.fetch_doi_metadata(doi),
-            timeout=self.timeout_seconds
-        )
+        metadata = await asyncio.wait_for(self._crossref_client.fetch_doi_metadata(doi), timeout=self.timeout_seconds)
         return metadata
 
     def validate_citation_format(self, citation: Citation) -> None:
         """验证引用格式 - 必须包含fact_hash"""
         if not citation.fact_hash:
-            raise CitationValidationError(
-                "Citation must include fact_hash for integrity verification"
-            )
+            raise CitationValidationError("Citation must include fact_hash for integrity verification")
 
         if not citation.doi:
             raise CitationValidationError("Citation must include DOI")
 
         if not self._is_valid_doi_format(citation.doi):
-            raise CitationValidationError(
-                f"Invalid DOI format: {citation.doi}"
-            )
+            raise CitationValidationError(f"Invalid DOI format: {citation.doi}")
 
-    async def verify_citation_content(
-        self,
-        doi: str,
-        fact_hash: str,
-        cited_content: str
-    ) -> CitationVerificationResult:
+    async def verify_citation_content(self, doi: str, fact_hash: str, cited_content: str) -> CitationVerificationResult:
         """验证引用内容与注册表一致"""
         expected_hash = hashlib.sha256(cited_content.encode()).hexdigest()
 
         if expected_hash != fact_hash:
             return CitationVerificationResult(
-                is_valid=False,
-                doi=doi,
-                fact_hash=fact_hash,
-                mismatch_reason="Content hash does not match fact_hash"
+                is_valid=False, doi=doi, fact_hash=fact_hash, mismatch_reason="Content hash does not match fact_hash"
             )
 
-        return CitationVerificationResult(
-            is_valid=True,
-            doi=doi,
-            fact_hash=fact_hash
-        )
+        return CitationVerificationResult(is_valid=True, doi=doi, fact_hash=fact_hash)
 
     def detect_circular_reference(self, citations: list[Citation]) -> bool:
         """检测循环引用 - A引用B，B引用A即为循环

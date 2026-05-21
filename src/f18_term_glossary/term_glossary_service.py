@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 @dataclass
 class RegisteredTerm:
     """注册术语"""
+
     id: str
     term: str
     definition: str
@@ -25,6 +26,7 @@ class RegisteredTerm:
 @dataclass
 class OperationResult:
     """操作结果"""
+
     success: bool
     term: RegisteredTerm | None = None
     error: str | None = None
@@ -48,10 +50,7 @@ class TermGlossaryService:
     ) -> OperationResult:
         """注册新术语"""
         if term in self._terms_by_name:
-            return OperationResult(
-                success=False,
-                error=f"Term '{term}' already exists"
-            )
+            return OperationResult(success=False, error=f"Term '{term}' already exists")
 
         term_id = str(uuid.uuid4())
         registered_term = RegisteredTerm(
@@ -66,7 +65,7 @@ class TermGlossaryService:
         self._terms[term_id] = registered_term
         self._terms_by_name[term] = term_id
 
-        for syn in (synonyms or []):
+        for syn in synonyms or []:
             self._synonym_index[syn.lower()] = term_id
 
         return OperationResult(success=True, term=registered_term)
@@ -89,10 +88,7 @@ class TermGlossaryService:
 
     def get_terms_by_domain(self, domain: str) -> list[RegisteredTerm]:
         """按领域获取术语"""
-        return [
-            term for term in self._terms.values()
-            if term.domain == domain
-        ]
+        return [term for term in self._terms.values() if term.domain == domain]
 
     def add_synonym(self, term_id: str, synonym: str) -> OperationResult:
         """为术语添加同义词"""
@@ -106,21 +102,14 @@ class TermGlossaryService:
 
         return OperationResult(success=True, term=term)
 
-    def update_term_definition(
-        self,
-        term_id: str,
-        new_definition: str
-    ) -> OperationResult:
+    def update_term_definition(self, term_id: str, new_definition: str) -> OperationResult:
         """更新术语定义"""
         term = self._terms.get(term_id)
         if not term:
             return OperationResult(success=False, error="Term not found")
 
         if term.locked:
-            return OperationResult(
-                success=False,
-                error="Term is locked. Unlock before updating."
-            )
+            return OperationResult(success=False, error="Term is locked. Unlock before updating.")
 
         term.definition = new_definition
         term.version += 1

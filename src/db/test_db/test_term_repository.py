@@ -96,11 +96,7 @@ class TestTermRepository:
         mock_term = MagicMock()
         repo = TermRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_term) as mock_create:
-            await repo.create_term(
-                term="new term",
-                definition="definition",
-                domain="science"
-            )
+            await repo.create_term(term="new term", definition="definition", domain="science")
 
         mock_create.assert_called_once()
 
@@ -243,10 +239,7 @@ class TestConceptRepository:
         mock_concept = MagicMock()
         repo = ConceptRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_concept) as mock_create:
-            await repo.create_concept(
-                name="new concept",
-                definition="description"
-            )
+            await repo.create_concept(name="new concept", definition="description")
 
         mock_create.assert_called_once()
 
@@ -631,6 +624,3 @@ class TestConceptRepositoryRelatedTerms:
             result = await repo.remove_related_term(uuid.uuid4(), "term")
 
         assert result is None
-
-
-

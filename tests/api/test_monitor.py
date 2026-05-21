@@ -26,7 +26,8 @@ class TestHealthCheck:
         assert "version" in data
 
     def test_health_check_components(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check includes component statuses"""
         response = test_client.get("/api/monitor/health")
@@ -36,11 +37,12 @@ class TestHealthCheck:
         assert "components" in data
 
     def test_health_check_returns_degraded_status(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check returns degraded when components fail"""
-        with patch.dict('sys.modules', {'f28_monitoring_dashboard.monitoring_dashboard': None}):
-            with patch('importlib.import_module', side_effect=ImportError):
+        with patch.dict("sys.modules", {"f28_monitoring_dashboard.monitoring_dashboard": None}):
+            with patch("importlib.import_module", side_effect=ImportError):
                 response = test_client.get("/api/monitor/health")
 
                 assert response.status_code == 200
@@ -48,7 +50,8 @@ class TestHealthCheck:
                 assert data["status"] in ["healthy", "degraded"]
 
     def test_health_check_includes_version(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check includes version field"""
         response = test_client.get("/api/monitor/health")
@@ -62,18 +65,19 @@ class TestHealthCheck:
 class TestMetricsEndpoint:
     """Tests for metrics endpoint"""
 
-    def test_metrics_endpoint_requires_auth(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_endpoint_requires_auth(self, test_client, test_admin_authenticated):
         """Test metrics endpoint requires authentication"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {
-            "f28_monitoring_dashboard": None,
-            "f28_monitoring_dashboard.monitoring_dashboard": None,
-            "f31_minimax_client": None,
-            "f31_minimax_client.cost_tracker": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f28_monitoring_dashboard": None,
+                "f28_monitoring_dashboard.monitoring_dashboard": None,
+                "f31_minimax_client": None,
+                "f31_minimax_client.cost_tracker": None,
+            },
+        ):
             response = test_client.get(
                 "/api/monitor/metrics",
                 headers={"Authorization": f"Bearer {token}"},
@@ -85,18 +89,19 @@ class TestMetricsEndpoint:
             assert "data" in data
             assert "timestamp" in data
 
-    def test_metrics_includes_uptime(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_includes_uptime(self, test_client, test_admin_authenticated):
         """Test metrics include uptime information"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {
-            "f28_monitoring_dashboard": None,
-            "f28_monitoring_dashboard.monitoring_dashboard": None,
-            "f31_minimax_client": None,
-            "f31_minimax_client.cost_tracker": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f28_monitoring_dashboard": None,
+                "f28_monitoring_dashboard.monitoring_dashboard": None,
+                "f31_minimax_client": None,
+                "f31_minimax_client.cost_tracker": None,
+            },
+        ):
             response = test_client.get(
                 "/api/monitor/metrics",
                 headers={"Authorization": f"Bearer {token}"},
@@ -108,18 +113,19 @@ class TestMetricsEndpoint:
             assert "uptime_seconds" in metrics
             assert "uptime_hours" in metrics
 
-    def test_metrics_includes_requests(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_includes_requests(self, test_client, test_admin_authenticated):
         """Test metrics include request statistics"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {
-            "f28_monitoring_dashboard": None,
-            "f28_monitoring_dashboard.monitoring_dashboard": None,
-            "f31_minimax_client": None,
-            "f31_minimax_client.cost_tracker": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f28_monitoring_dashboard": None,
+                "f28_monitoring_dashboard.monitoring_dashboard": None,
+                "f31_minimax_client": None,
+                "f31_minimax_client.cost_tracker": None,
+            },
+        ):
             response = test_client.get(
                 "/api/monitor/metrics",
                 headers={"Authorization": f"Bearer {token}"},
@@ -133,18 +139,19 @@ class TestMetricsEndpoint:
             assert "success" in metrics["requests"]
             assert "failed" in metrics["requests"]
 
-    def test_metrics_includes_response_times(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_includes_response_times(self, test_client, test_admin_authenticated):
         """Test metrics include response time statistics"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {
-            "f28_monitoring_dashboard": None,
-            "f28_monitoring_dashboard.monitoring_dashboard": None,
-            "f31_minimax_client": None,
-            "f31_minimax_client.cost_tracker": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f28_monitoring_dashboard": None,
+                "f28_monitoring_dashboard.monitoring_dashboard": None,
+                "f31_minimax_client": None,
+                "f31_minimax_client.cost_tracker": None,
+            },
+        ):
             response = test_client.get(
                 "/api/monitor/metrics",
                 headers={"Authorization": f"Bearer {token}"},
@@ -165,18 +172,19 @@ class TestMetricsEndpoint:
 
         assert response.status_code == 401
 
-    def test_metrics_viewer_allowed(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_viewer_allowed(self, test_client, test_admin_authenticated):
         """Test admin can access metrics"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {
-            "f28_monitoring_dashboard": None,
-            "f28_monitoring_dashboard.monitoring_dashboard": None,
-            "f31_minimax_client": None,
-            "f31_minimax_client.cost_tracker": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f28_monitoring_dashboard": None,
+                "f28_monitoring_dashboard.monitoring_dashboard": None,
+                "f31_minimax_client": None,
+                "f31_minimax_client.cost_tracker": None,
+            },
+        ):
             response = test_client.get(
                 "/api/monitor/metrics",
                 headers={"Authorization": f"Bearer {token}"},
@@ -201,9 +209,7 @@ class TestLogsEndpoint:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_get_logs_pagination(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_logs_pagination(self, test_client, test_admin_authenticated):
         """Test logs pagination"""
         token = test_admin_authenticated["access_token"]
 
@@ -214,9 +220,7 @@ class TestLogsEndpoint:
 
         assert response.status_code == 200
 
-    def test_get_logs_filter_by_event_type(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_logs_filter_by_event_type(self, test_client, test_admin_authenticated):
         """Test filtering logs by event type"""
         token = test_admin_authenticated["access_token"]
 
@@ -227,9 +231,7 @@ class TestLogsEndpoint:
 
         assert response.status_code == 200
 
-    def test_get_logs_filter_by_user(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_logs_filter_by_user(self, test_client, test_admin_authenticated):
         """Test filtering logs by user ID"""
         token = test_admin_authenticated["access_token"]
 
@@ -240,9 +242,7 @@ class TestLogsEndpoint:
 
         assert response.status_code == 200
 
-    def test_get_logs_filter_by_resource_type(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_logs_filter_by_resource_type(self, test_client, test_admin_authenticated):
         """Test filtering logs by resource type"""
         token = test_admin_authenticated["access_token"]
 
@@ -253,9 +253,7 @@ class TestLogsEndpoint:
 
         assert response.status_code == 200
 
-    def test_get_logs_date_range(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_logs_date_range(self, test_client, test_admin_authenticated):
         """Test filtering logs by date range"""
         token = test_admin_authenticated["access_token"]
 
@@ -291,9 +289,7 @@ class TestAlertsEndpoint:
         assert "total" in data
         assert "alerts" in data
 
-    def test_get_alerts_filter_by_severity(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_alerts_filter_by_severity(self, test_client, test_admin_authenticated):
         """Test filtering alerts by severity"""
         token = test_admin_authenticated["access_token"]
 
@@ -304,9 +300,7 @@ class TestAlertsEndpoint:
 
         assert response.status_code == 200
 
-    def test_get_alerts_filter_by_resolved(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_alerts_filter_by_resolved(self, test_client, test_admin_authenticated):
         """Test filtering alerts by resolved status"""
         token = test_admin_authenticated["access_token"]
 
@@ -327,9 +321,7 @@ class TestAlertsEndpoint:
 class TestWorkflowStats:
     """Tests for workflow statistics endpoint"""
 
-    def test_get_workflow_stats(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_workflow_stats(self, test_client, test_admin_authenticated):
         """Test getting workflow statistics"""
         token = test_admin_authenticated["access_token"]
 
@@ -343,9 +335,7 @@ class TestWorkflowStats:
         assert data["success"] is True
         assert "data" in data
 
-    def test_get_workflow_stats_includes_counts(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_workflow_stats_includes_counts(self, test_client, test_admin_authenticated):
         """Test workflow stats include workflow counts"""
         token = test_admin_authenticated["access_token"]
 
@@ -367,13 +357,13 @@ class TestWorkflowStats:
 class TestDashboardSummary:
     """Tests for dashboard summary endpoint"""
 
-    def test_get_dashboard_summary(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_dashboard_summary(self, test_client, test_admin_authenticated):
         """Test getting dashboard summary"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {"f28_monitoring_dashboard": None, "f28_monitoring_dashboard.monitoring_dashboard": None}):
+        with patch.dict(
+            "sys.modules", {"f28_monitoring_dashboard": None, "f28_monitoring_dashboard.monitoring_dashboard": None}
+        ):
             response = test_client.get(
                 "/api/monitor/dashboard/summary",
                 headers={"Authorization": f"Bearer {token}"},
@@ -384,13 +374,13 @@ class TestDashboardSummary:
             assert data["success"] is True
             assert "data" in data
 
-    def test_get_dashboard_summary_includes_counts(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_dashboard_summary_includes_counts(self, test_client, test_admin_authenticated):
         """Test dashboard summary includes project/chapter counts"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {"f28_monitoring_dashboard": None, "f28_monitoring_dashboard.monitoring_dashboard": None}):
+        with patch.dict(
+            "sys.modules", {"f28_monitoring_dashboard": None, "f28_monitoring_dashboard.monitoring_dashboard": None}
+        ):
             response = test_client.get(
                 "/api/monitor/dashboard/summary",
                 headers={"Authorization": f"Bearer {token}"},
@@ -440,9 +430,7 @@ class TestAppendLog:
 class TestLogsWithMockedModule:
     """Tests for logs endpoint with mocked ImmutableLog module"""
 
-    def test_get_logs_with_immutable_log_module(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_logs_with_immutable_log_module(self, test_client, test_admin_authenticated):
         """Test logs endpoint when f01_immutable_log is available"""
         token = test_admin_authenticated["access_token"]
 
@@ -486,9 +474,7 @@ class TestLogsWithMockedModule:
             assert data[0]["event_type"] == "USER_LOGIN"
             assert data[1]["event_type"] == "PROJECT_CREATE"
 
-    def test_get_logs_filters_by_event_type_with_mock(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_logs_filters_by_event_type_with_mock(self, test_client, test_admin_authenticated):
         """Test logs filter by event type with mock module"""
         token = test_admin_authenticated["access_token"]
 
@@ -519,9 +505,7 @@ class TestLogsWithMockedModule:
             assert len(data) == 1
             assert data[0]["event_type"] == "USER_LOGIN"
 
-    def test_get_logs_filters_by_user_id_with_mock(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_logs_filters_by_user_id_with_mock(self, test_client, test_admin_authenticated):
         """Test logs filter by user ID with mock module"""
         token = test_admin_authenticated["access_token"]
 
@@ -556,9 +540,7 @@ class TestLogsWithMockedModule:
 class TestAlertsWithMockedModule:
     """Tests for alerts endpoint with mocked dashboard module"""
 
-    def test_get_alerts_with_mock_dashboard(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_alerts_with_mock_dashboard(self, test_client, test_admin_authenticated):
         """Test alerts endpoint when dashboard module is available"""
         token = test_admin_authenticated["access_token"]
 
@@ -586,9 +568,7 @@ class TestAlertsWithMockedModule:
                 assert len(data["alerts"]) == 1
                 assert data["alerts"][0]["severity"] == "warning"
 
-    def test_get_alerts_filter_by_severity_with_mock(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_alerts_filter_by_severity_with_mock(self, test_client, test_admin_authenticated):
         """Test alerts filtering by severity with mock"""
         token = test_admin_authenticated["access_token"]
 
@@ -608,17 +588,18 @@ class TestAlertsWithMockedModule:
 class TestWorkflowStatsWithMockedModule:
     """Tests for workflow stats with mocked temporal module"""
 
-    def test_get_workflow_stats_when_module_import_error(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_workflow_stats_when_module_import_error(self, test_client, test_admin_authenticated):
         """Test workflow stats falls back to default when module unavailable"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict("sys.modules", {
-            "f04_temporal_workflow": None,
-            "f04_temporal_workflow.workflows": None,
-            "f04_temporal_workflow.workflows.mock_client": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f04_temporal_workflow": None,
+                "f04_temporal_workflow.workflows": None,
+                "f04_temporal_workflow.workflows.mock_client": None,
+            },
+        ):
             response = test_client.get(
                 "/api/monitor/workflow/stats",
                 headers={"Authorization": f"Bearer {token}"},
@@ -630,20 +611,21 @@ class TestWorkflowStatsWithMockedModule:
             stats = data["data"]
             assert stats["total_workflows"] == 0
 
-    def test_get_workflow_stats_with_getattr_handling(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_workflow_stats_with_getattr_handling(self, test_client, test_admin_authenticated):
         """Test workflow stats handles client without get_stats attribute"""
         token = test_admin_authenticated["access_token"]
 
         mock_client = MagicMock(spec=[])
-        assert not hasattr(mock_client, 'get_stats')
+        assert not hasattr(mock_client, "get_stats")
 
-        with patch.dict("sys.modules", {
-            "f04_temporal_workflow": None,
-            "f04_temporal_workflow.workflows": None,
-            "f04_temporal_workflow.workflows.mock_client": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f04_temporal_workflow": None,
+                "f04_temporal_workflow.workflows": None,
+                "f04_temporal_workflow.workflows.mock_client": None,
+            },
+        ):
             response = test_client.get(
                 "/api/monitor/workflow/stats",
                 headers={"Authorization": f"Bearer {token}"},
@@ -657,9 +639,7 @@ class TestWorkflowStatsWithMockedModule:
 class TestDashboardSummaryWithMockedModule:
     """Tests for dashboard summary with mocked dashboard module"""
 
-    def test_get_dashboard_summary_with_mock(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_get_dashboard_summary_with_mock(self, test_client, test_admin_authenticated):
         """Test dashboard summary when MonitoringDashboard is available"""
         token = test_admin_authenticated["access_token"]
 
@@ -667,9 +647,7 @@ class TestDashboardSummaryWithMockedModule:
             "total_projects": 15,
             "total_chapters": 87,
             "active_workflows": 5,
-            "recent_activity": [
-                {"type": "project_created", "timestamp": "2024-01-15T10:00:00Z"}
-            ],
+            "recent_activity": [{"type": "project_created", "timestamp": "2024-01-15T10:00:00Z"}],
         }
 
         mock_dashboard = MagicMock()
@@ -692,9 +670,7 @@ class TestDashboardSummaryWithMockedModule:
 class TestMetricsWithMockedModules:
     """Tests for metrics with mocked modules"""
 
-    def test_metrics_with_cost_tracker(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_with_cost_tracker(self, test_client, test_admin_authenticated):
         """Test metrics include cost tracker data when available"""
         token = test_admin_authenticated["access_token"]
 
@@ -705,10 +681,13 @@ class TestMetricsWithMockedModules:
             "request_count": 342,
         }
 
-        with patch.dict("sys.modules", {
-            "f28_monitoring_dashboard": None,
-            "f28_monitoring_dashboard.monitoring_dashboard": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f28_monitoring_dashboard": None,
+                "f28_monitoring_dashboard.monitoring_dashboard": None,
+            },
+        ):
             with patch("f31_minimax_client.cost_tracker.CostTracker", return_value=mock_tracker):
                 response = test_client.get(
                     "/api/monitor/metrics",
@@ -721,9 +700,7 @@ class TestMetricsWithMockedModules:
                 assert "llm_usage" in metrics
                 assert metrics["llm_usage"]["total_tokens"] == 1500000
 
-    def test_metrics_with_context_budget(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_with_context_budget(self, test_client, test_admin_authenticated):
         """Test metrics include context budget when module is available"""
         token = test_admin_authenticated["access_token"]
 
@@ -731,12 +708,15 @@ class TestMetricsWithMockedModules:
         mock_budget.get_total_usage.return_value = 85000
         mock_budget.max_tokens = 200000
 
-        with patch.dict("sys.modules", {
-            "f28_monitoring_dashboard": None,
-            "f28_monitoring_dashboard.monitoring_dashboard": None,
-            "f31_minimax_client": None,
-            "f31_minimax_client.cost_tracker": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f28_monitoring_dashboard": None,
+                "f28_monitoring_dashboard.monitoring_dashboard": None,
+                "f31_minimax_client": None,
+                "f31_minimax_client.cost_tracker": None,
+            },
+        ):
             with patch("f02_context_budget.context_budget_manager.ContextBudgetManager", return_value=mock_budget):
                 response = test_client.get(
                     "/api/monitor/metrics",
@@ -754,7 +734,8 @@ class TestHealthCheckWithAllModules:
     """Tests for health check with various module availability scenarios"""
 
     def test_health_check_with_all_modules_available(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check when all modules are available"""
         # The actual implementation returns basic health info with empty components
@@ -767,15 +748,19 @@ class TestHealthCheckWithAllModules:
         assert "version" in data
 
     def test_health_check_immutable_log_import_error(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check when immutable_log import fails"""
         # The actual implementation doesn't check module availability
         # and returns empty components dict
-        with patch.dict("sys.modules", {
-            "f01_immutable_log": None,
-            "f01_immutable_log.immutable_log": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f01_immutable_log": None,
+                "f01_immutable_log.immutable_log": None,
+            },
+        ):
             response = test_client.get("/api/monitor/health")
 
             assert response.status_code == 200
@@ -784,15 +769,19 @@ class TestHealthCheckWithAllModules:
             assert "components" in data
 
     def test_health_check_context_budget_import_error(
-        self, test_client,
+        self,
+        test_client,
     ):
         """Test health check when context_budget import fails"""
         # The actual implementation doesn't check module availability
         # and returns empty components dict
-        with patch.dict("sys.modules", {
-            "f02_context_budget": None,
-            "f02_context_budget.context_budget_manager": None,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "f02_context_budget": None,
+                "f02_context_budget.context_budget_manager": None,
+            },
+        ):
             response = test_client.get("/api/monitor/health")
 
             assert response.status_code == 200
@@ -804,9 +793,7 @@ class TestHealthCheckWithAllModules:
 class TestAppendLogWithMockedModule:
     """Tests for append log with mocked module"""
 
-    def test_append_log_with_immutable_log_available(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_append_log_with_immutable_log_available(self, test_client, test_admin_authenticated):
         """Test append log when ImmutableLog is available"""
         token = test_admin_authenticated["access_token"]
 

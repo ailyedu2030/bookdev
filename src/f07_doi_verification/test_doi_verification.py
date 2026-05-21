@@ -55,7 +55,7 @@ class TestDOIVerification:
 
         citation = Citation(
             doi="10.1234/example",
-            fact_hash=None  # 缺少fact_hash
+            fact_hash=None,  # 缺少fact_hash
         )
 
         with pytest.raises(CitationValidationError):
@@ -73,9 +73,7 @@ class TestDOIVerification:
         fact_hash = registry.register_fact(content, ["10.1234/example"])
 
         result = await verifier.verify_citation_content(
-            doi="10.1234/example",
-            fact_hash=fact_hash,
-            cited_content=content
+            doi="10.1234/example", fact_hash=fact_hash, cited_content=content
         )
 
         assert result.is_valid is True
@@ -131,12 +129,8 @@ class TestDOIVerification:
 
         client = CrossRefClient()
 
-        with patch.object(client, 'fetch_doi_metadata', new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.return_value = {
-                "DOI": "10.1234/example",
-                "title": "Test Title",
-                "author": "Test Author"
-            }
+        with patch.object(client, "fetch_doi_metadata", new_callable=AsyncMock) as mock_fetch:
+            mock_fetch.return_value = {"DOI": "10.1234/example", "title": "Test Title", "author": "Test Author"}
 
             result = await client.fetch_doi_metadata("10.1234/example")
             mock_fetch.assert_called_once_with("10.1234/example")
@@ -149,7 +143,7 @@ class TestDOIVerification:
 
         client = CrossRefClient()
 
-        with patch.object(client, 'fetch_doi_metadata', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(client, "fetch_doi_metadata", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = {"DOI": "10.1234/test"}
             exists = await client.verify_doi_exists("10.1234/test")
             assert exists is True
@@ -231,9 +225,7 @@ class TestSecurityTests:
         tampered_content = "被篡改的内容"
 
         result = await verifier.verify_citation_content(
-            doi="10.1234/example",
-            fact_hash=correct_hash,
-            cited_content=tampered_content
+            doi="10.1234/example", fact_hash=correct_hash, cited_content=tampered_content
         )
 
         assert result.is_valid is False
@@ -292,10 +284,7 @@ class TestSecurityTests:
         fact_a = registry.get_fact(hashes[0])
         fact_a.source_refs = ["doi-D"]
 
-        citations = [
-            Citation(doi=f"doi-{chr(65+i)}", fact_hash=hashes[i])
-            for i in range(4)
-        ]
+        citations = [Citation(doi=f"doi-{chr(65+i)}", fact_hash=hashes[i]) for i in range(4)]
 
         has_cycle = verifier.detect_circular_reference(citations)
         assert has_cycle is True
@@ -334,9 +323,7 @@ class TestIntegrationTests:
 
         # 3. 验证引用内容
         citation_result = await verifier.verify_citation_content(
-            doi="10.1234/ai-research",
-            fact_hash=fact_hash,
-            cited_content=content
+            doi="10.1234/ai-research", fact_hash=fact_hash, cited_content=content
         )
         assert citation_result.is_valid is True
 
@@ -446,7 +433,7 @@ class TestDOIVerifierUncovered:
 
         verifier = DOIVerifier()
 
-        with patch.object(verifier, '_fetch_doi_metadata', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(verifier, "_fetch_doi_metadata", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.side_effect = asyncio.TimeoutError()
 
             result = await verifier.verify("10.1234/test")
@@ -463,7 +450,7 @@ class TestDOIVerifierUncovered:
 
         verifier = DOIVerifier()
 
-        with patch.object(verifier, '_fetch_doi_metadata', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(verifier, "_fetch_doi_metadata", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.side_effect = Exception("Network error")
 
             result = await verifier.verify("10.1234/test")

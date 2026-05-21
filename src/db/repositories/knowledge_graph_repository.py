@@ -62,9 +62,7 @@ class KnowledgeGraphRepository:
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def update_node(
-        self, node_id: str, properties: dict[str, Any]
-    ) -> GraphNode | None:
+    async def update_node(self, node_id: str, properties: dict[str, Any]) -> GraphNode | None:
         """更新节点属性（合并）"""
         node = await self.get_node(node_id)
         if node is None:
@@ -98,9 +96,7 @@ class KnowledgeGraphRepository:
 
         # 使用参数化查询替代字符串拼接，防止SQL注入
         for key, value in property_filters.items():
-            conditions.append(
-                text("properties->>:key = :value").bindparams(key=key, value=str(value))
-            )
+            conditions.append(text("properties->>:key = :value").bindparams(key=key, value=str(value)))
 
         stmt = select(GraphNode)
         if conditions:
@@ -187,23 +183,24 @@ class KnowledgeGraphRepository:
         await self._session.flush()
         return True
 
-    async def get_neighbors(
-        self, node_id: str, depth: int = 1
-    ) -> list[dict[str, Any]]:
+    async def get_neighbors(self, node_id: str, depth: int = 1) -> list[dict[str, Any]]:
         """获取邻居节点（支持深度）"""
         if depth == 1:
             edges = await self.get_edges(source_id=node_id)
             neighbors = []
             for edge in edges:
-                neighbors.append({
-                    "neighbor_id": edge.target_id,
-                    "edge_type": edge.edge_type,
-                    "properties": edge.properties,
-                    "depth": 1,
-                })
+                neighbors.append(
+                    {
+                        "neighbor_id": edge.target_id,
+                        "edge_type": edge.edge_type,
+                        "properties": edge.properties,
+                        "depth": 1,
+                    }
+                )
             return neighbors
 
-        stmt = text("""
+        stmt = text(
+            """
             WITH RECURSIVE neighbors AS (
                 SELECT
                     CASE WHEN e.source_id = :node_id THEN e.target_id ELSE e.source_id END AS neighbor_id,
@@ -229,12 +226,10 @@ class KnowledgeGraphRepository:
             SELECT DISTINCT neighbor_id, edge_type, properties, depth
             FROM neighbors
             ORDER BY depth, neighbor_id
-        """)
-
-        result = await self._session.execute(
-            stmt,
-            {"node_id": node_id, "depth": depth}
+        """
         )
+
+        result = await self._session.execute(stmt, {"node_id": node_id, "depth": depth})
         rows = result.fetchall()
 
         return [
@@ -247,14 +242,13 @@ class KnowledgeGraphRepository:
             for row in rows
         ]
 
-    async def find_path(
-        self, start_id: str, end_id: str, max_depth: int = 10
-    ) -> list[str] | None:
+    async def find_path(self, start_id: str, end_id: str, max_depth: int = 10) -> list[str] | None:
         """使用 BFS 查找路径"""
         if start_id == end_id:
             return [start_id]
 
-        stmt = text("""
+        stmt = text(
+            """
             WITH RECURSIVE path_search AS (
                 SELECT
                     source_id AS node_id,
@@ -278,23 +272,20 @@ class KnowledgeGraphRepository:
             WHERE node_id = :end_id
             ORDER BY depth
             LIMIT 1
-        """)
-
-        result = await self._session.execute(
-            stmt,
-            {"start_id": start_id, "end_id": end_id, "max_depth": max_depth}
+        """
         )
+
+        result = await self._session.execute(stmt, {"start_id": start_id, "end_id": end_id, "max_depth": max_depth})
         row = result.fetchone()
 
         if row is None:
             return None
         return list(row[0])
 
-    async def bfs_traverse(
-        self, start_id: str, max_depth: int = 50
-    ) -> list[str]:
+    async def bfs_traverse(self, start_id: str, max_depth: int = 50) -> list[str]:
         """BFS 遍历 - 深度限制可配置"""
-        stmt = text("""
+        stmt = text(
+            """
             WITH RECURSIVE bfs AS (
                 SELECT source_id AS node_id, 1 AS depth
                 FROM graph_edges WHERE source_id = :start_id
@@ -312,12 +303,10 @@ class KnowledgeGraphRepository:
                 WHERE b.depth < :max_depth
             )
             SELECT DISTINCT node_id, depth FROM bfs WHERE node_id != :start_id ORDER BY depth
-        """)
-
-        result = await self._session.execute(
-            stmt,
-            {"start_id": start_id, "max_depth": max_depth}
+        """
         )
+
+        result = await self._session.execute(stmt, {"start_id": start_id, "max_depth": max_depth})
         rows = result.fetchall()
 
         result_list = [start_id]
@@ -326,9 +315,7 @@ class KnowledgeGraphRepository:
                 result_list.append(row[0])
         return result_list
 
-    async def dfs_traverse(
-        self, start_id: str, max_depth: int = 50
-    ) -> list[str]:
+    async def dfs_traverse(self, start_id: str, max_depth: int = 50) -> list[str]:
         """DFS 遍历 - 深度限制可配置"""
         visited = set()
         result = []
@@ -354,9 +341,7 @@ class KnowledgeGraphRepository:
         await dfs(start_id, 1)
         return result
 
-    async def batch_insert_nodes(
-        self, nodes: list[dict[str, Any]]
-    ) -> int:
+    async def batch_insert_nodes(self, nodes: list[dict[str, Any]]) -> int:
         """批量插入节点"""
         count = 0
         for node_data in nodes:
@@ -370,9 +355,7 @@ class KnowledgeGraphRepository:
         await self._session.flush()
         return count
 
-    async def batch_insert_edges(
-        self, edges: list[dict[str, Any]]
-    ) -> int:
+    async def batch_insert_edges(self, edges: list[dict[str, Any]]) -> int:
         """批量插入边"""
         count = 0
         for edge_data in edges:
@@ -405,21 +388,21 @@ class KnowledgeGraphRepository:
 
     async def node_exists(self, node_id: str) -> bool:
         """检查节点是否存在 - 使用EXISTS优化"""
-        stmt = select(exists()).select_from(GraphNode).where(
-            GraphNode.id == node_id
-        )
+        stmt = select(exists()).select_from(GraphNode).where(GraphNode.id == node_id)
         result = await self._session.execute(stmt)
         return bool(result.scalar_one())
 
-    async def edge_exists(
-        self, source_id: str, target_id: str, edge_type: str
-    ) -> bool:
+    async def edge_exists(self, source_id: str, target_id: str, edge_type: str) -> bool:
         """检查边是否存在 - 使用EXISTS优化"""
-        stmt = select(exists()).select_from(GraphEdge).where(
-            and_(
-                GraphEdge.source_id == source_id,
-                GraphEdge.target_id == target_id,
-                GraphEdge.edge_type == edge_type,
+        stmt = (
+            select(exists())
+            .select_from(GraphEdge)
+            .where(
+                and_(
+                    GraphEdge.source_id == source_id,
+                    GraphEdge.target_id == target_id,
+                    GraphEdge.edge_type == edge_type,
+                )
             )
         )
         result = await self._session.execute(stmt)

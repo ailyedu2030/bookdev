@@ -11,7 +11,6 @@ F18: 术语表服务 - TDD RED阶段测试
 """
 
 
-
 class TestTermGlossaryService:
     """术语表服务测试"""
 
@@ -24,7 +23,7 @@ class TestTermGlossaryService:
             term="人工智能",
             definition="研究、开发用于模拟、延伸和扩展人的智能...",
             domain="计算机科学",
-            synonyms=["AI", "Artificial Intelligence"]
+            synonyms=["AI", "Artificial Intelligence"],
         )
 
         assert result.success is True
@@ -101,19 +100,11 @@ class TestTermGlossaryService:
         from f18_term_glossary.term_glossary_service import TermGlossaryService
 
         service = TermGlossaryService()
-        result = service.register_term(
-            "人工智能",
-            "初始定义...",
-            "CS",
-            locked=True
-        )
+        result = service.register_term("人工智能", "初始定义...", "CS", locked=True)
 
         assert result.term.locked is True
 
-        update_result = service.update_term_definition(
-            result.term.id,
-            "新定义..."
-        )
+        update_result = service.update_term_definition(result.term.id, "新定义...")
 
         assert update_result.success is False
 
@@ -128,10 +119,7 @@ class TestTermGlossaryService:
 
         assert unlock_result.success is True
 
-        update_result = service.update_term_definition(
-            result.term.id,
-            "修订后的定义..."
-        )
+        update_result = service.update_term_definition(result.term.id, "修订后的定义...")
 
         assert update_result.success is True
 
@@ -341,10 +329,12 @@ class TestConsistencyChecker:
         glossary.register_term("人工智能", "定义A...", "CS")
 
         checker = ConsistencyChecker(glossary)
-        conflicts = checker.detect_conflicts([
-            {"term": "人工智能", "definition": "定义A..."},
-            {"term": "人工智能", "definition": "定义B..."},
-        ])
+        conflicts = checker.detect_conflicts(
+            [
+                {"term": "人工智能", "definition": "定义A..."},
+                {"term": "人工智能", "definition": "定义B..."},
+            ]
+        )
 
         assert len(conflicts) == 1
         assert conflicts[0]["term"] == "人工智能"
@@ -369,10 +359,12 @@ class TestConsistencyChecker:
 
         glossary = TermGlossaryService()
         checker = ConsistencyChecker(glossary)
-        conflicts = checker.detect_conflicts([
-            {"term": "人工智能", "definition": "定义A..."},
-            {"term": "机器学习", "definition": "定义B..."},
-        ])
+        conflicts = checker.detect_conflicts(
+            [
+                {"term": "人工智能", "definition": "定义A..."},
+                {"term": "机器学习", "definition": "定义B..."},
+            ]
+        )
 
         assert len(conflicts) == 0
 
@@ -640,12 +632,7 @@ class TestTermGlossaryIntegration:
 
         # 1. 注册术语
         service = TermGlossaryService()
-        result = service.register_term(
-            "低空经济",
-            "低空经济是指...",
-            "经济学",
-            synonyms=["UAM"]
-        )
+        result = service.register_term("低空经济", "低空经济是指...", "经济学", synonyms=["UAM"])
         term_id = result.term.id
 
         # 2. 检查一致性

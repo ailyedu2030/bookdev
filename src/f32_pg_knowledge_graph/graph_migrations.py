@@ -29,12 +29,14 @@ class GraphMigration:
 
     def register(self, version: str, description: str, up_sql: str, down_sql: str = "") -> None:
         """注册一个迁移"""
-        self._migrations.append({
-            "version": version,
-            "description": description,
-            "up": up_sql,
-            "down": down_sql,
-        })
+        self._migrations.append(
+            {
+                "version": version,
+                "description": description,
+                "up": up_sql,
+                "down": down_sql,
+            }
+        )
 
     def migrate(self) -> int:
         """执行所有未应用的迁移"""
@@ -89,20 +91,20 @@ class GraphMigration:
         applied = set(self._get_applied_versions())
         result = []
         for migration in self._migrations:
-            result.append({
-                "version": migration["version"],
-                "description": migration["description"],
-                "applied": migration["version"] in applied,
-            })
+            result.append(
+                {
+                    "version": migration["version"],
+                    "description": migration["description"],
+                    "applied": migration["version"] in applied,
+                }
+            )
         return result
 
     def _ensure_migration_table(self) -> None:
         self._execute_sql(MIGRATION_TABLE)
 
     def _get_applied_versions(self) -> list[str]:
-        rows = self._execute_sql(
-            "SELECT version FROM graph_migrations ORDER BY id"
-        )
+        rows = self._execute_sql("SELECT version FROM graph_migrations ORDER BY id")
         return [r[0] for r in rows]
 
     def _record_migration(self, version: str, description: str) -> None:
@@ -121,7 +123,7 @@ class GraphMigration:
         """在适配器上执行 SQL"""
         sql_upper = sql.strip().upper()
 
-        if hasattr(self._adapter, '_get_cursor'):
+        if hasattr(self._adapter, "_get_cursor"):
             with self._adapter._get_cursor() as (cursor, conn):
                 if params:
                     cursor.execute(sql, params)
@@ -131,7 +133,7 @@ class GraphMigration:
                     return cursor.fetchall()
                 conn.commit()
                 return None
-        elif hasattr(self._adapter, '_conn') and self._adapter._conn:
+        elif hasattr(self._adapter, "_conn") and self._adapter._conn:
             cursor = self._adapter._conn.cursor()
             try:
                 if params:
@@ -144,7 +146,7 @@ class GraphMigration:
                 return None
             finally:
                 cursor.close()
-        elif hasattr(self._adapter, '_nodes') and hasattr(self._adapter, '_edges'):
+        elif hasattr(self._adapter, "_nodes") and hasattr(self._adapter, "_edges"):
             return self._execute_sql_mock(sql, params)
         else:
             return None
@@ -156,26 +158,28 @@ class GraphMigration:
         if "CREATE TABLE IF NOT EXISTS" in sql_upper:
             return None
         if sql_upper.startswith("SELECT") and "GRAPH_MIGRATIONS" in sql_upper:
-            if not hasattr(self._adapter, '_migrations'):
+            if not hasattr(self._adapter, "_migrations"):
                 self._adapter._migrations = []
             return [(m["version"],) for m in self._adapter._migrations]
         if sql_upper.startswith("INSERT") and "GRAPH_MIGRATIONS" in sql_upper:
-            if not hasattr(self._adapter, '_migrations'):
+            if not hasattr(self._adapter, "_migrations"):
                 self._adapter._migrations = []
             version = params[0] if params else "unknown"
             description = params[1] if params and len(params) > 1 else ""
             import time
-            self._adapter._migrations.append({
-                "version": version,
-                "description": description,
-                "applied_at": time.time(),
-            })
+
+            self._adapter._migrations.append(
+                {
+                    "version": version,
+                    "description": description,
+                    "applied_at": time.time(),
+                }
+            )
             return None
         if sql_upper.startswith("DELETE") and "GRAPH_MIGRATIONS" in sql_upper:
-            if hasattr(self._adapter, '_migrations'):
+            if hasattr(self._adapter, "_migrations"):
                 self._adapter._migrations = [
-                    m for m in self._adapter._migrations
-                    if params is None or m["version"] != params[0]
+                    m for m in self._adapter._migrations if params is None or m["version"] != params[0]
                 ]
             return None
         return None

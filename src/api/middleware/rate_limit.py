@@ -16,6 +16,7 @@ from starlette.responses import JSONResponse
 @dataclass
 class RateLimitConfig:
     """Rate limit configuration for an endpoint"""
+
     requests: int
     window_seconds: int
     key_prefix: str = "rl"
@@ -24,6 +25,7 @@ class RateLimitConfig:
 @dataclass
 class RateLimitSettings:
     """Global rate limit settings"""
+
     trust_x_forwarded_for: bool = False
     trust_x_real_ip: bool = False
 
@@ -31,6 +33,7 @@ class RateLimitSettings:
 @dataclass
 class SlidingWindowEntry:
     """Sliding window entry for rate limiting"""
+
     timestamps: list[float] = field(default_factory=list)
 
 
@@ -54,10 +57,7 @@ class InMemoryRateLimiter:
 
         expired_keys = []
         for key, entry in self._storage.items():
-            entry.timestamps = [
-                ts for ts in entry.timestamps
-                if current_time - ts < 3600
-            ]
+            entry.timestamps = [ts for ts in entry.timestamps if current_time - ts < 3600]
             if not entry.timestamps:
                 expired_keys.append(key)
 

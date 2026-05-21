@@ -59,7 +59,7 @@ class TestDashboardPage:
         authenticated_page.goto("http://localhost:3000/dashboard")
         authenticated_page.wait_for_load_state("networkidle")
 
-        authenticated_page.click('text=项目列表')
+        authenticated_page.click("text=项目列表")
         authenticated_page.wait_for_url("**/projects", timeout=5000)
         expect(authenticated_page.locator("h1:has-text('项目列表')")).toBeVisible()
 

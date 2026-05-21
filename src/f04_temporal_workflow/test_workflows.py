@@ -78,7 +78,7 @@ def sample_textbook_config():
         "subject": "低空经济",
         "grade_level": "大学本科",
         "outline_review_required": False,  # 加速测试
-        "final_review_required": False,    # 加速测试
+        "final_review_required": False,  # 加速测试
         "quality_threshold": 70.0,
         "parallel_chapter_limit": 3,
         "chapters": [
@@ -121,6 +121,7 @@ def sample_textbook_config():
 
 # ─── Test 1: 章节工作流端到端 ─────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_01_chapter_workflow_e2e(client, sample_chapter_config):
     """测试章节工作流: 提纲→内容生成→评分→扫描"""
@@ -151,6 +152,7 @@ async def test_01_chapter_workflow_e2e(client, sample_chapter_config):
 
 
 # ─── Test 2: 全书编排端到端 ────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_02_orchestrator_workflow_e2e(client, sample_textbook_config):
@@ -190,6 +192,7 @@ async def test_02_orchestrator_workflow_e2e(client, sample_textbook_config):
 
 # ─── Test 3: 人工审核暂停/恢复 ─────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_03_human_review_signal_mechanism(client):
     """测试人工审核 signal 机制"""
@@ -227,9 +230,11 @@ async def test_03_human_review_signal_mechanism(client):
 
 # ─── Test 4: 子工作流并行执行 ──────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_04_parallel_child_workflows(client):
     """测试多个子工作流并行执行"""
+
     async def run_parallel_chapters():
         tasks = []
         for i in range(5):
@@ -264,6 +269,7 @@ async def test_04_parallel_child_workflows(client):
 
 # ─── Test 5: 异常和重试测试 ────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_05_error_handling_and_retry(client):
     """测试异常处理和重试机制"""
@@ -277,7 +283,8 @@ async def test_05_error_handling_and_retry(client):
         return f"success-{value}"
 
     result = await client.execute_activity(
-        fail_then_succeed, "test",
+        fail_then_succeed,
+        "test",
         options=ActivityOptions(
             start_to_close_timeout_seconds=30,
             retry_policy=RetryPolicy(
@@ -319,6 +326,7 @@ async def test_05_error_handling_and_retry(client):
 
 # ─── Test 6: 内容生成活动幂等性 ─────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_06_content_generation_idempotency(client):
     """测试内容生成活动的幂等性"""
@@ -344,6 +352,7 @@ async def test_06_content_generation_idempotency(client):
 
 
 # ─── Test 7: 安全扫描批量处理 ──────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_07_security_scan_batch(client):
@@ -384,6 +393,7 @@ async def test_07_security_scan_batch(client):
 
 # ─── Test 8: 质量评分门控 ─────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_08_quality_gate_retry(client):
     """测试质量门控: 质量评分触发重写"""
@@ -414,6 +424,7 @@ async def test_08_quality_gate_retry(client):
 
 
 # ─── Test 9: 提纲生成活动 ──────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_09_outline_generation(client):

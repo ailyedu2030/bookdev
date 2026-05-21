@@ -13,11 +13,11 @@ class TestMonitorRoutesEdgeCases:
 
     def test_health_check_all_components_import_error(self, test_client):
         """Test health check when modules are not available"""
-        with patch.dict('sys.modules', {
-            'f28_monitoring_dashboard': None,
-            'f01_immutable_log': None,
-            'f02_context_budget': None
-        }, clear=False):
+        with patch.dict(
+            "sys.modules",
+            {"f28_monitoring_dashboard": None, "f01_immutable_log": None, "f02_context_budget": None},
+            clear=False,
+        ):
             response = test_client.get("/api/monitor/health")
             assert response.status_code == 200
             data = response.json()
@@ -25,17 +25,15 @@ class TestMonitorRoutesEdgeCases:
             assert "components" in data
 
     @pytest.mark.skip(reason="Flaky: module mocking from test_monitor.py not cleaned up properly")
-    def test_metrics_with_context_budget_import_error(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_with_context_budget_import_error(self, test_client, test_admin_authenticated):
         """Test metrics endpoint when context_budget unavailable"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f02_context_budget': None,
-            'f28_monitoring_dashboard': None,
-            'f31_minimax_client': None
-        }, clear=False):
+        with patch.dict(
+            "sys.modules",
+            {"f02_context_budget": None, "f28_monitoring_dashboard": None, "f31_minimax_client": None},
+            clear=False,
+        ):
             response = test_client.get(
                 "/api/monitor/metrics",
                 headers={"Authorization": f"Bearer {token}"},
@@ -46,26 +44,22 @@ class TestMonitorRoutesEdgeCases:
             assert "data" in data
 
     @pytest.mark.skip(reason="Flaky: module mocking from test_monitor.py not cleaned up properly")
-    def test_metrics_with_llm_cost_tracker_import_error(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_metrics_with_llm_cost_tracker_import_error(self, test_client, test_admin_authenticated):
         """Test metrics when CostTracker unavailable"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f31_minimax_client': None,
-            'f02_context_budget': None,
-            'f28_monitoring_dashboard': None
-        }, clear=False):
+        with patch.dict(
+            "sys.modules",
+            {"f31_minimax_client": None, "f02_context_budget": None, "f28_monitoring_dashboard": None},
+            clear=False,
+        ):
             response = test_client.get(
                 "/api/monitor/metrics",
                 headers={"Authorization": f"Bearer {token}"},
             )
             assert response.status_code == 200
 
-    def test_logs_filter_by_resource_type_empty(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_logs_filter_by_resource_type_empty(self, test_client, test_admin_authenticated):
         """Test logs with resource_type filter"""
         token = test_admin_authenticated["access_token"]
 
@@ -76,9 +70,7 @@ class TestMonitorRoutesEdgeCases:
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
-    def test_logs_pagination_boundary(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_logs_pagination_boundary(self, test_client, test_admin_authenticated):
         """Test logs pagination at boundary"""
         token = test_admin_authenticated["access_token"]
 
@@ -88,15 +80,11 @@ class TestMonitorRoutesEdgeCases:
         )
         assert response.status_code == 200
 
-    def test_alerts_with_import_error(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_alerts_with_import_error(self, test_client, test_admin_authenticated):
         """Test alerts when monitoring dashboard unavailable"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f28_monitoring_dashboard': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f28_monitoring_dashboard": None}, clear=False):
             response = test_client.get(
                 "/api/monitor/alerts",
                 headers={"Authorization": f"Bearer {token}"},
@@ -106,9 +94,7 @@ class TestMonitorRoutesEdgeCases:
             assert data["success"] is True
             assert "alerts" in data
 
-    def test_alerts_filter_by_severity(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_alerts_filter_by_severity(self, test_client, test_admin_authenticated):
         """Test alerts filtering by severity"""
         token = test_admin_authenticated["access_token"]
 
@@ -118,9 +104,7 @@ class TestMonitorRoutesEdgeCases:
         )
         assert response.status_code == 200
 
-    def test_alerts_filter_by_resolved(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_alerts_filter_by_resolved(self, test_client, test_admin_authenticated):
         """Test alerts filtering by resolved status"""
         token = test_admin_authenticated["access_token"]
 
@@ -130,15 +114,11 @@ class TestMonitorRoutesEdgeCases:
         )
         assert response.status_code == 200
 
-    def test_workflow_stats_mock_client_import_error(
-        self, test_client, test_admin_authenticated
-    ):
+    def test_workflow_stats_mock_client_import_error(self, test_client, test_admin_authenticated):
         """Test workflow stats when MockWorkflowClient unavailable"""
         token = test_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f04_temporal_workflow': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f04_temporal_workflow": None}, clear=False):
             response = test_client.get(
                 "/api/monitor/workflow/stats",
                 headers={"Authorization": f"Bearer {token}"},
@@ -152,15 +132,11 @@ class TestMonitorRoutesEdgeCases:
 class TestSecurityRoutesEdgeCases:
     """Tests for security.py edge cases and error paths"""
 
-    def test_doi_verify_import_error(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_doi_verify_import_error(self, test_client, test_db, content_admin_authenticated):
         """Test DOI verification when DOIVerifier unavailable - uses mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f07_doi_verification': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f07_doi_verification": None}, clear=False):
             response = test_client.post(
                 "/api/security/doi/verify",
                 json={"doi": "10.1234/test"},
@@ -174,15 +150,11 @@ class TestSecurityRoutesEdgeCases:
             assert data["success"] is True
             assert data["valid"] is True
 
-    def test_regulation_verify_import_error(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_regulation_verify_import_error(self, test_client, test_db, content_admin_authenticated):
         """Test regulation verification when module unavailable - uses mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f08_regulation_verification': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f08_regulation_verification": None}, clear=False):
             response = test_client.post(
                 "/api/security/regulation/verify",
                 json={"content": "Test content"},
@@ -195,15 +167,11 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["success"] is True
 
-    def test_semantic_scan_import_error(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_semantic_scan_import_error(self, test_client, test_db, content_admin_authenticated):
         """Test semantic scan when GlobalSemanticScanner unavailable - uses mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f13_global_semantic_scanner': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f13_global_semantic_scanner": None}, clear=False):
             response = test_client.post(
                 "/api/security/semantic/scan",
                 json={"content": "Test content", "threshold": 0.8},
@@ -216,15 +184,11 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["success"] is True
 
-    def test_material_register_import_error(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_material_register_import_error(self, test_client, test_db, content_admin_authenticated):
         """Test material registration when SourceRegistry unavailable - uses mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f09_material_security': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f09_material_security": None}, clear=False):
             response = test_client.post(
                 "/api/security/material/register",
                 params={
@@ -239,15 +203,11 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["success"] is True
 
-    def test_material_verify_import_error(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_material_verify_import_error(self, test_client, test_db, content_admin_authenticated):
         """Test material verify when SourceRegistry unavailable - uses mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f09_material_security': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f09_material_security": None}, clear=False):
             response = test_client.get(
                 "/api/security/material/verify/nonexistent_hash",
                 headers={"Authorization": f"Bearer {token}"},
@@ -256,15 +216,11 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["success"] is True
 
-    def test_concept_verify_import_error(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_concept_verify_import_error(self, test_client, test_db, content_admin_authenticated):
         """Test concept verify when IntegrityVerifier unavailable - uses mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f10_concept_security': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f10_concept_security": None}, clear=False):
             response = test_client.post(
                 "/api/security/concept/verify",
                 json={
@@ -280,15 +236,11 @@ class TestSecurityRoutesEdgeCases:
             data = response.json()
             assert data["success"] is True
 
-    def test_batch_scan_import_error(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_batch_scan_import_error(self, test_client, test_db, content_admin_authenticated):
         """Test batch scan when ContentSecurityFilter unavailable - uses mock mode"""
         token = content_admin_authenticated["access_token"]
 
-        with patch.dict('sys.modules', {
-            'f23_content_security': None
-        }, clear=False):
+        with patch.dict("sys.modules", {"f23_content_security": None}, clear=False):
             response = test_client.post(
                 "/api/security/batch/scan?contents=content1&contents=content2&contents=content3",
                 headers={
@@ -302,9 +254,7 @@ class TestSecurityRoutesEdgeCases:
 class TestChaptersRoutesEdgeCases:
     """Tests for chapters.py edge cases"""
 
-    def test_list_chapters_project_not_found(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_chapters_project_not_found(self, test_client, test_db, test_user_authenticated):
         """Test listing chapters when project not found"""
         token = test_user_authenticated["access_token"]
 
@@ -314,9 +264,7 @@ class TestChaptersRoutesEdgeCases:
         )
         assert response.status_code == 404
 
-    def test_create_chapter_project_not_found(
-        self, test_client, test_db, content_admin_authenticated
-    ):
+    def test_create_chapter_project_not_found(self, test_client, test_db, content_admin_authenticated):
         """Test creating chapter when project not found - validation error"""
         token = content_admin_authenticated["access_token"]
 
@@ -333,9 +281,7 @@ class TestChaptersRoutesEdgeCases:
         )
         assert response.status_code in [404, 422]
 
-    def test_get_chapter_not_found(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_get_chapter_not_found(self, test_client, test_db, test_user_authenticated):
         """Test getting chapter when not found"""
         token = test_user_authenticated["access_token"]
 
@@ -463,9 +409,7 @@ class TestProjectsRoutesEdgeCases:
         )
         assert response.status_code == 404
 
-    def test_list_projects_with_pagination(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_projects_with_pagination(self, test_client, test_db, test_user_authenticated):
         """Test listing projects with pagination parameters"""
         token = test_user_authenticated["access_token"]
 
@@ -475,9 +419,7 @@ class TestProjectsRoutesEdgeCases:
         )
         assert response.status_code == 200
 
-    def test_list_projects_with_status_filter(
-        self, test_client, test_db, test_user_authenticated
-    ):
+    def test_list_projects_with_status_filter(self, test_client, test_db, test_user_authenticated):
         """Test listing projects with status filter"""
         token = test_user_authenticated["access_token"]
 

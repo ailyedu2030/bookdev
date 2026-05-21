@@ -17,6 +17,7 @@ from f21_risk_classification.risk_thresholds import (
 @dataclass
 class RiskClassification:
     """风险分类结果"""
+
     level: str
     review_ratio: float
     auto_approve: bool
@@ -65,11 +66,7 @@ class RiskClassifier:
         level = self.classify(score)
         config = self._risk_levels[level]
 
-        return {
-            "level": level,
-            "review_ratio": config["review_ratio"],
-            "auto_approve": config["auto_approve"]
-        }
+        return {"level": level, "review_ratio": config["review_ratio"], "auto_approve": config["auto_approve"]}
 
     def get_review_ratio(self, level: str) -> float | None:
         """

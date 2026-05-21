@@ -47,6 +47,7 @@ class MockHSMClient(HSMClient):
     def sign(self, data: str) -> str:
         """模拟签名"""
         import hashlib
+
         return f"hsm_signature_{hashlib.sha256(data.encode()).hexdigest()}"
 
     def verify(self, data: str, signature: str) -> bool:

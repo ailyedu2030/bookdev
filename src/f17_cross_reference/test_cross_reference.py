@@ -11,9 +11,9 @@ F17: 跨章引用解析器 - TDD RED阶段测试
 """
 
 
-
 class ReferencePattern:
     """引用模式"""
+
     DEFINITION_REF = "definition_ref"  # 定义引用 [@def:ch01_s01]
     APPLICATION_REF = "application_ref"  # 应用引用 [@app:ch01_s01]
     COMPARISON_REF = "comparison_ref"  # 对比引用 [@cmp:ch01_s01]
@@ -22,6 +22,7 @@ class ReferencePattern:
 
 class ParsedReference:
     """解析后的引用"""
+
     def __init__(
         self,
         ref_type: str,

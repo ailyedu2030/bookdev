@@ -29,15 +29,15 @@ class CrossRefClient:
                 "title": "Example Research Paper",
                 "author": "John Doe",
                 "published": "2024-01-01",
-                "publisher": "Test Publisher"
+                "publisher": "Test Publisher",
             },
             "10.1234/ai-research": {
                 "DOI": "10.1234/ai-research",
                 "title": "Artificial Intelligence Research Overview",
                 "author": "AI Research Team",
                 "published": "2024-01-15",
-                "publisher": "AI Press"
-            }
+                "publisher": "AI Press",
+            },
         }
 
         return mock_dois.get(doi)

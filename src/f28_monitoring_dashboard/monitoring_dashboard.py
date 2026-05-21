@@ -13,6 +13,7 @@ from typing import Any
 @dataclass
 class HealthStatus:
     """健康状态"""
+
     status: str
     timestamp: datetime
     message: str
@@ -21,6 +22,7 @@ class HealthStatus:
 @dataclass
 class WorkflowMetrics:
     """工作流指标"""
+
     active_count: int = 0
     completed_count: int = 0
     failed_count: int = 0
@@ -29,6 +31,7 @@ class WorkflowMetrics:
 @dataclass
 class Alert:
     """告警"""
+
     level: str
     message: str
     metadata: dict[str, Any]
@@ -57,7 +60,7 @@ class MonitoringDashboard:
         self._metric_history[name].append(value)
         # Limit history size to prevent unbounded growth
         if len(self._metric_history[name]) > self.MAX_HISTORY_LENGTH:
-            self._metric_history[name] = self._metric_history[name][-self.MAX_HISTORY_LENGTH:]
+            self._metric_history[name] = self._metric_history[name][-self.MAX_HISTORY_LENGTH :]
 
     def get_health_status(self) -> HealthStatus:
         """获取健康状态 - 实际检查各组件状态"""
@@ -69,20 +72,14 @@ class MonitoringDashboard:
             return HealthStatus(
                 status="critical",
                 timestamp=datetime.now(UTC),
-                message="Critical alerts active - immediate attention required"
+                message="Critical alerts active - immediate attention required",
             )
         elif has_warning:
             return HealthStatus(
-                status="degraded",
-                timestamp=datetime.now(UTC),
-                message="System operating with warnings"
+                status="degraded", timestamp=datetime.now(UTC), message="System operating with warnings"
             )
         else:
-            return HealthStatus(
-                status="healthy",
-                timestamp=datetime.now(UTC),
-                message="All systems operational"
-            )
+            return HealthStatus(status="healthy", timestamp=datetime.now(UTC), message="All systems operational")
 
     def check_log_integrity(self) -> bool:
         """检查日志完整性 - 实际验证日志记录"""
@@ -90,14 +87,14 @@ class MonitoringDashboard:
             return False
 
         # Check if logger has the verify_integrity method
-        if hasattr(self.logger, 'verify_integrity'):
+        if hasattr(self.logger, "verify_integrity"):
             try:
                 return self.logger.verify_integrity()
             except Exception:
                 return False
 
         # Fallback: check if logger has recent entries
-        if hasattr(self.logger, 'get_recent_entries'):
+        if hasattr(self.logger, "get_recent_entries"):
             try:
                 entries = self.logger.get_recent_entries(limit=10)
                 return len(entries) > 0
@@ -113,19 +110,19 @@ class MonitoringDashboard:
 
         try:
             # Try to get metrics from workflow client
-            if hasattr(self.workflow_client, 'get_metrics'):
+            if hasattr(self.workflow_client, "get_metrics"):
                 raw_metrics = self.workflow_client.get_metrics()
                 return WorkflowMetrics(
-                    active_count=raw_metrics.get('active', 0),
-                    completed_count=raw_metrics.get('completed', 0),
-                    failed_count=raw_metrics.get('failed', 0)
+                    active_count=raw_metrics.get("active", 0),
+                    completed_count=raw_metrics.get("completed", 0),
+                    failed_count=raw_metrics.get("failed", 0),
                 )
-            elif hasattr(self.workflow_client, 'get_workflow_stats'):
+            elif hasattr(self.workflow_client, "get_workflow_stats"):
                 stats = self.workflow_client.get_workflow_stats()
                 return WorkflowMetrics(
-                    active_count=stats.get('running', 0),
-                    completed_count=stats.get('completed', 0),
-                    failed_count=stats.get('failed', 0)
+                    active_count=stats.get("running", 0),
+                    completed_count=stats.get("completed", 0),
+                    failed_count=stats.get("failed", 0),
                 )
         except Exception:
             pass
@@ -134,17 +131,12 @@ class MonitoringDashboard:
 
     def add_alert(self, level: str, message: str, metadata: dict[str, Any]) -> None:
         """添加告警"""
-        alert = Alert(
-            level=level,
-            message=message,
-            metadata=metadata,
-            timestamp=datetime.now(UTC)
-        )
+        alert = Alert(level=level, message=message, metadata=metadata, timestamp=datetime.now(UTC))
         self.alerts.append(alert)
 
         # Track active alert by metric name for recovery detection
-        metric_name = metadata.get('metric_name')
-        if metric_name and level in ('warning', 'critical'):
+        metric_name = metadata.get("metric_name")
+        if metric_name and level in ("warning", "critical"):
             self._active_alerts[metric_name] = alert
 
     def get_average_metric(self, name: str) -> float | None:
@@ -161,7 +153,11 @@ class MonitoringDashboard:
             return
 
         if current_value > threshold:
-            self.add_alert(level, f"{name} exceeded threshold", {"threshold": threshold, "value": current_value, "metric_name": name})
+            self.add_alert(
+                level,
+                f"{name} exceeded threshold",
+                {"threshold": threshold, "value": current_value, "metric_name": name},
+            )
         else:
             # Metric recovered - clear any active alert for this metric
             self._clear_recovered_alert(name)
@@ -190,5 +186,5 @@ class MonitoringDashboard:
             return None
 
         # Calculate average change
-        changes = [history[i+1] - history[i] for i in range(len(history)-1)]
+        changes = [history[i + 1] - history[i] for i in range(len(history) - 1)]
         return sum(changes) / len(changes) if changes else 0.0
