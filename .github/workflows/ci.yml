@@ -502,7 +502,7 @@ jobs:
           exit 1
 
       - name: Notify deployment
-        if: success()
+        if: success() && false
         uses: slackapi/slack-github-action@v1.26.0
         with:
           payload: |
@@ -607,7 +607,7 @@ jobs:
           exit 1
 
       - name: Notify deployment
-        if: success()
+        if: success() && false
         uses: slackapi/slack-github-action@v1.26.0
         with:
           payload: |
@@ -618,7 +618,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify failure
-        if: failure()
+        if: failure() && false
         uses: slackapi/slack-github-action@v1.26.0
         with:
           payload: |
