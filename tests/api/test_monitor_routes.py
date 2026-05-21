@@ -6,8 +6,6 @@ Tests for monitoring endpoints with proper admin authentication:
 - GET /api/monitor/logs - Audit logs
 """
 
-import pytest
-from datetime import datetime
 
 
 class TestHealthCheck:

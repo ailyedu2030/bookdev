@@ -25,8 +25,9 @@ F05: 知识图谱核心 - TDD RED阶段测试
 - SIMILAR_TO(Concept → Concept, similarityScore)
 """
 
-import pytest
 from enum import Enum
+
+import pytest
 
 
 class LogicalType(Enum):
@@ -151,7 +152,6 @@ class TestKnowledgeGraphEdges:
     def test_follows_edge_between_chapters(self):
         """F05-T007: 创建FOLLOWS边 (Chapter → Chapter)"""
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
-        from f05_knowledge_graph.nodes import NodeStatus
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -382,8 +382,9 @@ class TestKnowledgeGraphIntegrity:
 
     def test_concept_definition_hash(self):
         """F05-T020: 概念定义哈希正确计算"""
-        from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
         import hashlib
+
+        from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
 
         kg = KnowledgeGraph()
         definition = "人工智能是研究、开发用于模拟、延伸和扩展人的智能..."

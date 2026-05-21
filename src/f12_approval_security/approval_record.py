@@ -2,10 +2,10 @@
 F12: 审批记录数据结构
 """
 
-from datetime import datetime
-from dataclasses import dataclass
-import uuid
 import os
+import uuid
+from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -31,7 +31,7 @@ class ApprovalRecord:
     def create(cls, content_id: str, content_hash: str, reviewer_id: str,
                result: str, comments: str, reviewer_ip: str = None) -> "ApprovalRecord":
         """创建审批记录
-        
+
         Args:
             content_id: 内容ID
             content_hash: 内容哈希 (SHA256)

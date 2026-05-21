@@ -5,18 +5,19 @@ Provides WebSocket connections for real-time updates.
 """
 
 import json
-import asyncio
-from typing import Dict, Set, Callable, Any
-from fastapi import WebSocket, WebSocketDisconnect
+from collections.abc import Callable
 from datetime import datetime
+from typing import Any
+
+from fastapi import WebSocket, WebSocketDisconnect
 
 
 class ConnectionManager:
     """Manages WebSocket connections and message broadcasting."""
 
     def __init__(self):
-        self.active_connections: Dict[str, Set[WebSocket]] = {}
-        self.message_handlers: Dict[str, Callable] = {}
+        self.active_connections: dict[str, set[WebSocket]] = {}
+        self.message_handlers: dict[str, Callable] = {}
 
     async def connect(self, websocket: WebSocket, channel: str = "global"):
         """Accept and register a new WebSocket connection."""

@@ -8,9 +8,10 @@ F01: 不可变日志系统 - TDD RED阶段测试
 3. Refactor: 优化代码质量
 """
 
-import pytest
 import hashlib
 from datetime import datetime
+
+import pytest
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +28,7 @@ class TestImmutableLogEntry:
 
     def test_log_entry_must_have_version_tag(self):
         """F01-T001: 日志条目必须有版本戳 (SHA-256)"""
-        from f01_immutable_log.immutable_log import create_log_entry, LogEntry
+        from f01_immutable_log.immutable_log import create_log_entry
 
         log_entry = create_log_entry("llm_call", {"prompt": "test"})
 
@@ -38,7 +39,7 @@ class TestImmutableLogEntry:
 
     def test_log_entry_must_have_content_hash(self):
         """F01-T002: 日志条目必须有内容哈希"""
-        from f01_immutable_log.immutable_log import create_log_entry, LogEntry
+        from f01_immutable_log.immutable_log import create_log_entry
 
         log_entry = create_log_entry("llm_call", {"prompt": "test"})
 
@@ -60,10 +61,7 @@ class TestImmutableLogEntry:
 
     def test_log_immutability_cannot_be_modified(self):
         """F01-T003: 日志不可修改"""
-        from f01_immutable_log.immutable_log import (
-            create_log_entry,
-            ImmutableLogError
-        )
+        from f01_immutable_log.immutable_log import ImmutableLogError, create_log_entry
 
         log_entry = create_log_entry("llm_call", {"prompt": "test"})
 
@@ -114,10 +112,7 @@ class TestImmutableLogChain:
 
     def test_chain_integrity_verification_passes(self):
         """F01-T005: 链完整性验证 - 正常链"""
-        from f01_immutable_log.immutable_log import (
-            create_log_entry,
-            verify_chain_integrity
-        )
+        from f01_immutable_log.immutable_log import create_log_entry, verify_chain_integrity
 
         entries = [
             create_log_entry("call_1", {"data": "a"}),
@@ -128,10 +123,7 @@ class TestImmutableLogChain:
 
     def test_chain_integrity_verification_single_entry(self):
         """F01-T005b: 单条目链总是有效的"""
-        from f01_immutable_log.immutable_log import (
-            create_log_entry,
-            verify_chain_integrity
-        )
+        from f01_immutable_log.immutable_log import create_log_entry, verify_chain_integrity
 
         entries = [create_log_entry("call_1", {"data": "a"})]
         assert verify_chain_integrity(entries) is True
@@ -144,11 +136,7 @@ class TestImmutableLogChain:
 
     def test_detect_tampering_in_history(self):
         """F01-T006: 检测历史篡改 - 创建假链"""
-        from f01_immutable_log.immutable_log import (
-            create_log_entry,
-            verify_chain_integrity,
-            LogEntry
-        )
+        from f01_immutable_log.immutable_log import LogEntry, create_log_entry, verify_chain_integrity
 
         entries = [
             create_log_entry("call_1", {"data": "a"}),
@@ -174,11 +162,7 @@ class TestImmutableLogChain:
 
     def test_detect_chain_break(self):
         """F01-T006b: 检测链断裂"""
-        from f01_immutable_log.immutable_log import (
-            create_log_entry,
-            verify_chain_integrity,
-            LogEntry
-        )
+        from f01_immutable_log.immutable_log import LogEntry, create_log_entry, verify_chain_integrity
 
         entry1 = create_log_entry("call_1", {"data": "a"})
         entry2 = create_log_entry("call_2", {"data": "b"})
@@ -200,11 +184,7 @@ class TestImmutableLogChain:
 
     def test_detect_version_tag_tampering(self):
         """F01-T006c: 检测版本戳被篡改"""
-        from f01_immutable_log.immutable_log import (
-            create_log_entry,
-            verify_chain_integrity,
-            LogEntry
-        )
+        from f01_immutable_log.immutable_log import LogEntry, create_log_entry, verify_chain_integrity
 
         entry1 = create_log_entry("call_1", {"data": "a"})
         entry2 = create_log_entry("call_2", {"data": "b"})
@@ -252,8 +232,8 @@ class TestImmutableLogClass:
         from f01_immutable_log.immutable_log import ImmutableLog
 
         log = ImmutableLog()
-        entry1 = log.append("op1", {"data": "a"})
-        entry2 = log.append("op2", {"data": "b"})
+        log.append("op1", {"data": "a"})
+        log.append("op2", {"data": "b"})
 
         entries = log.get_entries()
         assert len(entries) == 2
@@ -286,7 +266,7 @@ class TestImmutableLogClass:
         from f01_immutable_log.immutable_log import ImmutableLog
 
         log = ImmutableLog()
-        entry1 = log.append("op1", {"data": "a"})
+        log.append("op1", {"data": "a"})
         entry2 = log.append("op2", {"data": "b"})
 
         assert log.get_latest_hash() == entry2.version_tag
@@ -418,8 +398,9 @@ class TestImmutableLogPerformance:
 
     def test_sha256_performance(self):
         """F01-T010: SHA256计算性能(基本验证)"""
-        from f01_immutable_log.immutable_log import create_log_entry
         import time
+
+        from f01_immutable_log.immutable_log import create_log_entry
 
         start = time.time()
         for i in range(100):

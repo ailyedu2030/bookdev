@@ -1,15 +1,16 @@
 """Tests for api/routes/chapters.py"""
 
 import asyncio
-import pytest
+import os
+import sys
 from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi import HTTPException
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from api.deps import User, DatabaseSession
+from api.deps import DatabaseSession, User
 
 
 def run_async(coro):
@@ -367,9 +368,10 @@ class TestGenerateChapterContent:
 
     def test_generate_content_success(self):
         """Test successful content generation trigger."""
+        from unittest.mock import MagicMock
+
         from api.routes.chapters import generate_chapter_content
         from api.schemas.chapter import ChapterGenerateRequest
-        from unittest.mock import MagicMock
 
         mock_user = User(
             id="user-123",

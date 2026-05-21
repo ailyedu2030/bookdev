@@ -4,9 +4,10 @@ F00: RealKafkaProducer Tests
 TDD Phase RED: Tests for RealKafkaProducer
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from dataclasses import dataclass
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 @dataclass

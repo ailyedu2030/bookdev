@@ -10,9 +10,8 @@ F13: 全局语义扫描器 - TDD测试套件
 目标覆盖率: ≥86%
 """
 
-import pytest
-from typing import List, Dict
 
+import pytest
 
 # ============================================================
 # TopicTracker Tests
@@ -262,7 +261,9 @@ class TestGlobalSemanticScanner:
     def test_scanner_init(self):
         """F13-T019: 扫描器初始化"""
         from f13_global_semantic_scanner.semantic_scanner import (
-            GlobalSemanticScanner, TopicTracker, CombinationAnalyzer
+            CombinationAnalyzer,
+            GlobalSemanticScanner,
+            TopicTracker,
         )
 
         scanner = GlobalSemanticScanner()
@@ -357,9 +358,7 @@ class TestGlobalSemanticScanner:
 
     def test_scan_result_structure(self):
         """F13-T027: 扫描结果数据结构完整性"""
-        from f13_global_semantic_scanner.semantic_scanner import (
-            GlobalSemanticScanner, ScanResult
-        )
+        from f13_global_semantic_scanner.semantic_scanner import GlobalSemanticScanner, ScanResult
 
         scanner = GlobalSemanticScanner()
         results = scanner.scan_chapter("ch01", "领土争端与主权问题分析")

@@ -4,9 +4,9 @@ F10: 概念节点安全 - 实现
 import hashlib
 import hmac
 import os
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class ScanStatus(Enum):
@@ -41,7 +41,7 @@ class ConceptNode:
     created_at: str = ""
     definition_hash: str = ""
     status: str = "PENDING"
-    review_signature: Optional[str] = None
+    review_signature: str | None = None
 
     def __post_init__(self):
         if not self.created_at:
@@ -61,7 +61,7 @@ class ConceptNode:
 
 
 # F10-002 FIX: 从环境变量加载已批准模型列表，不再硬编码
-def _load_approved_models() -> List[str]:
+def _load_approved_models() -> list[str]:
     """从环境变量加载已批准模型列表"""
     env_value = os.environ.get("APPROVED_MODELS")
     if env_value:
@@ -90,7 +90,7 @@ def _get_signature_key() -> bytes:
 
 class KnowledgeGraphSecurity:
     def __init__(self):
-        self._concepts: Dict[str, ConceptNode] = {}
+        self._concepts: dict[str, ConceptNode] = {}
 
     def create_concept_node(
         self,
@@ -157,13 +157,13 @@ class KnowledgeGraphSecurity:
         """验证审批签名"""
         if not signature or not signature.startswith("sig-"):
             return False
-        
+
         expected = self._generate_approval_signature(concept_id, reviewer_id)
         return hmac.compare_digest(signature, expected)
 
     def verify_and_approve(
-        self, concept_id: str, reviewer_id: Optional[str]
-    ) -> Dict[str, Any]:
+        self, concept_id: str, reviewer_id: str | None
+    ) -> dict[str, Any]:
         if reviewer_id is None:
             raise SecurityException("Reviewer ID is required")
 
@@ -172,7 +172,7 @@ class KnowledgeGraphSecurity:
 
         node = self._concepts[concept_id]
         node.status = "APPROVED"
-        
+
         # F10-001 FIX: 使用HMAC生成安全签名，而不是简单的 f"sig-{reviewer_id}"
         node.review_signature = self._generate_approval_signature(concept_id, reviewer_id)
 

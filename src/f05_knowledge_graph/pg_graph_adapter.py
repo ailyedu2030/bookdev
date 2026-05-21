@@ -5,7 +5,7 @@ F05: PostgreSQL + APOC 图数据库适配器
 委托给F32的PGAdapter实现。
 """
 
-from typing import Any, Optional
+from typing import Any
 
 
 class PGGraphAdapter:

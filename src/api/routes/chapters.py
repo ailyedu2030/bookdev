@@ -14,40 +14,37 @@ Handles chapter and section CRUD operations:
 """
 
 from datetime import datetime
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
-from fastapi.responses import JSONResponse
 
-from api.schemas.chapter import (
-    ChapterCreate,
-    ChapterUpdate,
-    ChapterResponse,
-    ChapterContentResponse,
-    SectionCreate,
-    SectionUpdate,
-    SectionResponse,
-    ReviewSubmit,
-    ReviewResponse,
-    ReviewApprove,
-    ReviewReject,
-    ChapterGenerateRequest,
-    ChapterGenerateResponse,
-    ChapterListResponse,
-    ContentVersionResponse,
-)
-from api.schemas.common import SuccessResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+
 from api.deps import (
-    get_db,
-    get_current_active_user,
     DatabaseSession,
     User,
+    generate_uuid,
+    get_db,
+    hash_content,
     require_permission,
     require_role,
-    generate_uuid,
-    hash_content,
 )
 from api.middleware.csrf import csrf_protect
 from api.middleware.rate_limit import RateLimitConfig, rate_limit
+from api.schemas.chapter import (
+    ChapterCreate,
+    ChapterGenerateRequest,
+    ChapterGenerateResponse,
+    ChapterListResponse,
+    ChapterResponse,
+    ChapterUpdate,
+    ContentVersionResponse,
+    ReviewApprove,
+    ReviewReject,
+    ReviewResponse,
+    ReviewSubmit,
+    SectionCreate,
+    SectionResponse,
+    SectionUpdate,
+)
+from api.schemas.common import SuccessResponse
 
 router = APIRouter(prefix="/api/chapters", tags=["Chapters"])
 
@@ -57,7 +54,7 @@ async def list_chapters(
     project_id: str,
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=100),
-    status_filter: Optional[str] = Query(default=None),
+    status_filter: str | None = Query(default=None),
     user: User = Depends(require_permission("chapters:read")),
     db: DatabaseSession = Depends(get_db),
 ):

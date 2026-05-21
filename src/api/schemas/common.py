@@ -2,8 +2,9 @@
 Common API Schemas
 """
 
-from datetime import datetime, timezone
-from typing import Any, Generic, TypeVar, Optional, List, Literal
+from datetime import UTC, datetime
+from typing import Generic, Literal, TypeVar
+
 from pydantic import BaseModel, Field
 
 # Default pagination values
@@ -31,7 +32,7 @@ class ErrorCode:
 class ErrorDetail(BaseModel):
     code: str
     message: str
-    details: Optional[List[dict]] = None
+    details: list[dict] | None = None
 
 
 T = TypeVar("T")
@@ -40,7 +41,7 @@ T = TypeVar("T")
 class PaginatedResponse(BaseModel, Generic[T]):
     """Paginated response wrapper"""
     success: bool = True
-    data: List[T]
+    data: list[T]
     meta: dict = Field(
         default_factory=lambda: {
             "total": 0,
@@ -49,7 +50,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
             "total_pages": 0
         }
     )
-    links: Optional[dict] = None
+    links: dict | None = None
 
 
 class ErrorResponse(BaseModel):
@@ -67,14 +68,14 @@ class SuccessResponse(BaseModel):
     """Standard success response"""
     success: bool = True
     message: str
-    data: Optional[dict] = None
+    data: dict | None = None
 
 
 class HealthResponse(BaseModel):
     """Health check response"""
     status: str
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    components: Optional[dict] = None
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    components: dict | None = None
     version: str = API_VERSION
 
 
@@ -89,13 +90,13 @@ class LogEntry(BaseModel):
     """Log entry response"""
     id: str
     event_type: str
-    user_id: Optional[str] = None
-    resource_type: Optional[str] = None
-    resource_id: Optional[str] = None
-    action: Optional[str] = None
-    result: Optional[str] = None
-    details: Optional[dict] = None
-    ip_address: Optional[str] = None
+    user_id: str | None = None
+    resource_type: str | None = None
+    resource_id: str | None = None
+    action: str | None = None
+    result: str | None = None
+    details: dict | None = None
+    ip_address: str | None = None
     created_at: str
 
 
@@ -103,7 +104,7 @@ class PaginationParams(BaseModel):
     """Pagination parameters"""
     page: int = Field(default=DEFAULT_PAGE, ge=1)
     per_page: int = Field(default=DEFAULT_PER_PAGE, ge=1, le=MAX_PER_PAGE)
-    sort_by: Optional[str] = None
+    sort_by: str | None = None
     sort_order: SortOrder = Field(default="desc")
 
 
@@ -124,8 +125,8 @@ class ChapterIDParams(BaseModel):
 
 class ScanRequest(BaseModel):
     """Content scan request"""
-    content: Optional[str] = Field(default="")
-    categories: Optional[List[str]] = None
+    content: str | None = Field(default="")
+    categories: list[str] | None = None
 
 
 class ScanResponse(BaseModel):
@@ -133,8 +134,8 @@ class ScanResponse(BaseModel):
     success: bool = True
     is_safe: bool
     confidence_score: float = Field(..., ge=0, le=1)
-    categories: List[str] = Field(default_factory=list)
-    violations: List[dict] = Field(default_factory=list)
+    categories: list[str] = Field(default_factory=list)
+    violations: list[dict] = Field(default_factory=list)
     action: str
     details: str
 
@@ -149,35 +150,35 @@ class DOIVerifyResponse(BaseModel):
     success: bool = True
     valid: bool
     doi: str
-    metadata: Optional[dict] = None
-    error: Optional[str] = None
+    metadata: dict | None = None
+    error: str | None = None
 
 
 class RegulationVerifyRequest(BaseModel):
     """Regulation verification request"""
-    content: Optional[str] = Field(default="")
-    law_type: Optional[str] = Field(default=None, max_length=50)
+    content: str | None = Field(default="")
+    law_type: str | None = Field(default=None, max_length=50)
 
 
 class RegulationVerifyResponse(BaseModel):
     """Regulation verification response"""
     success: bool = True
     valid: bool
-    matched_laws: List[dict] = Field(default_factory=list)
+    matched_laws: list[dict] = Field(default_factory=list)
     confidence: float = Field(..., ge=0, le=1)
     details: str
 
 
 class SemanticScanRequest(BaseModel):
     """Semantic scan request"""
-    content: Optional[str] = Field(default="")
+    content: str | None = Field(default="")
     threshold: float = Field(default=0.7, ge=0, le=1)
 
 
 class SemanticScanResponse(BaseModel):
     """Semantic scan response"""
     success: bool = True
-    issues: List[dict] = Field(default_factory=list)
+    issues: list[dict] = Field(default_factory=list)
     score: float = Field(..., ge=0, le=1)
     summary: str
 
@@ -190,4 +191,4 @@ class ConceptVerifyRequest(BaseModel):
 
 class BatchScanRequest(BaseModel):
     """Batch scan request"""
-    contents: List[str] = Field(default_factory=list)
+    contents: list[str] = Field(default_factory=list)

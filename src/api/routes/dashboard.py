@@ -6,11 +6,10 @@ These endpoints aggregate data from multiple sources for the dashboard UI.
 """
 
 from datetime import datetime
-from typing import List, Optional
+
 from fastapi import APIRouter, Depends, Query
 
-from api.schemas.common import SuccessResponse
-from api.deps import get_current_active_user, User, require_permission
+from api.deps import User, get_current_active_user
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
@@ -51,7 +50,7 @@ async def get_activity_logs(
     try:
         from f01_immutable_log.immutable_log import ImmutableLog, LogEntry
         log = ImmutableLog()
-        all_entries: List[LogEntry] = log.get_entries()
+        all_entries: list[LogEntry] = log.get_entries()
         entries = all_entries[-limit:] if len(all_entries) > limit else all_entries
         return [
             {

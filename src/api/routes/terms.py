@@ -11,40 +11,39 @@ Handles terminology and concept operations:
 """
 
 from datetime import datetime
-from typing import Optional, List
-from fastapi import APIRouter, Body, Depends, HTTPException, status, Query
 
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+
+from api.deps import (
+    DatabaseSession,
+    User,
+    generate_uuid,
+    get_current_active_user,
+    get_db,
+    require_permission,
+)
+from api.middleware.csrf import csrf_protect
+from api.schemas.common import SuccessResponse
 from api.schemas.term import (
+    CitationCreate,
+    CitationResponse,
+    ConceptCreate,
+    ConceptResponse,
+    LockTermRequest,
     TermCreate,
-    TermUpdate,
     TermResponse,
     TermSearchRequest,
     TermSearchResponse,
-    ConceptCreate,
-    ConceptUpdate,
-    ConceptResponse,
-    CitationCreate,
-    CitationResponse,
-    LockTermRequest,
+    TermUpdate,
 )
-from api.schemas.common import SuccessResponse, ErrorResponse
-from api.deps import (
-    get_db,
-    get_current_active_user,
-    DatabaseSession,
-    User,
-    require_permission,
-    generate_uuid,
-)
-from api.middleware.csrf import csrf_protect
 
 router = APIRouter(prefix="/api/terms", tags=["Terms"])
 
 
 @router.get("", response_model=TermSearchResponse)
 async def list_terms(
-    domain: Optional[str] = Query(default=None),
-    locked: Optional[bool] = Query(default=None),
+    domain: str | None = Query(default=None),
+    locked: bool | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=100),
     user: User = Depends(get_current_active_user),
@@ -325,7 +324,7 @@ async def search_terms(
     )
 
 
-@router.get("/domains/list", response_model=List[str])
+@router.get("/domains/list", response_model=list[str])
 async def list_domains(
     user: User = Depends(get_current_active_user),
     db: DatabaseSession = Depends(get_db),
@@ -334,17 +333,17 @@ async def list_domains(
     List all unique domains used by terms.
     """
     terms = db.list_terms()
-    domains = set(t.get("domain") for t in terms if t.get("domain"))
-    return sorted(list(domains))
+    domains = {t.get("domain") for t in terms if t.get("domain")}
+    return sorted(domains)
 
 
 concept_router = APIRouter(prefix="/api/concepts", tags=["Concepts"])
 
 
-@concept_router.get("", response_model=List[ConceptResponse])
+@concept_router.get("", response_model=list[ConceptResponse])
 async def list_concepts(
-    domain: Optional[str] = Query(default=None),
-    locked: Optional[bool] = Query(default=None),
+    domain: str | None = Query(default=None),
+    locked: bool | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=100),
     user: User = Depends(get_current_active_user),
@@ -442,7 +441,7 @@ async def create_citation(
     )
 
 
-@citation_router.get("/chapter/{chapter_id}", response_model=List[CitationResponse])
+@citation_router.get("/chapter/{chapter_id}", response_model=list[CitationResponse])
 async def list_citations_by_chapter(
     chapter_id: str,
     user: User = Depends(get_current_active_user),

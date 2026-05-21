@@ -4,21 +4,20 @@ F31: MiniMax M2.7 API客户端 - 响应解析器
 解析MiniMax API的响应数据，包括常规响应和流式响应。
 """
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 
 @dataclass
 class ParsedResponse:
     """解析后的API响应"""
     content: str
-    finish_reason: Optional[str] = None
+    finish_reason: str | None = None
     usage_total_tokens: int = 0
     usage_prompt_tokens: int = 0
     usage_completion_tokens: int = 0
-    model: Optional[str] = None
+    model: str | None = None
     is_delta: bool = False
-    raw: Optional[dict] = None
+    raw: dict | None = None
 
 
 class ResponseParser:
@@ -105,7 +104,7 @@ class ResponseParser:
 
         return True
 
-    def extract_error(self, response_data: dict) -> Optional[str]:
+    def extract_error(self, response_data: dict) -> str | None:
         """
         从响应中提取错误信息
 

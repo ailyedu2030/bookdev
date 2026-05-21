@@ -2,14 +2,11 @@
 E2E: 教材编写全流程端到端测试
 使用真实 MiniMax API + PostgreSQL 验证完整流水线
 """
-import sys
-import os
 import asyncio
 import json
+import sys
 import time
 from pathlib import Path
-
-import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -17,7 +14,7 @@ from f01_immutable_log.immutable_log import ImmutableLog
 from f02_context_budget.context_budget_manager import ContextBudgetManager
 from f03_content_addressing.content_addressing import calculate_content_hash
 from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
-from f06_tier1_verification.tier1_engine import Tier1Verifier, VerificationResult, VerificationStatus
+from f06_tier1_verification.tier1_engine import Tier1Verifier
 from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 from f15_political_sensitivity.political_tracker import PoliticalTracker, SensitivityLevel
 from f18_term_glossary.term_glossary_service import TermGlossaryService
@@ -25,7 +22,6 @@ from f20_llm_judge.judge_service import JudgeService, MockLLMClient
 from f21_risk_classification.risk_classifier import RiskClassifier
 from f23_content_security.content_filter import ContentSecurityFilter
 from f24_config_center.config_center import ConfigCenter
-from f25_model_router.model_router import ModelRouter
 from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard
 from f29_quality_gate.quality_gate import QualityGate
 from f30_golden_dataset.dataset_builder import DatasetBuilder
@@ -51,9 +47,9 @@ class E2ETestResult:
         elapsed = time.time() - self.start_time
         total = len(self.stages)
         passed = sum(1 for s in self.stages if s["passed"])
-        failed = total - passed
+        total - passed
         print("\n" + "=" * 70)
-        print(f"  E2E 测试报告")
+        print("  E2E 测试报告")
         print("=" * 70)
         for s in self.stages:
             icon = "✅" if s["passed"] else "❌"
@@ -79,7 +75,7 @@ async def run_e2e_test():
 
     log = ImmutableLog()
     budget = ContextBudgetManager()
-    config = ConfigCenter()
+    ConfigCenter()
     monitor = MonitoringDashboard()
     log.append("e2e_test_start", {"timestamp": time.time()})
     result.add_stage("不可变日志", True, f"{len(log.get_entries())} 条")
@@ -199,7 +195,7 @@ async def run_e2e_test():
     result.add_stage("Tier1数值核实", v_result is not None, str(v_result.status)[:20])
 
     cit = CitationIntegrityManager()
-    reg_id = cit.register_unverified_citation("10.1234/test.2024", calculate_content_hash("AI definition"))
+    cit.register_unverified_citation("10.1234/test.2024", calculate_content_hash("AI definition"))
     cit_result = cit.verify_citation_integrity("10.1234/test.2024", calculate_content_hash("AI definition"), "AI定义内容")
     result.add_stage("引用完整性", cit_result is not None, str(cit_result.status)[:20])
 
@@ -257,7 +253,7 @@ async def run_e2e_test():
     # ==================== Stage 12: 日志完整性 ====================
     print("\n▶ Stage 12: 日志完整性")
 
-    final_log_entry = log.append("e2e_test_end", {
+    log.append("e2e_test_end", {
         "stages_passed": sum(1 for s in result.stages if s["passed"]),
         "total_stages": len(result.stages),
         "api_calls": result.api_calls,
@@ -336,7 +332,7 @@ def test_e2e_budget_overflow_protection():
 
 def test_e2e_content_dedup():
     """E2E-T005: 内容去重"""
-    from f03_content_addressing.content_addressing import deduplicate_by_hash, calculate_content_hash
+    from f03_content_addressing.content_addressing import calculate_content_hash, deduplicate_by_hash
 
     h1 = calculate_content_hash("相同内容")
     h2 = calculate_content_hash("相同内容")

@@ -3,12 +3,13 @@ Dead Letter Queue Handler with retry logic and exponential backoff
 """
 
 import asyncio
+import json
 import logging
 import os
-import json
-from typing import Callable, Optional, Dict, Any
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
-from dataclasses import dataclass, field
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DLQMessage:
     """Dead Letter Queue message structure"""
-    original_event: Dict[str, Any]
+    original_event: dict[str, Any]
     error: Exception
     attempts: int
     last_attempt: datetime
@@ -54,7 +55,7 @@ class DLQHandler:
         self,
         producer,
         dlq_topic: str = "dlq",
-        retry_config: Optional[RetryConfig] = None,
+        retry_config: RetryConfig | None = None,
     ):
         self.producer = producer
         self.dlq_topic = dlq_topic
@@ -168,7 +169,7 @@ class DLQHandler:
 
     async def send_to_dlq(
         self,
-        event: Dict[str, Any],
+        event: dict[str, Any],
         error: Exception,
         handler_name: str = "unknown",
     ) -> None:
@@ -255,7 +256,7 @@ class DLQHandler:
 
     async def retry_dlq_message(
         self,
-        dlq_message: Dict[str, Any],
+        dlq_message: dict[str, Any],
         processor: Callable,
     ) -> Any:
         """
@@ -269,13 +270,13 @@ class DLQHandler:
             Result of processing
         """
         event = dlq_message.get("event", {})
-        error = dlq_message.get("error", {})
+        dlq_message.get("error", {})
 
         logger.info(f"Retrying DLQ message: {event.get('event_type', 'unknown')}")
 
         return await self.process_with_retry(processor, event)
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         """Get DLQ handler statistics"""
         return self._stats.copy()
 

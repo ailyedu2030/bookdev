@@ -2,7 +2,6 @@
 F09: 素材安全管理 - 来源注册表
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
 from datetime import datetime
 
 
@@ -40,7 +39,7 @@ class MaterialSourceRegistry:
     }
 
     def __init__(self):
-        self._registered_sources: Dict[str, SourceInfo] = {}
+        self._registered_sources: dict[str, SourceInfo] = {}
 
     async def register_source(self, source: SourceInfo) -> SourceRegistrationResult:
         """注册来源"""
@@ -71,7 +70,7 @@ class MaterialSourceRegistry:
             return self._registered_sources[source_name].trust_level == "WHITELIST"
         return False
 
-    def get_source_info(self, source_name: str) -> Optional[SourceInfo]:
+    def get_source_info(self, source_name: str) -> SourceInfo | None:
         """获取来源信息"""
         if source_name in self._registered_sources:
             return self._registered_sources[source_name]
@@ -82,6 +81,6 @@ class MaterialSourceRegistry:
             )
         return None
 
-    def get_all_sources(self) -> List[SourceInfo]:
+    def get_all_sources(self) -> list[SourceInfo]:
         """获取所有注册来源"""
         return list(self._registered_sources.values())

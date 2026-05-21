@@ -3,12 +3,11 @@ F11: 工作流安全 - 工作流安全管理器
 P0漏洞: W-001 状态机绕过-审核节点跳过
 """
 
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
 import hashlib
-import hmac
 import json
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any
 
 
 class SecurityException(Exception):
@@ -27,7 +26,7 @@ class ReviewCallback:
     content_hash: str
     reviewer_id: str
     result: str
-    signature: Optional[str]
+    signature: str | None
     timestamp: datetime
 
 
@@ -46,9 +45,9 @@ class WorkflowState:
     """工作流状态"""
     workflow_id: str
     current_state: str
-    content: Dict[str, Any]
-    pending_tasks: List[str] = field(default_factory=list)
-    approval_history: List[Dict] = field(default_factory=list)
+    content: dict[str, Any]
+    pending_tasks: list[str] = field(default_factory=list)
+    approval_history: list[dict] = field(default_factory=list)
 
 
 # 定义有效的状态转换
@@ -74,9 +73,9 @@ class WorkflowSecurityManager:
     def __init__(self, hsm_client=None, require_multi_approval: bool = False):
         self.hsm_client = hsm_client
         self.require_multi_approval = require_multi_approval
-        self._workflows: Dict[str, WorkflowState] = {}
+        self._workflows: dict[str, WorkflowState] = {}
         self._used_signatures: set = set()
-        self._approval_counts: Dict[str, int] = {}
+        self._approval_counts: dict[str, int] = {}
         # F11-001 FIX: 移除硬编码Mock密钥，改用安全方式获取公钥
         self._public_key_pem = None
 
@@ -86,7 +85,7 @@ class WorkflowSecurityManager:
             raise SecurityException("INVALID_PUBLIC_KEY", "Public key must be at least 32 characters")
         self._public_key_pem = public_key_pem
 
-    def register_workflow(self, workflow_id: str, content: Dict[str, Any]) -> None:
+    def register_workflow(self, workflow_id: str, content: dict[str, Any]) -> None:
         """注册工作流"""
         self._workflows[workflow_id] = WorkflowState(
             workflow_id=workflow_id,
@@ -130,7 +129,7 @@ class WorkflowSecurityManager:
         # F11-004 FIX: 严格的状态转换验证
         workflow = self._workflows[callback.workflow_id]
         current_state = workflow.current_state
-        
+
         # 验证任务ID是否有效（必须在pending_tasks中）
         if callback.task_id not in workflow.pending_tasks:
             return VerificationResult(is_valid=False, reason="INVALID_TASK")
@@ -142,16 +141,16 @@ class WorkflowSecurityManager:
                 return VerificationResult(is_valid=False, reason="INVALID_STATE_TRANSITION")
 
         signature_payload = self._build_signature_payload(callback)
-        
+
         # F11-003 FIX: 无HSM时不能使用SHA256替代签名验证（不安全回退）
         # 如果没有HSM客户端，必须拒绝签名验证请求
         if not self.hsm_client:
             return VerificationResult(
-                is_valid=False, 
+                is_valid=False,
                 reason="NO_HSM_AVAILABLE",
                 hsm_verified=False
             )
-        
+
         if not self._verify_signature(callback, callback.signature, signature_payload):
             return VerificationResult(is_valid=False, reason="INVALID_SIGNATURE")
 
@@ -199,7 +198,7 @@ class WorkflowSecurityManager:
         """验证签名"""
         if self.hsm_client:
             return self.hsm_client.verify(payload, signature)
-        
+
         # F11-003 FIX: 不再提供不安全的回退选项 - 如果没有HSM必须拒绝
         return False
 
@@ -219,20 +218,20 @@ class WorkflowSecurityManager:
         """验证时间戳"""
         now = datetime.utcnow()
         diff = abs((now - timestamp).total_seconds())
-        
+
         # 基本时间戳年龄检查
         if diff > (MAX_TIMESTAMP_AGE_MINUTES * 60):
             return False
-        
+
         # F11-005 FIX: 时间戳漂移检测（可选）
         if not allow_drift:
             if diff > (MAX_TIMESTAMP_DRIFT_MINUTES * 60):
                 # 时间戳差异超过允许的漂移，可能是明显伪造
                 return False
-        
+
         return True
 
-    def calculate_content_hash(self, content: Dict[str, Any]) -> str:
+    def calculate_content_hash(self, content: dict[str, Any]) -> str:
         """计算内容哈希"""
         content_str = json.dumps(content, sort_keys=True, default=str)
         return hashlib.sha256(content_str.encode()).hexdigest()
@@ -242,11 +241,11 @@ class WorkflowSecurityManager:
         if workflow_id in self._workflows:
             current = self._workflows[workflow_id].current_state
             valid_next = VALID_STATE_TRANSITIONS.get(current, [])
-            
+
             # 严格验证状态转换
             if new_state in valid_next or current == new_state:
                 self._workflows[workflow_id].current_state = new_state
-                
+
                 # 如果进入下一个审核阶段，添加相应的pending task
                 self._update_pending_tasks(workflow_id, new_state)
             else:
@@ -262,11 +261,11 @@ class WorkflowSecurityManager:
             "CONTENT_REVIEW": "task-002",
             "FINAL_REVIEW": "task-003",
         }
-        
+
         if new_state in state_to_task:
             required_task = state_to_task[new_state]
             workflow = self._workflows[workflow_id]
-            
+
             # 如果pending_tasks中没有当前审核任务但需要进入下一阶段，则添加
             if required_task not in workflow.pending_tasks:
                 # 只允许添加当前阶段之后的任务，不允许跳过

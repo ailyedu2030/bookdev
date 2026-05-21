@@ -13,30 +13,29 @@
 9. 提纲生成活动
 """
 
-import os
 import asyncio as aio
+import os
+
 import pytest
 
 os.environ["MOCK_TEMPORAL"] = "true"
 
+from src.f04_temporal_workflow.activities.content_generation import (
+    generate_chapter_content,
+    generate_chapter_outline,
+)
+from src.f04_temporal_workflow.activities.security_scan import batch_scan_chapters
 from src.f04_temporal_workflow.workflows.mock_client import (
     ActivityOptions,
     MockTemporalClient,
     RetryPolicy,
     SignalType,
     TemporalActivity,
-    TemporalWorkflow,
     WorkflowStatus,
     get_mock_client,
 )
 from src.f04_temporal_workflow.workflows.textbook_chapter import TextbookChapterWorkflow
 from src.f04_temporal_workflow.workflows.textbook_orchestrator import TextbookOrchestratorWorkflow
-from src.f04_temporal_workflow.activities.content_generation import (
-    generate_chapter_content,
-    generate_chapter_outline,
-)
-from src.f04_temporal_workflow.activities.quality_check import batch_score_chapters
-from src.f04_temporal_workflow.activities.security_scan import batch_scan_chapters
 
 
 @pytest.fixture(autouse=True)
@@ -313,7 +312,7 @@ async def test_05_error_handling_and_retry(client):
                 ),
             ),
         )
-        assert False, "Should have raised"
+        raise AssertionError("Should have raised")
     except ValueError:
         assert call_counts_non_retryable == 1
 

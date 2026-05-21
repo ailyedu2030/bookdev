@@ -4,7 +4,8 @@ F17: 引用解析器
 将引用解析为实际的图谱节点，验证引用有效性
 """
 
-from typing import Optional, Any
+from typing import Any
+
 from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
 
 
@@ -14,7 +15,7 @@ class ReferenceResolver:
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.kg = knowledge_graph
 
-    def resolve(self, target_id: str, ref_type: str) -> Optional[Any]:
+    def resolve(self, target_id: str, ref_type: str) -> Any | None:
         """解析引用到目标节点
 
         Args:
@@ -29,7 +30,7 @@ class ReferenceResolver:
     def validate_reference_chain(
         self,
         source_id: str,
-        referenced_target: Optional[str] = None
+        referenced_target: str | None = None
     ) -> bool:
         """验证引用链完整性
 
@@ -159,6 +160,6 @@ class ReferenceResolver:
         return {
             "total_references": len(references),
             "by_type": by_type,
-            "unique_sources": len(set(e.source for e in references)),
-            "unique_targets": len(set(e.target for e in references)),
+            "unique_sources": len({e.source for e in references}),
+            "unique_targets": len({e.target for e in references}),
         }

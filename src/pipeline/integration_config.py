@@ -1,7 +1,7 @@
 """集成配置 — PipelineConfig 定义流水线的所有可配置参数。"""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -18,7 +18,7 @@ class MockModeConfig:
     mock_temporal: bool = True
     mock_eventbus_async: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "enabled": self.enabled,
             "mock_llm_model": self.mock_llm_model,
@@ -39,9 +39,9 @@ class ModuleConfig:
     enabled: bool = True
     timeout_seconds: int = 120
     retry_count: int = 2
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "module_id": self.module_id,
             "module_name": self.module_name,
@@ -57,13 +57,13 @@ class StageConfig:
     """单个流水线阶段的配置。"""
 
     stage_name: str
-    modules: List[str]
+    modules: list[str]
     timeout_seconds: int = 300
     parallel: bool = False
     required: bool = True
     checkpoint_after: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "stage_name": self.stage_name,
             "modules": self.modules,
@@ -181,13 +181,13 @@ class PipelineConfig:
         module_id="F30", module_name="GoldenDataset", timeout_seconds=60,
     ))
 
-    stages: List[StageConfig] = field(default_factory=list)
+    stages: list[StageConfig] = field(default_factory=list)
 
     def __post_init__(self):
         if not self.stages:
             self.stages = self._default_stages()
 
-    def _default_stages(self) -> List[StageConfig]:
+    def _default_stages(self) -> list[StageConfig]:
         return [
             StageConfig(
                 stage_name="INITIALIZATION",
@@ -237,14 +237,14 @@ class PipelineConfig:
             ),
         ]
 
-    def get_module_config(self, module_id: str) -> Optional[ModuleConfig]:
+    def get_module_config(self, module_id: str) -> ModuleConfig | None:
         for attr_name in dir(self):
             attr = getattr(self, attr_name)
             if isinstance(attr, ModuleConfig) and attr.module_id == module_id:
                 return attr
         return None
 
-    def all_modules(self) -> List[ModuleConfig]:
+    def all_modules(self) -> list[ModuleConfig]:
         result = []
         for attr_name in sorted(dir(self)):
             attr = getattr(self, attr_name)

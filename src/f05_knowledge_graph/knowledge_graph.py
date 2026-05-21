@@ -7,19 +7,18 @@ F05: 知识图谱核心实现
 - 图查询引擎 (BFS, DFS, 路径查找, 上下文查询)
 """
 
-from typing import Any, Optional
-from dataclasses import dataclass, field
+from typing import Any
 
+from f05_knowledge_graph.edges import Edge, create_edge
 from f05_knowledge_graph.nodes import (
     ChapterNode,
+    ConceptNode,
+    NodeStatus,
     SectionNode,
     SubsectionNode,
-    ConceptNode,
     TermNode,
-    NodeStatus,
     create_node,
 )
-from f05_knowledge_graph.edges import Edge, EdgeType, create_edge
 
 
 class KnowledgeGraph:
@@ -108,7 +107,7 @@ class KnowledgeGraph:
         domain: str,
         # KG-008: Fixed mutable default argument
         related_terms: list[str] = None,
-        source_chapter_id: Optional[str] = None,
+        source_chapter_id: str | None = None,
     ) -> ConceptNode:
         """创建概念节点"""
         # Fix: Use None instead of mutable default
@@ -134,7 +133,7 @@ class KnowledgeGraph:
         domain: str,
         # KG-008: Fixed mutable default argument
         synonyms: list[str] = None,
-        first_defined_at: Optional[str] = None,
+        first_defined_at: str | None = None,
     ) -> TermNode:
         """创建术语节点"""
         # Fix: Use None instead of mutable default
@@ -152,7 +151,7 @@ class KnowledgeGraph:
         self._adjacency[term_id] = []
         return node
 
-    def get_node(self, node_id: str) -> Optional[Any]:
+    def get_node(self, node_id: str) -> Any | None:
         """获取节点"""
         return self._nodes.get(node_id)
 
@@ -180,13 +179,13 @@ class KnowledgeGraph:
         """添加边"""
         edge = create_edge(edge_type, source, target, **properties)
         self._edges.append(edge)
-        
+
         # KG-005: Bidirectional adjacency update for undirected edges
         if source not in self._adjacency:
             self._adjacency[source] = []
         if target not in self._adjacency[source]:
             self._adjacency[source].append(target)
-        
+
         # For undirected edges (non-directional), also add reverse direction
         # Common undirected edge types include: SIMILAR_TO, FOLLOWS, REFERENCES
         if edge_type in ("SIMILAR_TO", "FOLLOWS", "REFERENCES", "USES"):
@@ -194,7 +193,7 @@ class KnowledgeGraph:
                 self._adjacency[target] = []
             if source not in self._adjacency[target]:
                 self._adjacency[target].append(source)
-        
+
         return edge
 
     def get_edges(self, node_id: str = None, edge_type: str = None) -> list[Edge]:
@@ -223,7 +222,7 @@ class KnowledgeGraph:
         # Get all sections at once and compute total
         section_nodes = [self._nodes.get(sid) for sid in sections if sid in self._nodes]
         total_word_count = sum(
-            node.word_count for node in section_nodes 
+            node.word_count for node in section_nodes
             if node and hasattr(node, "word_count")
         )
 
@@ -295,7 +294,7 @@ class KnowledgeGraph:
                 concepts.append(node)
         return concepts
 
-    def get_term(self, term_id: str) -> Optional[TermNode]:
+    def get_term(self, term_id: str) -> TermNode | None:
         """获取术语"""
         node = self._nodes.get(term_id)
         if node and node.type == "Term":
@@ -340,7 +339,7 @@ class KnowledgeGraph:
             for neighbor in self._adjacency.get(node_id, []):
                 if neighbor not in visited:
                     queue.append(neighbor)
-            
+
             # Safety limit to prevent runaway traversal
             if len(result) > len(self._nodes):
                 break
@@ -369,7 +368,7 @@ class KnowledgeGraph:
         _dfs(start_id)
         return result
 
-    def find_path(self, start_id: str, end_id: str) -> Optional[list[str]]:
+    def find_path(self, start_id: str, end_id: str) -> list[str] | None:
         """查找两个节点之间的路径 (BFS)"""
         if start_id not in self._nodes or end_id not in self._nodes:
             return None

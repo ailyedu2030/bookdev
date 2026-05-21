@@ -4,7 +4,7 @@ F22: MiniMax嵌入客户端
 提供文本嵌入功能，支持单条和批量生成
 """
 
-from typing import List
+
 import numpy as np
 
 
@@ -37,7 +37,7 @@ class MiniMaxEmbeddingClient:
         embedding = self._compute_embedding(text)
         return embedding
 
-    def batch_generate_embedding(self, texts: List[str]) -> List[np.ndarray]:
+    def batch_generate_embedding(self, texts: list[str]) -> list[np.ndarray]:
         """
         批量生成嵌入向量
 

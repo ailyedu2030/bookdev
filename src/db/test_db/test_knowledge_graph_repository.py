@@ -73,7 +73,7 @@ class TestKnowledgeGraphRepository:
         mock_session.execute = AsyncMock()
 
         with patch.object(repo, "get_node", return_value=existing_node):
-            result = await repo.update_node("node1", {"new_key": "new_value"})
+            await repo.update_node("node1", {"new_key": "new_value"})
 
         mock_session.flush.assert_called()
         mock_session.refresh.assert_called()
@@ -557,7 +557,7 @@ class TestKnowledgeGraphRepositoryCreateNode:
         """Test create_node creates node with properties."""
         with patch("db.repositories.knowledge_graph_repository.GraphNode") as mock_node_class:
             mock_node_class.return_value = MagicMock()
-            result = await repo.create_node(
+            await repo.create_node(
                 node_id="node1",
                 node_type="concept",
                 properties={"key": "value"}
@@ -572,7 +572,7 @@ class TestKnowledgeGraphRepositoryCreateNode:
         """Test create_node creates node with default empty properties."""
         with patch("db.repositories.knowledge_graph_repository.GraphNode") as mock_node_class:
             mock_node_class.return_value = MagicMock()
-            result = await repo.create_node(
+            await repo.create_node(
                 node_id="node2",
                 node_type="term"
             )
@@ -613,7 +613,7 @@ class TestKnowledgeGraphRepositoryCreateEdge:
 
         with patch("db.repositories.knowledge_graph_repository.GraphEdge") as mock_edge_class:
             mock_edge_class.return_value = MagicMock()
-            result = await repo.create_edge(
+            await repo.create_edge(
                 source_id="source1",
                 target_id="target1",
                 edge_type="relates_to",

@@ -17,9 +17,9 @@ F32: PostgreSQL 知识图谱 - TDD 测试
 所有测试使用 MockPGAdapter，无需 PostgreSQL 环境。
 """
 
-import pytest
-import json
 from enum import Enum
+
+import pytest
 
 
 class LogicalType(Enum):
@@ -38,6 +38,7 @@ class ReferenceType(Enum):
 # ── Fixture ──────────────────────────────────────────────
 
 import pytest
+
 
 @pytest.fixture
 def pg_kg():

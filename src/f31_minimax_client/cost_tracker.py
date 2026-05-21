@@ -5,7 +5,7 @@ F31: MiniMax M2.7 API客户端 - 成本追踪器
 """
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 
 

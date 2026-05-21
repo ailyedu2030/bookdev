@@ -2,13 +2,13 @@
 Real Kafka Consumer using aiokafka
 """
 
-from aiokafka import AIOKafkaConsumer
-from aiokafka.errors import KafkaError
-from typing import Callable, Optional, Dict, Any, List, Set
 import asyncio
 import json
 import logging
-import time
+from collections.abc import Callable
+from typing import Any
+
+from aiokafka import AIOKafkaConsumer
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class RealKafkaConsumer:
         bootstrap_servers: str = "localhost:9092",
         group_id: str = "textbook-consumer",
         auto_offset_reset: str = "earliest",
-        topics: Optional[List[str]] = None,
+        topics: list[str] | None = None,
         # KAFKA-006: Manual commit for reliability
         enable_auto_commit: bool = False,
         auto_commit_interval_ms: int = 5000,
@@ -47,10 +47,10 @@ class RealKafkaConsumer:
         self.auto_commit_interval_ms = auto_commit_interval_ms
         self.max_retries = max_retries
         self.retry_backoff_ms = retry_backoff_ms
-        self._consumer: Optional[AIOKafkaConsumer] = None
+        self._consumer: AIOKafkaConsumer | None = None
         self._running = False
-        self._task: Optional[asyncio.Task] = None
-        self._pending_offsets: Dict[str, Dict[int, int]] = {}  # topic -> partition -> offset
+        self._task: asyncio.Task | None = None
+        self._pending_offsets: dict[str, dict[int, int]] = {}  # topic -> partition -> offset
 
     async def start(self) -> None:
         """Start the consumer and connect to Kafka"""
@@ -126,7 +126,7 @@ class RealKafkaConsumer:
         # Store offset to commit (add 1 since offset is inclusive)
         self._pending_offsets[topic][partition] = offset + 1
 
-    async def consume(self, handler: Callable[[Dict[str, Any]], None]) -> None:
+    async def consume(self, handler: Callable[[dict[str, Any]], None]) -> None:
         """
         Start consuming messages and call handler for each
 
@@ -196,7 +196,7 @@ class RealKafkaConsumer:
             raise
 
     async def consume_in_background(
-        self, handler: Callable[[Dict[str, Any]], None]
+        self, handler: Callable[[dict[str, Any]], None]
     ) -> None:
         """
         Start consuming messages in background task

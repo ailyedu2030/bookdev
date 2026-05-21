@@ -4,7 +4,7 @@ F20: LLM-as-Judge评分系统 - 提示模板
 包含LLM评判所需的提示模板定义
 """
 
-from typing import Dict, Any
+from typing import Any
 
 
 class PromptTemplates:
@@ -46,7 +46,7 @@ class PromptTemplates:
 """
 
     @classmethod
-    def build_judge_prompt(cls, content: str, rubric: Dict[str, Any] = None) -> str:
+    def build_judge_prompt(cls, content: str, rubric: dict[str, Any] = None) -> str:
         """
         构建评判提示
 

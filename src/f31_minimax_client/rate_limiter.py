@@ -4,8 +4,8 @@ F31: MiniMax M2.7 API客户端 - 速率限制器
 基于滑动窗口的请求速率限制，支持同步检查和异步等待。
 """
 
-import time
 import asyncio
+import time
 from threading import Lock
 
 

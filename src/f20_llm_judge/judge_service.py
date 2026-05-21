@@ -5,15 +5,15 @@ F20: LLM-as-Judge评分系统 - LLM评判服务
 """
 
 import json
-import re
 import math
-from typing import Dict, Any, List, Optional, AsyncIterator
-from dataclasses import dataclass, field
+import re
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
-from f20_llm_judge.scoring_engine import ScoringEngine, JUDGE_DIMENSIONS
 from f20_llm_judge.prompt_templates import PromptTemplates
+from f20_llm_judge.scoring_engine import ScoringEngine
 
 
 class JudgeServiceError(Exception):
@@ -32,15 +32,15 @@ class JudgeStatus(Enum):
 @dataclass
 class JudgeResult:
     """评判结果"""
-    scores: Dict[str, float]
+    scores: dict[str, float]
     overall_score: float
     reasoning: str
     timestamp: datetime
     status: JudgeStatus = JudgeStatus.COMPLETED
-    model_id: Optional[str] = None
-    latency_ms: Optional[float] = None
+    model_id: str | None = None
+    latency_ms: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "scores": self.scores,
             "overall_score": self.overall_score,
@@ -97,9 +97,9 @@ class JudgeService:
 
     def __init__(
         self,
-        llm_client: Optional[BaseLLMClient] = None,
-        scoring_engine: Optional[ScoringEngine] = None,
-        prompt_templates: Optional[PromptTemplates] = None
+        llm_client: BaseLLMClient | None = None,
+        scoring_engine: ScoringEngine | None = None,
+        prompt_templates: PromptTemplates | None = None
     ):
         """
         初始化评判服务
@@ -116,7 +116,7 @@ class JudgeService:
     async def judge_content(
         self,
         content: str,
-        rubric: Dict[str, Any] = None,
+        rubric: dict[str, Any] = None,
         **kwargs
     ) -> JudgeResult:
         """
@@ -156,10 +156,10 @@ class JudgeService:
 
     async def batch_judge(
         self,
-        contents: List[str],
-        rubric: Dict[str, Any] = None,
+        contents: list[str],
+        rubric: dict[str, Any] = None,
         **kwargs
-    ) -> List[JudgeResult]:
+    ) -> list[JudgeResult]:
         """
         批量评判内容
 
@@ -270,8 +270,8 @@ class JudgeService:
 
 
 def calculate_correlation(
-    llm_scores: List[float],
-    human_scores: List[float]
+    llm_scores: list[float],
+    human_scores: list[float]
 ) -> float:
     """
     计算LLM评分与人工评分的相关性

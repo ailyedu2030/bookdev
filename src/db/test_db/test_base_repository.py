@@ -24,8 +24,8 @@ class TestBaseRepositoryUpdate:
     @pytest.mark.asyncio
     async def test_update_modifies_instance(self, mock_session):
         """Test update modifies and refreshes instance."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         existing = MagicMock()
         existing.username = "original"
@@ -34,7 +34,7 @@ class TestBaseRepositoryUpdate:
         repo = BaseRepository(User, mock_session)
 
         with patch.object(repo, "get_by_id", return_value=existing):
-            result = await repo.update(uuid.uuid4(), username="updated")
+            await repo.update(uuid.uuid4(), username="updated")
 
         assert existing.username == "updated"
         mock_session.flush.assert_called()
@@ -43,8 +43,8 @@ class TestBaseRepositoryUpdate:
     @pytest.mark.asyncio
     async def test_update_returns_none_when_not_found(self, mock_session):
         """Test update returns None when instance not found."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
 
@@ -56,8 +56,8 @@ class TestBaseRepositoryUpdate:
     @pytest.mark.asyncio
     async def test_update_with_multiple_attributes(self, mock_session):
         """Test update with multiple attributes."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         existing = MagicMock()
         mock_session.execute = AsyncMock()
@@ -85,8 +85,8 @@ class TestBaseRepositoryDelete:
     @pytest.mark.asyncio
     async def test_delete_removes_instance(self, mock_session):
         """Test delete removes instance and returns True."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         existing = MagicMock()
         repo = BaseRepository(User, mock_session)
@@ -101,8 +101,8 @@ class TestBaseRepositoryDelete:
     @pytest.mark.asyncio
     async def test_delete_returns_false_when_not_found(self, mock_session):
         """Test delete returns False when instance not found."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
 
@@ -125,8 +125,8 @@ class TestBaseRepositoryBulkOperations:
     @pytest.mark.asyncio
     async def test_bulk_update_returns_zero_for_empty_list(self, mock_session):
         """Test bulk_update returns 0 for empty id list."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
         result = await repo.bulk_update([], status="active")
@@ -136,8 +136,8 @@ class TestBaseRepositoryBulkOperations:
     @pytest.mark.asyncio
     async def test_bulk_delete_returns_zero_for_empty_list(self, mock_session):
         """Test bulk_delete returns 0 for empty id list."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
         result = await repo.bulk_delete([])
@@ -157,8 +157,8 @@ class TestBaseRepositoryGetByIds:
     @pytest.mark.asyncio
     async def test_get_by_ids_returns_empty_for_empty_list(self, mock_session):
         """Test get_by_ids returns empty list for empty ids."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
         result = await repo.get_by_ids([])
@@ -177,8 +177,8 @@ class TestBaseRepositoryHelpers:
 
     def test_repository_initialization(self, mock_session):
         """Test repository initializes with model and session."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
 
@@ -187,8 +187,8 @@ class TestBaseRepositoryHelpers:
 
     def test_model_type_constraint(self, mock_session):
         """Test repository accepts ModelType parameter."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo: BaseRepository[User] = BaseRepository(User, mock_session)
 
@@ -215,8 +215,8 @@ class TestBaseRepositoryGetOne:
     @pytest.mark.asyncio
     async def test_get_one_returns_instance(self, mock_session, mock_result):
         """Test get_one returns instance when found."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_user = MagicMock()
         mock_user.username = "test"
@@ -231,8 +231,8 @@ class TestBaseRepositoryGetOne:
     @pytest.mark.asyncio
     async def test_get_one_returns_none_when_not_found(self, mock_session, mock_result):
         """Test get_one returns None when not found."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
@@ -264,8 +264,8 @@ class TestBaseRepositoryFindAll:
     @pytest.mark.asyncio
     async def test_find_all_returns_list(self, mock_session, mock_result):
         """Test find_all returns list of instances."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_users = [MagicMock(), MagicMock()]
         mock_result.scalars.return_value.all.return_value = mock_users
@@ -279,8 +279,8 @@ class TestBaseRepositoryFindAll:
     @pytest.mark.asyncio
     async def test_find_all_with_filters(self, mock_session, mock_result):
         """Test find_all with filters."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_users = [MagicMock()]
         mock_result.scalars.return_value.all.return_value = mock_users
@@ -312,8 +312,8 @@ class TestBaseRepositoryCount:
     @pytest.mark.asyncio
     async def test_count_returns_int(self, mock_session, mock_result):
         """Test count returns integer."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_result.scalar_one.return_value = 5
         mock_session.execute.return_value = mock_result
@@ -339,8 +339,8 @@ class TestBaseRepositoryCreate:
     @pytest.mark.asyncio
     async def test_create_returns_instance(self, mock_session):
         """Test create returns new instance."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
         mock_instance = MagicMock()
@@ -353,8 +353,8 @@ class TestBaseRepositoryCreate:
     @pytest.mark.asyncio
     async def test_create_instantiates_model_and_adds_to_session(self, mock_session):
         """Test create instantiates model, adds, flushes and refreshes."""
-        from db.repositories.base_repository import BaseRepository
         from db import models
+        from db.repositories.base_repository import BaseRepository
 
         with patch.object(models, "User") as MockUser:
             mock_instance = MagicMock()
@@ -389,8 +389,8 @@ class TestBaseRepositoryGetById:
     @pytest.mark.asyncio
     async def test_get_by_id_returns_instance(self, mock_session, mock_result):
         """Test get_by_id returns instance when found."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_user = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_user
@@ -404,8 +404,8 @@ class TestBaseRepositoryGetById:
     @pytest.mark.asyncio
     async def test_get_by_id_returns_none_when_not_found(self, mock_session, mock_result):
         """Test get_by_id returns None when not found."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
@@ -436,8 +436,8 @@ class TestBaseRepositoryExists:
     @pytest.mark.asyncio
     async def test_exists_returns_true(self, mock_session, mock_result):
         """Test exists returns True when records found."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_result.scalar_one.return_value = 1
         mock_session.execute.return_value = mock_result
@@ -450,8 +450,8 @@ class TestBaseRepositoryExists:
     @pytest.mark.asyncio
     async def test_exists_returns_false(self, mock_session, mock_result):
         """Test exists returns False when no records found."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_result.scalar_one.return_value = 0
         mock_session.execute.return_value = mock_result
@@ -477,8 +477,8 @@ class TestBaseRepositoryBulkCreate:
     @pytest.mark.asyncio
     async def test_bulk_create_returns_created_instances(self, mock_session):
         """Test bulk_create returns list of created instances."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
         mock_instances = [MagicMock(), MagicMock()]
@@ -510,8 +510,8 @@ class TestBaseRepositoryBulkUpdate:
     @pytest.mark.asyncio
     async def test_bulk_update_returns_rowcount(self, mock_session, mock_result):
         """Test bulk_update returns number of updated rows."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
         with patch.object(repo, "bulk_update", return_value=3) as mock_update:
@@ -543,8 +543,8 @@ class TestBaseRepositoryBulkDelete:
     @pytest.mark.asyncio
     async def test_bulk_delete_returns_rowcount(self, mock_session, mock_result):
         """Test bulk_delete returns number of deleted rows."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_session.execute.return_value = mock_result
         repo = BaseRepository(User, mock_session)
@@ -577,8 +577,8 @@ class TestBaseRepositoryGetByIdsWithContent:
     @pytest.mark.asyncio
     async def test_get_by_ids_returns_matching_instances(self, mock_session, mock_result):
         """Test get_by_ids returns instances for given IDs."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_session.execute.return_value = mock_result
         repo = BaseRepository(User, mock_session)
@@ -610,8 +610,8 @@ class TestBaseRepositoryFindAllOrdering:
     @pytest.mark.asyncio
     async def test_find_all_with_order_desc(self, mock_session, mock_result):
         """Test find_all with descending order."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_session.execute.return_value = mock_result
         repo = BaseRepository(User, mock_session)
@@ -636,8 +636,8 @@ class TestBaseRepositoryCreate2:
     @pytest.mark.asyncio
     async def test_create_returns_instance(self, mock_session):
         """Test create adds, flushes, refreshes and returns instance."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
         with patch.object(repo, "create", wraps=repo.create) as mock_create:
@@ -668,8 +668,8 @@ class TestBaseRepositoryFindAllWithNoneValue:
     @pytest.mark.asyncio
     async def test_find_all_with_none_filter_value(self, mock_session, mock_result):
         """Test find_all uses is_(None) when filter value is None."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_session.execute.return_value = mock_result
         repo = BaseRepository(User, mock_session)
@@ -699,8 +699,8 @@ class TestBaseRepositoryCountWithNoneValue:
     @pytest.mark.asyncio
     async def test_count_with_none_filter_value(self, mock_session, mock_result):
         """Test count uses is_(None) when filter value is None."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_session.execute.return_value = mock_result
         repo = BaseRepository(User, mock_session)
@@ -730,8 +730,8 @@ class TestBaseRepositoryExistsWithNoneValue:
     @pytest.mark.asyncio
     async def test_exists_with_none_filter_value(self, mock_session, mock_result):
         """Test exists uses is_(None) when filter value is None."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_session.execute.return_value = mock_result
         repo = BaseRepository(User, mock_session)
@@ -756,8 +756,8 @@ class TestBaseRepositoryBulkCreate2:
     @pytest.mark.asyncio
     async def test_bulk_create_adds_and_flushes_all(self, mock_session):
         """Test bulk_create adds all instances and flushes."""
-        from db.repositories.base_repository import BaseRepository
         from db import models
+        from db.repositories.base_repository import BaseRepository
 
         with patch.object(models, "User") as MockUser:
             mock_instance = MagicMock()
@@ -796,9 +796,10 @@ class TestBaseRepositoryBulkUpdate2:
     @pytest.mark.asyncio
     async def test_bulk_update_with_wrapped_mock(self, mock_session, mock_result):
         """Test bulk_update with wrapped mock returns correct rowcount."""
-        from db.repositories.base_repository import BaseRepository
-        from db.models import User
         import uuid
+
+        from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         repo = BaseRepository(User, mock_session)
         ids = [uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
@@ -831,9 +832,10 @@ class TestBaseRepositoryBulkDelete2:
     @pytest.mark.asyncio
     async def test_bulk_delete_executes_delete_statement(self, mock_session, mock_result):
         """Test bulk_delete executes delete statement."""
-        from db.repositories.base_repository import BaseRepository
-        from db.models import User
         import uuid
+
+        from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_session.execute.return_value = mock_result
         repo = BaseRepository(User, mock_session)
@@ -866,8 +868,8 @@ class TestBaseRepositoryFindAllWithOffsetAndLimit:
     @pytest.mark.asyncio
     async def test_find_all_with_offset_and_limit(self, mock_session, mock_result):
         """Test find_all applies offset and limit."""
-        from db.repositories.base_repository import BaseRepository
         from db.models import User
+        from db.repositories.base_repository import BaseRepository
 
         mock_session.execute.return_value = mock_result
         repo = BaseRepository(User, mock_session)

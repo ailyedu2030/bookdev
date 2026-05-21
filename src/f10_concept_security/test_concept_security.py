@@ -2,13 +2,9 @@
 F10: 概念节点安全 - 单元测试
 TDD RED阶段：测试必须失败，因为实现不存在
 """
-import pytest
-import asyncio
 import hashlib
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
+
+import pytest
 
 
 class TestConceptNodeSecurity:
@@ -16,7 +12,7 @@ class TestConceptNodeSecurity:
 
     def test_concept_node_requires_source_chunk(self):
         """F10-T001: 概念节点必须有来源chunk"""
-        from f10_concept_security.concept_security import KnowledgeGraphSecurity, ConceptValidationError
+        from f10_concept_security.concept_security import ConceptValidationError, KnowledgeGraphSecurity
 
         kg_security = KnowledgeGraphSecurity()
 
@@ -53,7 +49,7 @@ class TestConceptNodeSecurity:
         )
 
         result = kg_security.verify_integrity(node)
-        assert result.is_integral == True
+        assert result.is_integral is True
 
     def test_tampering_detection(self):
         """F10-T004: 篡改检测"""
@@ -70,7 +66,7 @@ class TestConceptNodeSecurity:
         node.definition = "被篡改的定义"
 
         result = kg_security.verify_integrity(node)
-        assert result.tampering_detected == True
+        assert result.tampering_detected is True
 
     def test_confidence_based_review_decision(self):
         """F10-T005: 基于置信度的审核决策"""
@@ -83,7 +79,7 @@ class TestConceptNodeSecurity:
             source_chunk_id="chunk-001",
             model_id="claude-3-5-sonnet"
         )
-        assert high_confidence_node.should_auto_approve == True
+        assert high_confidence_node.should_auto_approve is True
 
         medium_confidence_node = ConceptNode(
             concept_id="c-002",
@@ -92,7 +88,7 @@ class TestConceptNodeSecurity:
             source_chunk_id="chunk-002",
             model_id="claude-3-5-sonnet"
         )
-        assert medium_confidence_node.requires_manual_review == True
+        assert medium_confidence_node.requires_manual_review is True
 
     def test_review_signature_required(self):
         """F10-T006: 审核需要签名"""
@@ -120,7 +116,7 @@ class TestIntegrityVerifier:
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
         result = verifier.verify_hash(content, content_hash)
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_verify_hash_mismatch(self):
         """F10-T008: 验证哈希不匹配"""
@@ -129,7 +125,7 @@ class TestIntegrityVerifier:
         verifier = IntegrityVerifier()
 
         result = verifier.verify_hash("原始内容", "错误的哈希")
-        assert result.is_valid == False
+        assert result.is_valid is False
 
     def test_source_chunk_verification(self):
         """F10-T009: 验证源chunk存在"""
@@ -138,7 +134,7 @@ class TestIntegrityVerifier:
         verifier = IntegrityVerifier()
 
         result = verifier.verify_source_chunk_exists("chunk-001")
-        assert result.exists == True
+        assert result.exists is True
 
 
 class TestSecurityTests:
@@ -205,7 +201,7 @@ class TestIntegrationTests:
         assert node.definition_hash is not None
 
         integrity_result = kg_security.verify_integrity(node)
-        assert integrity_result.is_integral == True
+        assert integrity_result.is_integral is True
 
     def test_security_and_integrity_integration(self):
         """F10-I002: 安全与完整性集成"""
@@ -219,7 +215,7 @@ class TestIntegrationTests:
             model_id="claude-3-5-sonnet"
         )
 
-        assert kg_security.verify_integrity(node).is_integral == True
+        assert kg_security.verify_integrity(node).is_integral is True
 
 
 class TestConceptSecurityUncovered:
@@ -227,7 +223,7 @@ class TestConceptSecurityUncovered:
 
     def test_verify_and_approve_concept_not_found(self):
         """verify_and_approve处理不存在的概念 (覆盖lines 125-126)"""
-        from f10_concept_security.concept_security import KnowledgeGraphSecurity, ConceptValidationError
+        from f10_concept_security.concept_security import ConceptValidationError, KnowledgeGraphSecurity
 
         kg_security = KnowledgeGraphSecurity()
 

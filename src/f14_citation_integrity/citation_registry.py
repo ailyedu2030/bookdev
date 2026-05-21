@@ -2,12 +2,10 @@
 F14: 引用完整性校验
 引用注册表和完整性管理
 """
-import hashlib
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Any
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from typing import Any
 
 
 @dataclass
@@ -15,8 +13,8 @@ class Citation:
     citation_id: str
     doi: str
     fact_hash: str
-    position: Dict[str, Any]
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    position: dict[str, Any]
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     is_verified: bool = False
 
 
@@ -26,30 +24,30 @@ class CitationIntegrityResult:
     doi: str
     fact_hash: str
     content_hash: str
-    mismatch_reason: Optional[str] = None
+    mismatch_reason: str | None = None
 
 
 @dataclass
 class CitationChainResult:
     is_valid: bool
-    chain: List[str]
+    chain: list[str]
     is_biased: bool = False
-    issues: List[str] = field(default_factory=list)
+    issues: list[str] = field(default_factory=list)
 
 
 class CitationRegistry:
     """引用注册表"""
 
     def __init__(self):
-        self._citations: Dict[str, Citation] = {}
-        self._doi_index: Dict[str, List[str]] = {}
-        self._fact_index: Dict[str, List[str]] = {}
+        self._citations: dict[str, Citation] = {}
+        self._doi_index: dict[str, list[str]] = {}
+        self._fact_index: dict[str, list[str]] = {}
 
     def register_citation(
         self,
         doi: str,
         fact_hash: str,
-        position: Dict[str, Any]
+        position: dict[str, Any]
     ) -> str:
         """注册引用"""
         existing = self._find_existing_citation(doi, fact_hash, position)
@@ -82,8 +80,8 @@ class CitationRegistry:
         self,
         doi: str,
         fact_hash: str,
-        position: Dict[str, Any]
-    ) -> Optional[str]:
+        position: dict[str, Any]
+    ) -> str | None:
         """查找已存在的引用"""
         citation_ids = self._doi_index.get(doi, [])
         for cid in citation_ids:
@@ -92,16 +90,16 @@ class CitationRegistry:
                 return cid
         return None
 
-    def get_citation(self, citation_id: str) -> Optional[Citation]:
+    def get_citation(self, citation_id: str) -> Citation | None:
         """获取引用"""
         return self._citations.get(citation_id)
 
-    def list_citations_by_doi(self, doi: str) -> List[Citation]:
+    def list_citations_by_doi(self, doi: str) -> list[Citation]:
         """按DOI列出引用"""
         citation_ids = self._doi_index.get(doi, [])
         return [self._citations[cid] for cid in citation_ids if cid in self._citations]
 
-    def get_fact_citations(self, fact_hash: str) -> List[Citation]:
+    def get_fact_citations(self, fact_hash: str) -> list[Citation]:
         """获取引用特定事实的所有引用"""
         citation_ids = self._fact_index.get(fact_hash, [])
         return [self._citations[cid] for cid in citation_ids if cid in self._citations]
@@ -113,7 +111,7 @@ class CitationRegistry:
         self._citations[citation_id].is_verified = True
         return True
 
-    def get_unverified_citations(self) -> List[Citation]:
+    def get_unverified_citations(self) -> list[Citation]:
         """获取所有未验证的引用"""
         return [c for c in self._citations.values() if not c.is_verified]
 

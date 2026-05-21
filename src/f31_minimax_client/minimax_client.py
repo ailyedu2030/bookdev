@@ -5,19 +5,19 @@ F31: MiniMax M2.7 API客户端
 Mock实现用于无API Key时的开发和测试。
 """
 
-import os
-import json
-import time
 import asyncio
+import json
+import os
+import time
 from dataclasses import dataclass, field
-from typing import Optional, AsyncIterator, Dict, Any
+from typing import Any
 
 import aiohttp
 
-from f31_minimax_client.token_counter import TokenCounter
-from f31_minimax_client.response_parser import ResponseParser, ParsedResponse
-from f31_minimax_client.rate_limiter import RateLimiter
 from f31_minimax_client.cost_tracker import CostTracker, UsageStats
+from f31_minimax_client.rate_limiter import RateLimiter
+from f31_minimax_client.response_parser import ResponseParser
+from f31_minimax_client.token_counter import TokenCounter
 
 
 @dataclass
@@ -59,12 +59,12 @@ class MiniMaxClient:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        model: Optional[str] = None,
-        rate_limiter: Optional[RateLimiter] = None,
-        cost_tracker: Optional[CostTracker] = None,
-        token_counter: Optional[TokenCounter] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        model: str | None = None,
+        rate_limiter: RateLimiter | None = None,
+        cost_tracker: CostTracker | None = None,
+        token_counter: TokenCounter | None = None,
         timeout: float = 120.0,
     ):
         """
@@ -92,8 +92,8 @@ class MiniMaxClient:
         self.response_parser = ResponseParser()
 
         # INF-012: Create session once and reuse instead of creating per-call
-        self._session: Optional[aiohttp.ClientSession] = None
-        self._session_created_at: Optional[float] = None
+        self._session: aiohttp.ClientSession | None = None
+        self._session_created_at: float | None = None
         self._session_timeout = aiohttp.ClientTimeout(total=self._timeout)
 
     async def _get_session(self) -> aiohttp.ClientSession:
@@ -207,7 +207,7 @@ class MiniMaxClient:
         if not user_prompt or not user_prompt.strip():
             raise ValueError("user_prompt cannot be empty")
 
-    def _build_headers(self) -> Dict[str, str]:
+    def _build_headers(self) -> dict[str, str]:
         """构建请求头"""
         return {
             "Content-Type": "application/json",
@@ -221,7 +221,7 @@ class MiniMaxClient:
         max_tokens: int,
         temperature: float,
         stream: bool,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """构建请求体"""
         return {
             "model": self.model,
@@ -414,36 +414,36 @@ class MiniMaxClient:
 
         if "人工智能" in user_prompt or "AI" in user_prompt:
             response += (
-                f"人工智能（Artificial Intelligence，简称AI）是计算机科学的一个重要分支，"
-                f"旨在研究和开发能够模拟、延伸和扩展人类智能的理论、方法、技术及应用系统。\n\n"
-                f"人工智能的核心领域包括：\n"
-                f"1. 机器学习（Machine Learning）\n"
-                f"2. 深度学习（Deep Learning）\n"
-                f"3. 自然语言处理（Natural Language Processing）\n"
-                f"4. 计算机视觉（Computer Vision）\n"
-                f"5. 知识表示与推理（Knowledge Representation）\n\n"
-                f"近年来，随着大语言模型（LLM）的快速发展，"
-                f"人工智能在教材编写、教育辅助等领域的应用越来越广泛。"
+                "人工智能（Artificial Intelligence，简称AI）是计算机科学的一个重要分支，"
+                "旨在研究和开发能够模拟、延伸和扩展人类智能的理论、方法、技术及应用系统。\n\n"
+                "人工智能的核心领域包括：\n"
+                "1. 机器学习（Machine Learning）\n"
+                "2. 深度学习（Deep Learning）\n"
+                "3. 自然语言处理（Natural Language Processing）\n"
+                "4. 计算机视觉（Computer Vision）\n"
+                "5. 知识表示与推理（Knowledge Representation）\n\n"
+                "近年来，随着大语言模型（LLM）的快速发展，"
+                "人工智能在教材编写、教育辅助等领域的应用越来越广泛。"
             )
         elif "教材" in user_prompt or "教材" in system_prompt:
             response += (
-                f"教材是教学活动的基本工具，是知识传递的重要载体。\n\n"
-                f"一本优秀的教材应当具备以下特征：\n"
-                f"1. 知识体系的完整性与系统性\n"
-                f"2. 内容组织的逻辑性与层次性\n"
-                f"3. 语言表达的准确性与清晰性\n"
-                f"4. 案例选择的典型性与时代性\n"
-                f"5. 习题设计的层次性与启发性\n\n"
-                f"在AI辅助教材编写的背景下，"
-                f"我们需要在效率提升和质量保障之间找到平衡。"
+                "教材是教学活动的基本工具，是知识传递的重要载体。\n\n"
+                "一本优秀的教材应当具备以下特征：\n"
+                "1. 知识体系的完整性与系统性\n"
+                "2. 内容组织的逻辑性与层次性\n"
+                "3. 语言表达的准确性与清晰性\n"
+                "4. 案例选择的典型性与时代性\n"
+                "5. 习题设计的层次性与启发性\n\n"
+                "在AI辅助教材编写的背景下，"
+                "我们需要在效率提升和质量保障之间找到平衡。"
             )
         else:
             response += (
-                f"关于您的问题，以下是相关回答：\n\n"
-                f"根据系统提示的要求，我们针对该主题进行了分析和整理。"
-                f"该内容基于MiniMax M2.7大语言模型生成，"
-                f"模型拥有200K tokens的上下文窗口，"
-                f"能够处理长文本的生成和理解任务。"
+                "关于您的问题，以下是相关回答：\n\n"
+                "根据系统提示的要求，我们针对该主题进行了分析和整理。"
+                "该内容基于MiniMax M2.7大语言模型生成，"
+                "模型拥有200K tokens的上下文窗口，"
+                "能够处理长文本的生成和理解任务。"
             )
 
         # 确保不超过max_tokens
@@ -464,9 +464,9 @@ class MockMiniMaxClient(MiniMaxClient):
 
     def __init__(
         self,
-        rate_limiter: Optional[RateLimiter] = None,
-        cost_tracker: Optional[CostTracker] = None,
-        token_counter: Optional[TokenCounter] = None,
+        rate_limiter: RateLimiter | None = None,
+        cost_tracker: CostTracker | None = None,
+        token_counter: TokenCounter | None = None,
     ):
         """
         初始化Mock客户端

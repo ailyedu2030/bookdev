@@ -3,17 +3,16 @@
 Tests JWT token operations, password hashing, RBAC, and user dependencies.
 """
 
+import os
+import sys
 import uuid
-import time
-from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, AsyncMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
@@ -22,7 +21,7 @@ class TestPasswordHashing:
 
     def test_verify_password_correct(self):
         """Test verify_password returns True for correct password."""
-        from api.deps import verify_password, get_password_hash
+        from api.deps import get_password_hash, verify_password
 
         hashed = get_password_hash("testpassword123")
         result = verify_password("testpassword123", hashed)
@@ -30,7 +29,7 @@ class TestPasswordHashing:
 
     def test_verify_password_incorrect(self):
         """Test verify_password returns False for incorrect password."""
-        from api.deps import verify_password, get_password_hash
+        from api.deps import get_password_hash, verify_password
 
         hashed = get_password_hash("correctpassword")
         result = verify_password("wrongpassword", hashed)
@@ -111,8 +110,8 @@ class TestJWTTokens:
 
     def test_decode_token_wrong_type_raises(self):
         """Test decode_token raises exception for wrong token type."""
+
         from api.deps import create_access_token, decode_token
-        from jose import JWTError
 
         token = create_access_token({"sub": "user123", "email": "test@example.com", "role": "viewer"})
         with pytest.raises(HTTPException) as exc_info:
@@ -132,8 +131,9 @@ class TestJWTTokens:
 
     def test_decode_token_expired(self):
         """Test decode_token raises exception for expired token."""
-        from api.deps import create_access_token, decode_token, ACCESS_TOKEN_EXPIRE_MINUTES
         from datetime import timedelta
+
+        from api.deps import create_access_token, decode_token
 
         token = create_access_token(
             {"sub": "user123", "email": "test@example.com", "role": "viewer"},
@@ -235,7 +235,7 @@ class TestTokenDataModel:
         """Test TokenData creation."""
         from api.deps import TokenData
 
-        now = int(datetime.now(timezone.utc).timestamp())
+        now = int(datetime.now(UTC).timestamp())
         token_data = TokenData(
             sub="user123",
             email="test@example.com",
@@ -385,7 +385,7 @@ class TestRequireRole:
     @pytest.mark.asyncio
     async def test_require_role_returns_dependency(self):
         """Test require_role returns async dependency function."""
-        from api.deps import require_role, User
+        from api.deps import User, require_role
 
         role_check = require_role("admin", "editor")
 
@@ -402,7 +402,7 @@ class TestRequireRole:
     @pytest.mark.asyncio
     async def test_require_role_unauthorized(self):
         """Test require_role raises for unauthorized role."""
-        from api.deps import require_role, User
+        from api.deps import User, require_role
 
         role_check = require_role("admin")
 
@@ -425,7 +425,7 @@ class TestRequireMinRole:
     @pytest.mark.asyncio
     async def test_require_min_role_sufficient_level(self):
         """Test require_min_role allows sufficient role level."""
-        from api.deps import require_min_role, User
+        from api.deps import User, require_min_role
 
         min_role_check = require_min_role("editor")
 
@@ -442,7 +442,7 @@ class TestRequireMinRole:
     @pytest.mark.asyncio
     async def test_require_min_role_insufficient_level(self):
         """Test require_min_role denies insufficient role level."""
-        from api.deps import require_min_role, User
+        from api.deps import User, require_min_role
 
         min_role_check = require_min_role("editor")
 
@@ -462,7 +462,7 @@ class TestRequireMinRole:
     @pytest.mark.asyncio
     async def test_require_min_role_exact_level(self):
         """Test require_min_role allows exact role level."""
-        from api.deps import require_min_role, User
+        from api.deps import User, require_min_role
 
         min_role_check = require_min_role("editor")
 
@@ -483,7 +483,7 @@ class TestGetCurrentUser:
     @pytest.mark.asyncio
     async def test_get_current_user_with_valid_credentials(self):
         """Test get_current_user returns user for valid token."""
-        from api.deps import get_current_user, create_access_token
+        from api.deps import create_access_token, get_current_user
 
         token = create_access_token({
             "sub": "user123",
@@ -515,7 +515,7 @@ class TestGetCurrentUser:
     @pytest.mark.asyncio
     async def test_get_current_user_with_existing_state_user(self):
         """Test get_current_user returns user from request.state if available."""
-        from api.deps import get_current_user, User
+        from api.deps import User, get_current_user
 
         user = User(
             id="state_user",
@@ -552,7 +552,7 @@ class TestGetCurrentActiveUser:
     @pytest.mark.asyncio
     async def test_get_current_active_user_returns_user(self):
         """Test get_current_active_user returns user when authenticated."""
-        from api.deps import get_current_active_user, User
+        from api.deps import User, get_current_active_user
 
         user = User(
             id="user123",
@@ -582,7 +582,7 @@ class TestGetOptionalUser:
     @pytest.mark.asyncio
     async def test_get_optional_user_with_token(self):
         """Test get_optional_user returns user when token provided."""
-        from api.deps import get_optional_user, create_access_token
+        from api.deps import create_access_token, get_optional_user
 
         token = create_access_token({
             "sub": "user123",
@@ -884,7 +884,7 @@ class TestGetDB:
     @pytest.mark.asyncio
     async def test_get_db_returns_singleton(self):
         """Test get_db returns the singleton database session."""
-        from api.deps import get_db, db_session
+        from api.deps import db_session, get_db
 
         result = await get_db()
         assert result is db_session
@@ -895,7 +895,7 @@ class TestDecodeTokenEdgeCases:
 
     def test_decode_token_wrong_type_raises_jwt_error(self):
         """Test decode_token raises JWTError when token type mismatch."""
-        from api.deps import create_access_token, decode_token, create_refresh_token
+        from api.deps import create_refresh_token, decode_token
 
         token = create_refresh_token({"sub": "user123", "email": "test@example.com", "role": "viewer"})
 
@@ -912,10 +912,11 @@ class TestGetCurrentUserEdgeCases:
     @pytest.mark.asyncio
     async def test_get_current_user_generic_exception(self):
         """Test get_current_user raises 401 on unexpected exception."""
-        from api.deps import get_current_user
         from unittest.mock import MagicMock
+
         from fastapi.security import HTTPAuthorizationCredentials
-        from jose import jwt
+
+        from api.deps import get_current_user
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid_format_but_invalid")
 
@@ -930,8 +931,9 @@ class TestGetCurrentUserEdgeCases:
     @pytest.mark.asyncio
     async def test_get_current_user_decode_error(self):
         """Test get_current_user handles decode errors properly."""
-        from api.deps import get_current_user
         from fastapi.security import HTTPAuthorizationCredentials
+
+        from api.deps import get_current_user
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="malformed.token.here")
         mock_request = MagicMock()
@@ -962,7 +964,7 @@ class TestRequireMinRoleEdgeCases:
     @pytest.mark.asyncio
     async def test_require_min_role_level_too_low(self):
         """Test require_min_role raises when role level is insufficient."""
-        from api.deps import require_min_role, User
+        from api.deps import User, require_min_role
 
         min_role_check = require_min_role("editor")
 
@@ -1204,9 +1206,11 @@ class TestDecodeTokenTypeMismatch:
     @pytest.mark.asyncio
     async def test_get_current_user_handles_non_jwt_exception(self):
         """Test get_current_user handles unexpected non-JWTError exceptions."""
-        from api.deps import get_current_user, create_access_token
-        from fastapi.security import HTTPAuthorizationCredentials
         from unittest.mock import patch
+
+        from fastapi.security import HTTPAuthorizationCredentials
+
+        from api.deps import create_access_token, get_current_user
 
         token = create_access_token({
             "sub": "user123",
@@ -1233,8 +1237,9 @@ class TestDecodeTokenInvalidType:
 
     def test_decode_token_missing_type_field(self):
         """Test decode_token raises when token has no type field."""
-        from api.deps import decode_token, SECRET_KEY, ALGORITHM
         from jose import jwt
+
+        from api.deps import ALGORITHM, SECRET_KEY, decode_token
 
         payload = {
             "sub": "user123",

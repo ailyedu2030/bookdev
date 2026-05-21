@@ -4,7 +4,6 @@ F16: 样本验证器
 """
 import math
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Set
 
 
 @dataclass
@@ -18,8 +17,8 @@ class ValidationResult:
 class BiasDetectionResult:
     is_biased: bool
     bias_score: float
-    bias_type: Optional[str] = None
-    details: Optional[str] = None
+    bias_type: str | None = None
+    details: str | None = None
 
 
 class SampleValidator:
@@ -32,8 +31,8 @@ class SampleValidator:
 
     def validate_representativeness(
         self,
-        population: List[float],
-        sample: List[float]
+        population: list[float],
+        sample: list[float]
     ) -> ValidationResult:
         """验证样本代表性"""
         if not population or not sample:
@@ -67,8 +66,8 @@ class SampleValidator:
 
     def validate_minimum_size(
         self,
-        population: List,
-        sample: List
+        population: list,
+        sample: list
     ) -> ValidationResult:
         """验证最小样本量"""
         if len(sample) < self.minimum_sample_size:
@@ -96,8 +95,8 @@ class SampleValidator:
 
     def validate_stratification_balance(
         self,
-        population_strata: Dict[str, List],
-        sample_strata: Dict[str, List]
+        population_strata: dict[str, list],
+        sample_strata: dict[str, list]
     ) -> ValidationResult:
         """验证分层平衡"""
         if set(population_strata.keys()) != set(sample_strata.keys()):
@@ -107,7 +106,7 @@ class SampleValidator:
                 message="Strata mismatch between population and sample"
             )
 
-        scores: List[float] = []
+        scores: list[float] = []
 
         for stratum in population_strata:
             pop_size = len(population_strata[stratum])
@@ -140,8 +139,8 @@ class SampleValidator:
 
     def detect_bias(
         self,
-        population: List,
-        sample: List
+        population: list,
+        sample: list
     ) -> BiasDetectionResult:
         """检测抽样偏差"""
         if not population or not sample:
@@ -200,10 +199,10 @@ class SampleValidator:
 
     def validate_sample_quality(
         self,
-        population: List[float],
-        sample: List[float],
-        strata: Optional[Dict[str, List]] = None
-    ) -> Dict[str, ValidationResult]:
+        population: list[float],
+        sample: list[float],
+        strata: dict[str, list] | None = None
+    ) -> dict[str, ValidationResult]:
         """综合样本质量验证"""
         results = {}
 
@@ -212,7 +211,7 @@ class SampleValidator:
 
         if strata:
             sample_strata = {}
-            pop_size = len(population)
+            len(population)
             for i, val in enumerate(sample):
                 stratum = list(strata.keys())[i % len(strata)]
                 if stratum not in sample_strata:
@@ -223,7 +222,7 @@ class SampleValidator:
 
         return results
 
-    def _median(self, sorted_list: List) -> float:
+    def _median(self, sorted_list: list) -> float:
         """计算中位数"""
         n = len(sorted_list)
         if n == 0:
@@ -232,7 +231,7 @@ class SampleValidator:
             return (sorted_list[n // 2 - 1] + sorted_list[n // 2]) / 2
         return sorted_list[n // 2]
 
-    def _std(self, data: List) -> float:
+    def _std(self, data: list) -> float:
         """计算标准差"""
         if not data:
             return 0

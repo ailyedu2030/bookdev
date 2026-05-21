@@ -15,37 +15,37 @@ AI多Agent教材编写系统 - FastAPI API层
 
 __version__ = "1.0.0"
 
-from api.router import api_router
 from api.deps import (
-    get_db,
-    get_current_user,
+    DatabaseSession,
+    User,
     get_current_active_user,
+    get_current_user,
+    get_db,
     get_optional_user,
+    require_min_role,
     require_permission,
     require_role,
-    require_min_role,
-    User,
-    DatabaseSession,
 )
+from api.router import api_router
 from api.schemas import (
-    UserCreate,
-    UserLogin,
-    Token,
-    ProjectCreate,
-    ProjectUpdate,
-    ProjectResponse,
     ChapterCreate,
-    ChapterUpdate,
     ChapterResponse,
-    TermCreate,
-    TermUpdate,
-    TermResponse,
-    ScanRequest,
-    ScanResponse,
+    ChapterUpdate,
+    ErrorResponse,
     HealthResponse,
     MetricsResponse,
+    ProjectCreate,
+    ProjectResponse,
+    ProjectUpdate,
+    ScanRequest,
+    ScanResponse,
     SuccessResponse,
-    ErrorResponse,
+    TermCreate,
+    TermResponse,
+    TermUpdate,
+    Token,
+    UserCreate,
+    UserLogin,
 )
 
 __all__ = [

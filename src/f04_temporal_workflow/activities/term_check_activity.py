@@ -2,9 +2,8 @@
 Term Check Activity - 术语检查
 """
 
-from dataclasses import dataclass
-from typing import List, Optional, Dict, Any, Set
 from collections import defaultdict
+from dataclasses import dataclass
 
 from temporalio import activity
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -15,8 +14,8 @@ class TermCheckInput:
     """术语检查输入"""
     chapter_id: str
     content: str
-    glossary: Optional[dict] = None
-    preferred_terms: Optional[Dict[str, str]] = None
+    glossary: dict | None = None
+    preferred_terms: dict[str, str] | None = None
 
 
 @dataclass
@@ -26,8 +25,8 @@ class TermIssue:
     severity: str
     category: str
     original_term: str
-    suggested_term: Optional[str]
-    location: Optional[str] = None
+    suggested_term: str | None
+    location: str | None = None
 
 
 @dataclass
@@ -36,8 +35,8 @@ class TermCheckOutput:
     chapter_id: str
     passed: bool
     consistency_score: float
-    issues: List[TermIssue]
-    terms_used: Set[str]
+    issues: list[TermIssue]
+    terms_used: set[str]
     glossary_coverage: float
 
 
@@ -126,7 +125,7 @@ class TermCheckActivity:
 
     @staticmethod
     @activity.defn(name="normalize_terms")
-    async def normalize_terms(chapter_id: str, content: str, term_map: Dict[str, str]) -> str:
+    async def normalize_terms(chapter_id: str, content: str, term_map: dict[str, str]) -> str:
         """
         标准化术语
 
@@ -150,7 +149,7 @@ class TermCheckActivity:
     @staticmethod
     @activity.defn(name="extract_terms")
     @retry(stop=stop_after_attempt(2))
-    async def extract_terms(chapter_id: str, content: str) -> Dict[str, List[str]]:
+    async def extract_terms(chapter_id: str, content: str) -> dict[str, list[str]]:
         """
         从内容中提取术语
 
@@ -177,7 +176,7 @@ class TermCheckActivity:
     @activity.defn(name="build_chapter_glossary")
     async def build_chapter_glossary(
         chapter_id: str,
-        terms: Dict[str, List[str]]
+        terms: dict[str, list[str]]
     ) -> dict:
         """
         为章节构建术语表

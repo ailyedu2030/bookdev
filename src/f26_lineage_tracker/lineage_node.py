@@ -3,10 +3,9 @@ F26: 血缘追踪系统 - 节点数据结构
 定义血缘节点、边和数据源类型
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from uuid import uuid4
+from typing import Any
 
 
 class NodeType(Enum):
@@ -25,7 +24,7 @@ class DataSource:
     source_id: str
     source_type: str
     name: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __hash__(self):
         return hash(self.source_id)
@@ -44,10 +43,10 @@ class LineageNode:
     node_type: NodeType
     source: DataSource
     transformation: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    parents: List[str] = field(default_factory=list)
-    children: List[str] = field(default_factory=list)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    metadata: dict[str, Any] = field(default_factory=dict)
+    parents: list[str] = field(default_factory=list)
+    children: list[str] = field(default_factory=list)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     depth: int = 0
 
     def __hash__(self):
@@ -66,7 +65,7 @@ class LineageEdge:
     source_node_id: str
     target_node_id: str
     edge_type: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __hash__(self):
         return hash(self.edge_id)
@@ -76,9 +75,9 @@ class LineageEdge:
 class ImpactReport:
     """影响分析报告"""
     source_id: str
-    affected_nodes: List[str]
+    affected_nodes: list[str]
     total_affected: int
     max_depth: int
-    critical_paths: List[List[str]]
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    generated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    critical_paths: list[list[str]]
+    metadata: dict[str, Any] = field(default_factory=dict)
+    generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))

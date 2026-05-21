@@ -4,15 +4,13 @@ Admin Routes API Integration Tests
 Tests for admin endpoints using properly permissioned users.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from api.deps import generate_uuid, create_access_token
+from api.deps import generate_uuid
+
 from tests.api.conftest import (
-    create_test_project,
     create_test_chapter,
-    get_auth_header,
-    get_csrf_headers,
+    create_test_project,
 )
 
 
@@ -37,7 +35,7 @@ class TestListUsers:
     ):
         """Test listing users with existing data"""
         token = test_admin_authenticated["access_token"]
-        admin = test_admin_authenticated["user"]
+        test_admin_authenticated["user"]
 
         test_db.create_user({
             "username": "user1",
@@ -351,7 +349,7 @@ class TestDeleteUser:
     ):
         """Test deleting a user"""
         token = test_admin_authenticated["access_token"]
-        admin = test_admin_authenticated["user"]
+        test_admin_authenticated["user"]
         target_user = test_db.create_user({
             "username": "deleteme",
             "email": "delete@example.com",
@@ -993,5 +991,5 @@ class TestRolesPermissionsExpanded:
         assert response.status_code == 200
         data = response.json()
         resources = data["resources"]
-        for resource, actions in resources.items():
+        for _resource, actions in resources.items():
             assert isinstance(actions, list)

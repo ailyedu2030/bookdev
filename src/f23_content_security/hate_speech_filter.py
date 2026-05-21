@@ -2,7 +2,6 @@
 F23: 内容安全过滤 - 仇恨言论过滤器
 """
 import re
-from typing import List, Tuple
 
 
 class HateSpeechFilter:
@@ -28,14 +27,14 @@ class HateSpeechFilter:
     def __init__(self):
         self._patterns = self._compile_patterns()
 
-    def _compile_patterns(self) -> List[Tuple[re.Pattern, float]]:
+    def _compile_patterns(self) -> list[tuple[re.Pattern, float]]:
         """编译仇恨言论正则"""
         compiled = []
         for pattern, severity in self.HATE_PATTERNS.items():
             compiled.append((re.compile(pattern), severity))
         return compiled
 
-    def detect(self, content: str) -> List[Tuple[str, float, int]]:
+    def detect(self, content: str) -> list[tuple[str, float, int]]:
         """检测仇恨言论
 
         Returns:

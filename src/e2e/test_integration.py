@@ -9,9 +9,9 @@
 5. F19 Logic Chain + F20 LLM Judge
 """
 
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestKafkaLogIntegration:
@@ -19,8 +19,9 @@ class TestKafkaLogIntegration:
 
     def test_event_produces_log_entry(self):
         """INT-T001: Kafka事件产生日志条目"""
-        from f01_immutable_log.immutable_log import create_log_entry, reset_global_chain
         import json
+
+        from f01_immutable_log.immutable_log import create_log_entry, reset_global_chain
         from f03_content_addressing.content_addressing import calculate_content_hash
 
         reset_global_chain()
@@ -40,7 +41,7 @@ class TestKafkaLogIntegration:
 
     def test_log_chain_for_kafka_events(self):
         """INT-T002: Kafka事件日志链"""
-        from f01_immutable_log.immutable_log import create_log_entry, verify_chain_integrity, reset_global_chain
+        from f01_immutable_log.immutable_log import create_log_entry, reset_global_chain, verify_chain_integrity
 
         reset_global_chain()
 
@@ -137,10 +138,10 @@ class TestKnowledgeGraphPGIntegration:
 
     def test_pg_adapter_in_knowledge_graph(self):
         """INT-T020: PG适配器在知识图谱中使用"""
-        from f32_pg_knowledge_graph.pg_adapter import MockPGAdapter
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+        from f32_pg_knowledge_graph.pg_adapter import MockPGAdapter
 
-        adapter = MockPGAdapter()
+        MockPGAdapter()
         kg = KnowledgeGraph()
 
         kg.create_chapter("ch-pg-1", "测试章节", 1)
@@ -196,8 +197,8 @@ class TestSemanticTermIntegration:
 
     def test_term_consistency_check(self):
         """INT-T031: 术语一致性检查"""
-        from f18_term_glossary.term_glossary_service import TermGlossaryService
         from f18_term_glossary.consistency_checker import ConsistencyChecker
+        from f18_term_glossary.term_glossary_service import TermGlossaryService
 
         term_svc = TermGlossaryService()
         checker = ConsistencyChecker(term_svc)
@@ -205,7 +206,6 @@ class TestSemanticTermIntegration:
         term_svc.register_term("AI", "人工智能", "计算机科学")
 
         content_with_term = "人工智能（AI）是重要的技术..."
-        content_without_term = "这是一些其他内容..."
 
         result = checker.check_consistency(
             content_with_term,
@@ -262,8 +262,8 @@ class TestSecurityPipelineIntegration:
 
     def test_content_filter_with_political_tracker(self):
         """INT-T050: 内容过滤与政治敏感追踪"""
-        from f23_content_security.content_filter import ContentSecurityFilter
         from f15_political_sensitivity.political_tracker import PoliticalTracker, SensitivityLevel
+        from f23_content_security.content_filter import ContentSecurityFilter
 
         cf = ContentSecurityFilter()
         pt = PoliticalTracker()
@@ -338,9 +338,9 @@ class TestConfigMonitoringIntegration:
 
         config = ConfigCenter()
 
-        v1 = config.set_config("versioned.key", "value1")
-        v2 = config.set_config("versioned.key", "value2")
-        v3 = config.set_config("versioned.key", "value3")
+        config.set_config("versioned.key", "value1")
+        config.set_config("versioned.key", "value2")
+        config.set_config("versioned.key", "value3")
 
         history = config.get_version_history("versioned.key")
 
@@ -355,9 +355,9 @@ class TestWorkflowActivityIntegration:
 
     def test_workflow_signals_trigger_activities(self):
         """INT-T070: 工作流信号触发活动"""
-        from f04_temporal_workflow.activities.term_check_activity import TermCheckInput
         from f04_temporal_workflow.activities.format_review_activity import FormatCheckInput
         from f04_temporal_workflow.activities.security_scan_activity import SecurityScanInput
+        from f04_temporal_workflow.activities.term_check_activity import TermCheckInput
 
         term_input = TermCheckInput(
             chapter_id="ch-workflow-1",
@@ -415,7 +415,7 @@ class TestDataLineageIntegration:
 
     def test_tier1_with_content_hash(self):
         """INT-T090: Tier1核实与内容哈希"""
-        from f06_tier1_verification.tier1_engine import Tier1Verifier, VerificationStatus
+        from f06_tier1_verification.tier1_engine import Tier1Verifier
 
         verifier = Tier1Verifier()
 
@@ -425,8 +425,8 @@ class TestDataLineageIntegration:
 
     def test_citation_with_hash(self):
         """INT-T091: 引用完整性与哈希"""
-        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
         from f03_content_addressing.content_addressing import calculate_content_hash
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
 

@@ -4,14 +4,14 @@ F29: CI/CD质量门禁
 自动化代码质量和安全检查。
 """
 
+import logging
 import os
 import re
 import subprocess
-import logging
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
-from enum import Enum
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -31,15 +31,15 @@ class CheckResult:
     name: str
     status: CheckStatus
     message: str
-    details: Optional[Dict[str, Any]] = None
+    details: dict[str, Any] | None = None
 
 
 @dataclass
 class QualityGateResult:
     """质量门禁结果"""
     passed: bool
-    check_results: List[CheckResult]
-    summary: Dict[str, int]
+    check_results: list[CheckResult]
+    summary: dict[str, int]
     timestamp: str
 
 
@@ -69,7 +69,7 @@ class LinterChecker:
     def _check_file(self, file_path: str) -> CheckResult:
         """检查单个文件"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 content = f.read()
                 try:
                     compile(content, file_path, 'exec')
@@ -166,11 +166,11 @@ class SecurityScanner:
             message="未发现安全问题"
         )
 
-    def _scan_file(self, file_path: str) -> List[str]:
+    def _scan_file(self, file_path: str) -> list[str]:
         """扫描单个文件"""
         findings = []
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 content = f.read()
 
             patterns = {
@@ -248,12 +248,11 @@ class CoverageTracker:
 
     def _parse_coverage_file(self, coverage_file: str) -> float:
         """解析覆盖率文件，支持文本格式(SF/DA行)和二进制.coverage文件"""
-        import re
         try:
             abs_path = os.path.abspath(coverage_file)
             if not os.path.exists(abs_path):
                 return 0.0
-            with open(abs_path, 'r') as f:
+            with open(abs_path) as f:
                 content = f.read()
             if not content.strip():
                 return 0.0
@@ -398,7 +397,7 @@ class QualityGate:
         """运行覆盖率检查"""
         return self.coverage_tracker.track(code_path)
 
-    def _compute_summary(self, check_results: List[CheckResult]) -> Dict[str, int]:
+    def _compute_summary(self, check_results: list[CheckResult]) -> dict[str, int]:
         """计算检查摘要"""
         summary = {
             "total": len(check_results),

@@ -1,15 +1,16 @@
 """Tests for api/routes/terms.py"""
 
 import asyncio
-import pytest
+import os
+import sys
 from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi import HTTPException
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from api.deps import User, DatabaseSession
+from api.deps import DatabaseSession, User
 
 
 def run_async(coro):

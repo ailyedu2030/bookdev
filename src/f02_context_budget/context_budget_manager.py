@@ -4,8 +4,7 @@ F02: 上下文预算管理器 - GREEN阶段实现
 固定核心60K + 弹性素材40K预算控制
 """
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 
 class BudgetError(Exception):
@@ -17,8 +16,8 @@ class BudgetError(Exception):
 class BudgetResult:
     """预算操作结果"""
     accepted: bool
-    rejection_reason: Optional[str] = None
-    evicted_material: Optional[str] = None
+    rejection_reason: str | None = None
+    evicted_material: str | None = None
 
 
 class ContextBudgetManager:
@@ -197,7 +196,7 @@ class ContextBudgetManager:
         """获取材料总token数"""
         return sum(self._material_tokens.values())
 
-    def _evict_oldest_material(self) -> Optional[str]:
+    def _evict_oldest_material(self) -> str | None:
         """淘汰最老的材料"""
         while self._material_order:
             oldest = self._material_order.pop(0)

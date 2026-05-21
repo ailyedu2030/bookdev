@@ -2,8 +2,7 @@
 F07: DOI强制解析服务 - CrossRef客户端
 """
 import asyncio
-from typing import Optional, Dict, Any
-from unittest.mock import AsyncMock
+from typing import Any
 
 
 class CrossRefClient:
@@ -11,14 +10,14 @@ class CrossRefClient:
 
     DEFAULT_TIMEOUT = 10.0  # seconds
 
-    def __init__(self, base_url: str = "https://api.crossref.org", timeout: Optional[float] = None):
+    def __init__(self, base_url: str = "https://api.crossref.org", timeout: float | None = None):
         self.base_url = base_url
         self.timeout = timeout if timeout is not None else self.DEFAULT_TIMEOUT
 
-    async def fetch_doi_metadata(self, doi: str, timeout: Optional[float] = None) -> Optional[Dict[str, Any]]:
+    async def fetch_doi_metadata(self, doi: str, timeout: float | None = None) -> dict[str, Any] | None:
         """获取DOI元数据"""
         effective_timeout = timeout if timeout is not None else self.timeout
-        
+
         try:
             await asyncio.wait_for(asyncio.sleep(0.01), timeout=effective_timeout)  # Simulate network delay
         except asyncio.TimeoutError:
@@ -43,7 +42,7 @@ class CrossRefClient:
 
         return mock_dois.get(doi)
 
-    async def verify_doi_exists(self, doi: str, timeout: Optional[float] = None) -> bool:
+    async def verify_doi_exists(self, doi: str, timeout: float | None = None) -> bool:
         """验证DOI是否存在"""
         metadata = await self.fetch_doi_metadata(doi, timeout)
         return metadata is not None

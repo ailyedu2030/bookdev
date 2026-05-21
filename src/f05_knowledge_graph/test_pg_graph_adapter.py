@@ -5,9 +5,8 @@ TDD Phase RED: Tests for PGGraphAdapter persistence layer
 These tests verify that PGGraphAdapter properly delegates to F32's PGAdapter
 """
 
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from dataclasses import dataclass
+from unittest.mock import AsyncMock, MagicMock
 
 
 @dataclass
@@ -166,7 +165,7 @@ class TestPGGraphAdapterDelegation:
         adapter = PGGraphAdapter(backend=mock_backend)
 
         import asyncio
-        result = asyncio.run(adapter.find_path("n-001", "n-002", depth=2))
+        asyncio.run(adapter.find_path("n-001", "n-002", depth=2))
 
         mock_backend.find_path.assert_called_once_with("n-001", "n-002", edge_types=None, depth=2)
 

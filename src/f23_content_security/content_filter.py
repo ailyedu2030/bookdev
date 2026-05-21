@@ -3,10 +3,7 @@ F23: 内容安全过滤 - 主过滤器实现
 TDD GREEN阶段：实现让测试通过
 """
 import re
-import asyncio
-from typing import List, Dict, Any, Set
-from dataclasses import dataclass, field
-from datetime import datetime
+from typing import Any
 
 
 class FilterResult:
@@ -15,8 +12,8 @@ class FilterResult:
         self,
         is_safe: bool = True,
         confidence_score: float = 1.0,
-        categories: List[str] = None,
-        violations: List[Dict[str, Any]] = None,
+        categories: list[str] = None,
+        violations: list[dict[str, Any]] = None,
         action: str = "PASS",
         details: str = ""
     ):
@@ -27,7 +24,7 @@ class FilterResult:
         self.action = action
         self.details = details
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "is_safe": self.is_safe,
             "confidence_score": self.confidence_score,
@@ -88,12 +85,12 @@ class ContentSecurityFilter:
     }
 
     def __init__(self):
-        self.whitelist: Set[str] = set()
+        self.whitelist: set[str] = set()
         self._profanity_words = set(self.PROFANITY_WORDS)
         self._hate_speech_patterns = self.HATE_SPEECH_PATTERNS
         self._pii_patterns = self.PII_PATTERNS
         self._political_keywords = self.POLITICAL_KEYWORDS
-        self._malware_signatures: Set[str] = set()
+        self._malware_signatures: set[str] = set()
         self._political_tracker = None
 
     def add_to_whitelist(self, content: str):
@@ -107,7 +104,7 @@ class ContentSecurityFilter:
                 return True
         return False
 
-    def _detect_profanity(self, content: str) -> Dict[str, Any]:
+    def _detect_profanity(self, content: str) -> dict[str, Any]:
         """检测脏话"""
         found_words = []
         for word in self._profanity_words:
@@ -122,7 +119,7 @@ class ContentSecurityFilter:
             }
         return {'detected': False, 'words': [], 'confidence': 1.0}
 
-    def _detect_hate_speech(self, content: str) -> Dict[str, Any]:
+    def _detect_hate_speech(self, content: str) -> dict[str, Any]:
         """检测仇恨言论"""
         matched = []
         for pattern in self._hate_speech_patterns:
@@ -137,7 +134,7 @@ class ContentSecurityFilter:
             }
         return {'detected': False, 'patterns': [], 'confidence': 1.0}
 
-    def _detect_pii(self, content: str) -> Dict[str, Any]:
+    def _detect_pii(self, content: str) -> dict[str, Any]:
         """检测PII信息"""
         detected = []
         for pii_type, pattern in self._pii_patterns.items():
@@ -153,7 +150,7 @@ class ContentSecurityFilter:
             }
         return {'detected': False, 'pii_types': [], 'confidence': 1.0}
 
-    def _detect_political_sensitivity(self, content: str) -> Dict[str, Any]:
+    def _detect_political_sensitivity(self, content: str) -> dict[str, Any]:
         """检测政治敏感"""
         matched_levels = {'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}
         matched_keywords = []
@@ -173,7 +170,7 @@ class ContentSecurityFilter:
             }
         return {'detected': False, 'keywords': [], 'level': None, 'confidence': 1.0}
 
-    def _detect_injection(self, content: str) -> Dict[str, Any]:
+    def _detect_injection(self, content: str) -> dict[str, Any]:
         """检测注入攻击"""
         detected = []
         for inj_type, patterns in self.INJECTION_PATTERNS.items():
@@ -267,10 +264,10 @@ class ContentSecurityFilter:
         """异步过滤"""
         return self.filter_content(content)
 
-    def scan_batch(self, contents: List[str]) -> List[FilterResult]:
+    def scan_batch(self, contents: list[str]) -> list[FilterResult]:
         """批量扫描"""
         return [self.filter_content(c) for c in contents]
 
-    async def async_scan_batch(self, contents: List[str]) -> List[FilterResult]:
+    async def async_scan_batch(self, contents: list[str]) -> list[FilterResult]:
         """异步批量扫描"""
         return [self.filter_content(c) for c in contents]

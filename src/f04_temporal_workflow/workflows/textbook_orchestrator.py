@@ -13,23 +13,23 @@ Phase 6: 输出汇总报告
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+from ..activities.content_generation import generate_chapter_outline
+from ..activities.quality_check import batch_score_chapters
+from ..activities.security_scan import batch_scan_chapters
 from .mock_client import (
     ActivityOptions,
+    ChildWorkflowFailedError,
     ChildWorkflowOptions,
     MockTemporalClient,
     RetryPolicy,
     SignalType,
-    TemporalWorkflow,
     TemporalQuery,
-    ChildWorkflowFailedError,
+    TemporalWorkflow,
     get_mock_client,
 )
 from .textbook_chapter import TextbookChapterWorkflow
-from ..activities.content_generation import generate_chapter_outline
-from ..activities.quality_check import batch_score_chapters
-from ..activities.security_scan import batch_scan_chapters
 
 logger = logging.getLogger(__name__)
 
@@ -76,14 +76,14 @@ class TextbookOrchestratorWorkflow:
     """
 
     def __init__(self):
-        self._temporal_client: Optional[MockTemporalClient] = None
+        self._temporal_client: MockTemporalClient | None = None
         self._context = None
         self._state = TextbookOrchestratorState.INIT
-        self._chapter_results: List[Dict[str, Any]] = []
-        self._batch_scan_result: Optional[Dict[str, Any]] = None
-        self._batch_quality_result: Optional[List[Dict[str, Any]]] = None
+        self._chapter_results: list[dict[str, Any]] = []
+        self._batch_scan_result: dict[str, Any] | None = None
+        self._batch_quality_result: list[dict[str, Any]] | None = None
         # TEMP-019: 状态持久化
-        self._workflow_state: Dict[str, Any] = {}
+        self._workflow_state: dict[str, Any] = {}
         # TEMP-016: 心跳
         self._heartbeat_count = 0
 
@@ -102,8 +102,8 @@ class TextbookOrchestratorWorkflow:
     async def execute(
         self,
         textbook_id: str,
-        config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         执行全书编排工作流
 
@@ -150,7 +150,7 @@ class TextbookOrchestratorWorkflow:
         chapters_config = config.get("chapters", [])
         outline_review_required = config.get("outline_review_required", True)
         final_review_required = config.get("final_review_required", True)
-        quality_threshold = config.get("quality_threshold", 70.0)
+        config.get("quality_threshold", 70.0)
         parallel_limit = config.get("parallel_chapter_limit", 5)
 
         logger.info(
@@ -452,9 +452,9 @@ class TextbookOrchestratorWorkflow:
 
     def _assess_risk(
         self,
-        chapters: List[Dict[str, Any]],
-        quality_results: Optional[List[Dict[str, Any]]],
-    ) -> Dict[str, Any]:
+        chapters: list[dict[str, Any]],
+        quality_results: list[dict[str, Any]] | None,
+    ) -> dict[str, Any]:
         """风险评估"""
         risks = []
         overall_risk = "LOW"
@@ -502,12 +502,12 @@ class TextbookOrchestratorWorkflow:
         textbook_id: str,
         title: str,
         subject: str,
-        outline: Dict[str, Any],
-        chapters: List[Dict[str, Any]],
-        scan_result: Optional[Dict[str, Any]],
-        quality_result: Optional[List[Dict[str, Any]]],
-        risk_assessment: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        outline: dict[str, Any],
+        chapters: list[dict[str, Any]],
+        scan_result: dict[str, Any] | None,
+        quality_result: list[dict[str, Any]] | None,
+        risk_assessment: dict[str, Any],
+    ) -> dict[str, Any]:
         """构建最终输出报告"""
         completed = [c for c in chapters if c.get("status") in ("COMPLETED", "NEEDS_REVIEW")]
         failed = [c for c in chapters if c.get("status") == "FAILED"]
@@ -558,7 +558,7 @@ class TextbookOrchestratorWorkflow:
 
     # TEMP-022: 查询处理器
     @TemporalQuery.defn(name="get_orchestrator_status")
-    async def get_orchestrator_status(self) -> Dict[str, Any]:
+    async def get_orchestrator_status(self) -> dict[str, Any]:
         """查询编排器状态"""
         return {
             "textbook_id": self._workflow_state.get("textbook_id", "unknown"),
@@ -570,7 +570,7 @@ class TextbookOrchestratorWorkflow:
         }
 
     @TemporalQuery.defn(name="get_workflow_progress")
-    async def get_workflow_progress(self) -> Dict[str, Any]:
+    async def get_workflow_progress(self) -> dict[str, Any]:
         """查询工作流进度"""
         progress = {
             "outline_generated": "outline" in self._workflow_state,
@@ -585,7 +585,7 @@ class TextbookOrchestratorWorkflow:
         return progress
 
     @TemporalQuery.defn(name="get_risk_assessment")
-    async def get_risk_assessment(self) -> Optional[Dict[str, Any]]:
+    async def get_risk_assessment(self) -> dict[str, Any] | None:
         """查询风险评估"""
         if self._batch_quality_result:
             return self._assess_risk(self._chapter_results, self._batch_quality_result)

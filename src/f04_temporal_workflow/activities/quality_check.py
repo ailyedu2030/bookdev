@@ -13,7 +13,7 @@
 
 import hashlib
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..workflows.mock_client import TemporalActivity
 
@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 async def score_chapter_quality(
     chapter_id: str,
     content: str,
-    criteria: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    criteria: list[str] | None = None,
+) -> dict[str, Any]:
     """对单个章节进行质量评分 (幂等)"""
     logger.info(f"[QualityCheck] Scoring chapter '{chapter_id}'")
 
@@ -75,8 +75,8 @@ async def score_chapter_quality(
     idempotent=True,
 )
 async def batch_score_chapters(
-    chapters: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
+    chapters: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """
     批量质量评分 (幂等)
     TEMP-014: 添加了幂等性保护
@@ -143,7 +143,7 @@ def _compute_score(criterion: str, content: str) -> float:
     return round(score, 1)
 
 
-def _identify_issues(scores: Dict[str, float]) -> List[Dict[str, str]]:
+def _identify_issues(scores: dict[str, float]) -> list[dict[str, str]]:
     """根据评分识别问题"""
     issues = []
 
@@ -171,9 +171,9 @@ class QualityCheck:
     """质量检查活动集合"""
 
     @staticmethod
-    async def score(chapter_id: str, content: str, **kwargs) -> Dict[str, Any]:
+    async def score(chapter_id: str, content: str, **kwargs) -> dict[str, Any]:
         return await score_chapter_quality(chapter_id, content, kwargs.get("criteria"))
 
     @staticmethod
-    async def batch_score(chapters: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def batch_score(chapters: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return await batch_score_chapters(chapters)

@@ -13,13 +13,12 @@ F00: Kafka事件总线 - TDD RED阶段测试
 - 工厂模式总线切换
 """
 
-import pytest
 import json
-import time
 import threading
+import time
 from datetime import datetime
-from dataclasses import asdict
 
+import pytest
 
 # ============================================================
 # Fixtures
@@ -855,7 +854,7 @@ class TestCoverageGaps:
             payload={},
         )
         assert e1 != "not an event"
-        assert e1 != None
+        assert e1 is not None
 
     def test_event_repr(self):
         """F00-T024d: Event的repr格式"""

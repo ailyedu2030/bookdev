@@ -4,18 +4,19 @@ Rate Limit Middleware Tests
 Tests for rate limiting middleware and in-memory rate limiter.
 """
 
-import pytest
 import time
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from api.middleware.rate_limit import (
+    DEFAULT_RATE_LIMITS,
     InMemoryRateLimiter,
-    SlidingWindowEntry,
     RateLimitConfig,
     RateLimitMiddleware,
-    rate_limit,
+    SlidingWindowEntry,
     get_client_identifier,
-    DEFAULT_RATE_LIMITS,
+    rate_limit,
 )
 
 
@@ -35,7 +36,7 @@ class TestInMemoryRateLimiter:
         """Test multiple requests within limit"""
         limiter = InMemoryRateLimiter()
         last_remaining = 0
-        for i in range(5):
+        for _i in range(5):
             allowed, last_remaining, _ = await limiter.check_rate_limit("key2", 10, 60)
             assert allowed is True
         assert last_remaining == 5
@@ -44,7 +45,7 @@ class TestInMemoryRateLimiter:
     async def test_check_rate_limit_exceeds_limit(self):
         """Test requests exceeding limit are blocked"""
         limiter = InMemoryRateLimiter()
-        for i in range(10):
+        for _i in range(10):
             await limiter.check_rate_limit("key3", 10, 60)
         allowed, remaining, reset = await limiter.check_rate_limit("key3", 10, 60)
         assert allowed is False
@@ -176,7 +177,7 @@ class TestRateLimitDependency:
             mock_request.headers = {"X-Forwarded-For": "192.168.1.100"}
             await dep(mock_request)
 
-    
+
 
 
 class TestRateLimitMiddleware:
@@ -191,7 +192,7 @@ class TestRateLimitMiddleware:
         mock_response = MagicMock()
         mock_response.status_code = 200
         call_next = AsyncMock(return_value=mock_response)
-        response = await middleware.dispatch(mock_request, call_next)
+        await middleware.dispatch(mock_request, call_next)
         call_next.assert_called_once()
 
     @pytest.mark.asyncio

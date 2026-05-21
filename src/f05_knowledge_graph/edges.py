@@ -3,8 +3,8 @@ F05: 知识图谱边定义
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
 from enum import Enum
+from typing import Any
 
 
 class EdgeType(Enum):

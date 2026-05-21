@@ -4,14 +4,13 @@ F21: 风险分级复核系统 - 风险分级器
 根据质量分数进行风险分级
 """
 
-from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any
 
 from f21_risk_classification.risk_thresholds import (
     RISK_LEVELS,
     get_risk_level_for_score,
-    get_review_ratio_for_level,
-    is_auto_approvable
+    is_auto_approvable,
 )
 
 
@@ -26,7 +25,7 @@ class RiskClassification:
 class RiskClassifier:
     """风险分级器"""
 
-    def __init__(self, risk_levels: Dict[str, Dict[str, Any]] = None):
+    def __init__(self, risk_levels: dict[str, dict[str, Any]] = None):
         """
         初始化风险分级器
 
@@ -53,7 +52,7 @@ class RiskClassifier:
 
         return get_risk_level_for_score(score)
 
-    def classify_with_metadata(self, score: float) -> Dict[str, Any]:
+    def classify_with_metadata(self, score: float) -> dict[str, Any]:
         """
         带元数据的风险分类
 
@@ -72,7 +71,7 @@ class RiskClassifier:
             "auto_approve": config["auto_approve"]
         }
 
-    def get_review_ratio(self, level: str) -> Optional[float]:
+    def get_review_ratio(self, level: str) -> float | None:
         """
         获取风险等级的复核比例
 
@@ -125,7 +124,7 @@ class RiskClassifier:
         level = self.classify(score)
         return self.is_auto_approvable(level)
 
-    def get_score_range(self, level: str) -> Optional[tuple[float, float]]:
+    def get_score_range(self, level: str) -> tuple[float, float] | None:
         """
         获取风险等级的分数范围
 

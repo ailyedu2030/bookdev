@@ -4,10 +4,9 @@ Additional Security API Tests for Higher Coverage
 Tests additional endpoints and edge cases for security routes.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-from tests.api.conftest import get_auth_header, get_csrf_headers
+import pytest
 
 
 class TestSecurityScanAdditional:

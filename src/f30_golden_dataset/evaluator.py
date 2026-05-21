@@ -5,10 +5,8 @@ F30: Golden Dataset系统 - 样本评估器
 """
 
 import json
-import os
-import re
-from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
+from typing import Any
 
 from f30_golden_dataset.dataset_builder import DatasetBuilder, GoldenSample
 from f30_golden_dataset.sample_manager import SampleManager
@@ -18,11 +16,11 @@ from f30_golden_dataset.sample_manager import SampleManager
 class EvaluationResult:
     """评估结果"""
     overall_score: float
-    dimension_scores: Dict[str, float]
+    dimension_scores: dict[str, float]
     has_hallucinations: bool = False
     has_regulation_errors: bool = False
-    detected_hallucinations: List[Dict[str, Any]] = None
-    detected_errors: List[Dict[str, Any]] = None
+    detected_hallucinations: list[dict[str, Any]] = None
+    detected_errors: list[dict[str, Any]] = None
 
 
 @dataclass
@@ -75,7 +73,7 @@ class GoldenDatasetEvaluator:
             dimension_scores=dimension_scores
         )
 
-    def detect_hallucinations(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def detect_hallucinations(self, sample: dict[str, Any]) -> dict[str, Any]:
         """
         检测幻觉内容
 
@@ -86,7 +84,7 @@ class GoldenDatasetEvaluator:
             幻觉检测结果
         """
         hallucination_markers = sample.get("hallucination_markers", [])
-        content_text = json.dumps(sample.get("content", {}))
+        json.dumps(sample.get("content", {}))
 
         detected = []
         for marker in hallucination_markers:
@@ -103,7 +101,7 @@ class GoldenDatasetEvaluator:
             "total_count": len(detected)
         }
 
-    def detect_regulation_errors(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def detect_regulation_errors(self, sample: dict[str, Any]) -> dict[str, Any]:
         """
         检测法规错误
 
@@ -132,7 +130,7 @@ class GoldenDatasetEvaluator:
 
     def calibrate_judge(
         self,
-        llm_results: List[Dict[str, Any]]
+        llm_results: list[dict[str, Any]]
     ) -> CalibrationResult:
         """
         使用样本校准评判器
@@ -187,8 +185,8 @@ class GoldenDatasetEvaluator:
 
     def _calculate_correlation(
         self,
-        x: List[float],
-        y: List[float]
+        x: list[float],
+        y: list[float]
     ) -> float:
         """
         计算皮尔逊相关系数
@@ -222,7 +220,7 @@ class GoldenDatasetEvaluator:
 
         return numerator / denominator
 
-    def generate_evaluation_report(self) -> Dict[str, Any]:
+    def generate_evaluation_report(self) -> dict[str, Any]:
         """
         生成评估报告
 

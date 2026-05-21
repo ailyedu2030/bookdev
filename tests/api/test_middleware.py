@@ -9,38 +9,34 @@ Tests for:
 """
 
 import asyncio
-import pytest
 import time
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, AsyncMock
-from fastapi import Request, HTTPException
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
-from starlette.responses import Response
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from api.middleware.csrf import (
-    CSRFTokenManager,
-    CSRFMiddleware,
-    csrf_protect,
-    csrf_token_manager,
     CSRF_TOKEN_COOKIE_NAME,
     CSRF_TOKEN_HEADER_NAME,
     SAFE_METHODS,
+    CSRFMiddleware,
+    CSRFTokenManager,
+    csrf_protect,
+    csrf_token_manager,
 )
 from api.middleware.rate_limit import (
     InMemoryRateLimiter,
     RateLimitConfig,
     RateLimitMiddleware,
     SlidingWindowEntry,
-    rate_limit,
     get_client_identifier,
     rate_limit_settings,
 )
 from api.middleware.security_headers import (
+    DEFAULT_SECURITY_CONFIG,
     SecurityHeadersConfig,
     SecurityHeadersMiddleware,
-    DEFAULT_SECURITY_CONFIG,
 )
+from fastapi import HTTPException, Request
+from starlette.responses import Response
 
 
 class TestCSRFTokenManager:
@@ -284,7 +280,7 @@ class TestInMemoryRateLimiter:
         """Test requests exceeding limit are blocked"""
         limiter = InMemoryRateLimiter()
 
-        for i in range(10):
+        for _i in range(10):
             await limiter.check_rate_limit("test-key", 10, 60)
 
         allowed, remaining, reset = await limiter.check_rate_limit("test-key", 10, 60)
@@ -297,7 +293,7 @@ class TestInMemoryRateLimiter:
         """Test that different keys have separate limits"""
         limiter = InMemoryRateLimiter()
 
-        for i in range(10):
+        for _i in range(10):
             await limiter.check_rate_limit("key1", 10, 60)
 
         allowed, remaining, _ = await limiter.check_rate_limit("key2", 10, 60)
@@ -310,7 +306,7 @@ class TestInMemoryRateLimiter:
         """Test that rate limit resets after window"""
         limiter = InMemoryRateLimiter()
 
-        for i in range(10):
+        for _i in range(10):
             await limiter.check_rate_limit("test-key", 10, 1)
             await asyncio.sleep(0.1)
 
@@ -682,7 +678,7 @@ class TestRateLimitDependency:
     @pytest.mark.asyncio
     async def test_rate_limit_allows_within_limit(self):
         """Test that requests within limit are allowed"""
-        from api.middleware.rate_limit import rate_limit, RateLimitConfig
+        from api.middleware.rate_limit import RateLimitConfig, rate_limit
 
         config = RateLimitConfig(requests=100, window_seconds=60)
         limiter = rate_limit(config)
@@ -696,7 +692,7 @@ class TestRateLimitDependency:
     @pytest.mark.asyncio
     async def test_rate_limit_blocks_when_exceeded(self):
         """Test that requests over limit raise HTTPException"""
-        from api.middleware.rate_limit import rate_limit, RateLimitConfig, InMemoryRateLimiter
+        from api.middleware.rate_limit import InMemoryRateLimiter, RateLimitConfig, rate_limit
 
         InMemoryRateLimiter()._storage.clear()
 
@@ -860,7 +856,7 @@ class TestCSRFProtectDependencyCoverage:
 
     def test_csrf_protect_with_mismatch_token_raises(self):
         """Test that mismatched tokens raise HTTPException"""
-        token_manager = CSRFTokenManager()
+        CSRFTokenManager()
         mock_request = MagicMock(spec=Request)
         mock_request.method = "PUT"
         mock_request.headers = {"X-CSRF-Token": "valid-looking-token"}
@@ -926,7 +922,7 @@ class TestRateLimitDependencyDefaultConfig:
     @pytest.mark.asyncio
     async def test_rate_limit_dependency_default_behavior(self):
         """Test that rate_limit dependency works without explicit config"""
-        from api.middleware.rate_limit import rate_limit, DEFAULT_RATE_LIMITS
+        from api.middleware.rate_limit import rate_limit
 
         limiter = rate_limit()
 
@@ -943,7 +939,7 @@ class TestRateLimitMiddlewareExhausted:
     @pytest.mark.asyncio
     async def test_rate_limit_exceeded_returns_429(self):
         """Test that requests over limit return 429"""
-        from api.middleware.rate_limit import RateLimitMiddleware, InMemoryRateLimiter
+        from api.middleware.rate_limit import InMemoryRateLimiter, RateLimitMiddleware
 
         InMemoryRateLimiter()._storage.clear()
 

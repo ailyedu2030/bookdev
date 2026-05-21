@@ -4,11 +4,8 @@ Additional Knowledge Graph API Tests for Higher Coverage
 Tests additional endpoints and edge cases for knowledge graph routes.
 """
 
-import pytest
-from unittest.mock import patch
 
 from api.deps import generate_uuid
-from tests.api.conftest import get_auth_header, get_csrf_headers
 
 
 class TestKnowledgeGraphNodesAdditional:
@@ -867,7 +864,7 @@ class TestKnowledgeGraphInitialize:
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
 
-        from tests.api.conftest import create_test_project, create_test_chapter
+        from tests.api.conftest import create_test_chapter, create_test_project
         project = create_test_project(test_db, owner_id=user.id, name="Demo Project")
         create_test_chapter(test_db, project_id=project["id"], title="Chapter 1")
 

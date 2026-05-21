@@ -37,7 +37,7 @@ class MockHSMClient(HSMClient):
         # F11-002 FIX: 移除硬编码测试密钥，使用配置或生成随机值
         self._mock_private_key = config.get("private_key") if config else None
         self._mock_public_key = config.get("public_key") if config else None
-        
+
         # 如果没有提供密钥，使用临时值但标记为非生产可用
         if not self._mock_private_key:
             self._mock_private_key = "MOCK_ONLY_NOT_FOR_PRODUCTION"

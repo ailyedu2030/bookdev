@@ -5,7 +5,6 @@ without triggering SQLAlchemy ORM initialization.
 """
 
 import uuid
-import pytest
 
 
 class TestModelImports:
@@ -14,25 +13,13 @@ class TestModelImports:
     def test_all_models_importable(self):
         """Verify all model classes can be imported from db.models."""
         from db.models import (
-            User,
-            Role,
-            Permission,
-            UserRole,
-            RolePermission,
-            Chapter,
-            ChapterContent,
-            Section,
-            Concept,
-            Term,
-            Project,
-            ProjectMember,
-            Review,
             AuditLog,
-            ContentVersion,
-            MaterialAsset,
-            Citation,
-            GraphNode,
+            Chapter,
             GraphEdge,
+            GraphNode,
+            Project,
+            Role,
+            User,
         )
 
         assert User is not None
@@ -243,7 +230,7 @@ class TestDbModuleExports:
 
     def test_async_session_exported(self):
         """Verify AsyncSession is used in db module."""
-        from db import get_session, get_db_session
+        from db import get_db_session, get_session
 
         assert callable(get_session)
         assert callable(get_db_session)

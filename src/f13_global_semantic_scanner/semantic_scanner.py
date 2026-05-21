@@ -6,18 +6,16 @@
 3. 全局风险评分
 """
 
-from typing import List, Dict, Optional, Set, Tuple
-from dataclasses import dataclass, field
-from collections import defaultdict
-import re
 import math
-
+import re
+from collections import defaultdict
+from dataclasses import dataclass, field
 
 # ═══════════════════════════════════════════════════════════════
 # 内置敏感词库 (可扩展)
 # ═══════════════════════════════════════════════════════════════
 
-_SENSITIVE_TOPICS: Dict[str, float] = {
+_SENSITIVE_TOPICS: dict[str, float] = {
     "台海": 0.70,
     "台湾": 0.65,
     "西藏": 0.65,
@@ -63,7 +61,7 @@ _SENSITIVE_TOPICS: Dict[str, float] = {
 }
 
 # 预编译正则缓存
-_TOPIC_PATTERNS: Dict[str, re.Pattern] = {
+_TOPIC_PATTERNS: dict[str, re.Pattern] = {
     topic: re.compile(re.escape(topic))
     for topic in _SENSITIVE_TOPICS
 }
@@ -77,8 +75,8 @@ _TOPIC_PATTERNS: Dict[str, re.Pattern] = {
 class ScanResult:
     topic_id: str
     risk_score: float
-    affected_chapters: List[str] = field(default_factory=list)
-    combined_risks: List[str] = field(default_factory=list)
+    affected_chapters: list[str] = field(default_factory=list)
+    combined_risks: list[str] = field(default_factory=list)
     base_weight: float = 0.0
     frequency: int = 0
     chapter_count: int = 0
@@ -95,9 +93,9 @@ class TopicTracker:
     """
 
     def __init__(self) -> None:
-        self._topics: Dict[str, Dict] = {}
+        self._topics: dict[str, dict] = {}
         # topic -> {chapters: {ch_id: weight}, total_weight: float, frequency: int}
-        self._chapter_map: Dict[str, Set[str]] = defaultdict(set)
+        self._chapter_map: dict[str, set[str]] = defaultdict(set)
         # chapter_id -> set of topic_ids
 
     def track_topic(self, topic: str, chapter_id: str, weight: float = 1.0) -> None:
@@ -123,13 +121,13 @@ class TopicTracker:
         entry["frequency"] += 1
         self._chapter_map[chapter_id].add(topic)
 
-    def get_topic_chapters(self, topic: str) -> List[str]:
+    def get_topic_chapters(self, topic: str) -> list[str]:
         """获取话题出现的所有章节"""
         if topic in self._topics:
             return sorted(self._topics[topic]["chapters"].keys())
         return []
 
-    def get_chapter_topics(self, chapter_id: str) -> List[str]:
+    def get_chapter_topics(self, chapter_id: str) -> list[str]:
         """获取章节中所有话题"""
         return sorted(self._chapter_map.get(chapter_id, set()))
 
@@ -176,11 +174,11 @@ class CombinationAnalyzer:
     """
 
     def __init__(self) -> None:
-        self._combinations: Dict[str, int] = defaultdict(int)
+        self._combinations: dict[str, int] = defaultdict(int)
         # "topic1||topic2" -> occurrence count
-        self._rules: Dict[str, float] = {}
+        self._rules: dict[str, float] = {}
         # "topic1||topic2" -> base risk weight
-        self._observed_combinations: Dict[str, Dict] = {}
+        self._observed_combinations: dict[str, dict] = {}
         # "topic1||topic2" -> {count, score, topics}
 
     def add_rule(self, topic1: str, topic2: str, risk_weight: float) -> None:
@@ -194,7 +192,7 @@ class CombinationAnalyzer:
         key = self._make_key(topic1, topic2)
         self._rules[key] = max(0.0, min(1.0, risk_weight))
 
-    def analyze_combination(self, topics: List[str]) -> float:
+    def analyze_combination(self, topics: list[str]) -> float:
         """分析一组话题的组合风险
 
         Args:
@@ -217,7 +215,7 @@ class CombinationAnalyzer:
         # 规则加成: 检查所有2-组合是否有规则
         rule_bonus = 0.0
         rule_matches = 0
-        matched_rule_pairs: List[Tuple[str, str, float]] = []
+        matched_rule_pairs: list[tuple[str, str, float]] = []
         for i in range(len(sorted_topics)):
             for j in range(i + 1, len(sorted_topics)):
                 pair_key = self._make_key(sorted_topics[i], sorted_topics[j])
@@ -250,7 +248,7 @@ class CombinationAnalyzer:
 
         return round(combined, 4)
 
-    def get_dangerous_combinations(self, threshold: float = 0.7) -> List[dict]:
+    def get_dangerous_combinations(self, threshold: float = 0.7) -> list[dict]:
         """获取超过阈值的危险组合
 
         仅返回至少匹配一条规则的组合。
@@ -262,7 +260,7 @@ class CombinationAnalyzer:
             危险组合列表,按风险降序排列
         """
         dangerous = []
-        for key, obs in self._observed_combinations.items():
+        for _key, obs in self._observed_combinations.items():
             # 仅规则匹配的组合才算危险
             if not obs.get("has_rules", False):
                 continue
@@ -304,8 +302,8 @@ class GlobalSemanticScanner:
     def __init__(self) -> None:
         self.topic_tracker = TopicTracker()
         self.combination_analyzer = CombinationAnalyzer()
-        self._scanned_chapters: Set[str] = set()
-        self._chapter_results: Dict[str, List[ScanResult]] = {}
+        self._scanned_chapters: set[str] = set()
+        self._chapter_results: dict[str, list[ScanResult]] = {}
 
         # 内置危险组合规则
         self._init_default_rules()
@@ -337,7 +335,7 @@ class GlobalSemanticScanner:
         for t1, t2, weight in rules:
             self.combination_analyzer.add_rule(t1, t2, weight)
 
-    def scan_chapter(self, chapter_id: str, content: str) -> List[ScanResult]:
+    def scan_chapter(self, chapter_id: str, content: str) -> list[ScanResult]:
         """扫描章节内容,检测敏感话题
 
         Args:
@@ -351,8 +349,8 @@ class GlobalSemanticScanner:
             return []
 
         self._scanned_chapters.add(chapter_id)
-        results: List[ScanResult] = []
-        detected_topics: Set[str] = set()
+        results: list[ScanResult] = []
+        detected_topics: set[str] = set()
 
         # 关键词匹配
         for topic, base_weight in _SENSITIVE_TOPICS.items():
@@ -430,12 +428,12 @@ class GlobalSemanticScanner:
         raw_score = (avg_topic_risk * 0.6 + combo_penalty * 0.4) * (0.5 + 0.5 * chapter_factor)
         return round(min(1.0, raw_score), 4)
 
-    def get_cross_chapter_risks(self) -> List[dict]:
+    def get_cross_chapter_risks(self) -> list[dict]:
         """获取跨章节风险列表
 
         检测同一话题在多个章节中出现的情况。
         """
-        risks: List[dict] = []
+        risks: list[dict] = []
 
         for topic, entry in self.topic_tracker._topics.items():
             chapters = list(entry["chapters"].keys())

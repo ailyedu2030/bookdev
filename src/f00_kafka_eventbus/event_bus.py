@@ -6,16 +6,15 @@ F00: 事件总线工厂
 """
 
 import asyncio
-import logging
 import json
+import logging
 import os
-from typing import Optional
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
-def create_event_bus(config: Optional[dict] = None):
+def create_event_bus(config: dict | None = None):
     """
     创建事件总线实例
 
@@ -51,7 +50,7 @@ class RealEventBus:
     # Local fallback log path for DLQ failures
     DLQ_FALLBACK_DIR = "/var/log/bookdop/dlq_fallback"
 
-    def __init__(self, config: Optional[dict] = None):
+    def __init__(self, config: dict | None = None):
         if config is None:
             config = {}
 
@@ -59,18 +58,18 @@ class RealEventBus:
         self._consumer_group = config.get("consumer_group", "textbook-system")
         self._topic_prefix = config.get("topic_prefix", "textbook")
 
-        self._producer: Optional["RealKafkaProducer"] = None
+        self._producer: "RealKafkaProducer" | None = None
         self._consumers: dict = {}
         self._subscribers: dict = {}
         self._dlq_handlers: list = []
         self._running = False
-        self._dlq_handler: Optional["DLQHandler"] = None
+        self._dlq_handler: "DLQHandler" | None = None
 
     async def initialize(self) -> None:
         """初始化事件总线"""
+        from f00_kafka_eventbus.dlq_handler import DLQHandler
         from f00_kafka_eventbus.real_producer import RealKafkaProducer
         from f00_kafka_eventbus.topic_manager import KafkaTopicManager
-        from f00_kafka_eventbus.dlq_handler import DLQHandler
 
         self._producer = RealKafkaProducer(
             bootstrap_servers=self._bootstrap_servers,
@@ -134,7 +133,6 @@ class RealEventBus:
         if not event_type or not event_type.strip():
             raise ValueError("event_type cannot be empty")
 
-        from f00_kafka_eventbus.real_consumer import RealKafkaConsumer
 
         topic = f"{self._topic_prefix}.{event_type}"
 
@@ -199,7 +197,6 @@ class RealEventBus:
         Returns:
             True if handler succeeded, False otherwise
         """
-        last_error = None
         exponential_base = 2.0
         max_delay = 60.0
 
@@ -212,7 +209,6 @@ class RealEventBus:
                     )
                 return True
             except Exception as e:
-                last_error = e
                 if attempt < max_retries:
                     # Calculate delay with exponential backoff and jitter
                     import random

@@ -1,5 +1,8 @@
 """AI多Agent教材编写系统 - 主CLI入口"""
-import sys, os, argparse
+import argparse
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 
@@ -83,7 +86,7 @@ def cmd_check(args):
         from f02_context_budget.context_budget_manager import ContextBudgetManager
         budget = ContextBudgetManager()
         u = budget.get_total_usage()
-        print(f"✅ 上下文预算: {u if isinstance(u, (int, float)) else u.get('total', 0)} tokens")
+        print(f"✅ 上下文预算: {u if isinstance(u, int | float) else u.get('total', 0)} tokens")
 
         from f03_content_addressing.content_addressing import calculate_content_hash
         h = calculate_content_hash("hello world")
@@ -103,7 +106,7 @@ def cmd_check(args):
         d = MonitoringDashboard()
         s = d.get_health_status()
         print(f"✅ 监控: {s.status}")
-        
+
         print("\n🎉 核心系统检查通过！")
     except Exception as e:
         print(f"❌ 检查失败: {e}")

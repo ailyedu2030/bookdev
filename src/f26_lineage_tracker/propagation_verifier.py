@@ -2,11 +2,9 @@
 F26: 血缘追踪系统 - 传播验证器
 验证数据传播深度，防止无限传播（防F06漏洞）
 """
-import networkx as nx
-from typing import Optional
 
+import networkx as nx
 from lineage_tracker import DataLineageTracker
-from lineage_node import LineageNode
 
 
 class PropagationVerifier:
@@ -101,7 +99,7 @@ class PropagationVerifier:
         self,
         data_id: str,
         max_depth: int = 5
-    ) -> Optional[int]:
+    ) -> int | None:
         """验证深度是否超限，返回实际深度或None"""
         node_id = f"node_{data_id}"
 

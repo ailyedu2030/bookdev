@@ -2,14 +2,13 @@
 F23: 内容安全过滤 - 测试文件
 TDD GREEN阶段：实现后测试通过
 """
-import unittest
-from typing import List, Dict, Any
 import asyncio
-import sys
 import os
+import sys
+import unittest
 
 sys.path.insert(0, os.path.dirname(__file__))
-from content_filter import FilterResult, ContentSecurityFilter
+from content_filter import ContentSecurityFilter
 
 
 class TestContentSecurityFilter(unittest.TestCase):

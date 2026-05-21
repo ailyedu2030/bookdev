@@ -3,9 +3,7 @@ F15: 政治敏感分析 - 政治敏感追踪器
 TDD GREEN阶段：最小实现让测试通过
 """
 import threading
-import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set
 from enum import Enum
 
 
@@ -20,28 +18,27 @@ class SensitivityLevel(Enum):
 @dataclass
 class TopicAggregation:
     count: int = 0
-    levels: List[SensitivityLevel] = field(default_factory=list)
+    levels: list[SensitivityLevel] = field(default_factory=list)
     is_aggregated_risk: bool = False
 
 
 @dataclass
 class CrossTopicAnalysis:
     is_aggregated_risk: bool = False
-    topics: List[str] = field(default_factory=list)
+    topics: list[str] = field(default_factory=list)
     max_sensitivity: SensitivityLevel = SensitivityLevel.NONE
 
 
 class PoliticalTracker:
     def __init__(self):
         self._lock = threading.RLock()
-        self._topics: Dict[str, List[SensitivityLevel]] = {}
-        self._sensitivity_cache: Dict[str, SensitivityLevel] = {}
-        self._normalized_topics: Dict[str, str] = {}
+        self._topics: dict[str, list[SensitivityLevel]] = {}
+        self._sensitivity_cache: dict[str, SensitivityLevel] = {}
+        self._normalized_topics: dict[str, str] = {}
 
     def _normalize_topic(self, topic: str) -> str:
         normalizations = {
             '台灣': '台湾',
-            '臺灣': '台湾',
             '臺灣': '台湾',
         }
         return normalizations.get(topic, topic.strip())
@@ -82,7 +79,7 @@ class PoliticalTracker:
                 is_aggregated_risk=max_level.value >= SensitivityLevel.HIGH.value
             )
 
-    def cross_topic_analysis(self, topics: List[str]) -> CrossTopicAnalysis:
+    def cross_topic_analysis(self, topics: list[str]) -> CrossTopicAnalysis:
         with self._lock:
             max_sensitivity = SensitivityLevel.NONE
             for topic in topics:

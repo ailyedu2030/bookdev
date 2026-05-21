@@ -9,34 +9,32 @@ Handles user authentication:
 """
 
 from datetime import datetime
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
-from api.schemas.auth import (
-    UserCreate,
-    UserLogin,
-    UserResponse,
-    Token,
-    RefreshTokenRequest,
-    PasswordChange,
-)
-from api.schemas.common import SuccessResponse
 from api.deps import (
-    get_db,
-    get_current_active_user,
-    get_password_hash,
-    verify_password,
+    DatabaseSession,
+    User,
     create_access_token,
     create_refresh_token,
     decode_token,
-    DatabaseSession,
-    User,
-    generate_uuid,
+    get_current_active_user,
+    get_db,
+    get_password_hash,
+    verify_password,
 )
-from jose import JWTError
-from api.middleware.rate_limit import RateLimitConfig, rate_limit
 from api.middleware.csrf import csrf_protect
+from api.middleware.rate_limit import RateLimitConfig, rate_limit
+from api.schemas.auth import (
+    PasswordChange,
+    RefreshTokenRequest,
+    Token,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+)
+from api.schemas.common import SuccessResponse
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -230,7 +228,7 @@ async def refresh_token(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
@@ -329,7 +327,7 @@ async def change_password(
 @router.post("/csrf-token", response_model=SuccessResponse)
 async def get_csrf_token(
     request: Request,
-    user: Optional[User] = Depends(get_current_active_user),
+    user: User | None = Depends(get_current_active_user),
 ):
     """
     Get CSRF token for state-changing operations.

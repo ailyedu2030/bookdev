@@ -7,8 +7,8 @@ F03: 内容寻址哈希 - TDD RED阶段测试
 3. Refactor: 优化代码质量
 """
 
+
 import pytest
-import hashlib
 
 
 class TestContentAddressing:
@@ -60,10 +60,7 @@ class TestContentAddressing:
 
     def test_integrity_verification_success(self):
         """F03-T006: 完整性验证 - 成功"""
-        from f03_content_addressing.content_addressing import (
-            calculate_content_hash,
-            verify_integrity
-        )
+        from f03_content_addressing.content_addressing import calculate_content_hash, verify_integrity
 
         content = "原始内容"
         stored_hash = calculate_content_hash(content)
@@ -72,10 +69,7 @@ class TestContentAddressing:
 
     def test_integrity_verification_failure(self):
         """F03-T006b: 完整性验证 - 篡改检测"""
-        from f03_content_addressing.content_addressing import (
-            calculate_content_hash,
-            verify_integrity
-        )
+        from f03_content_addressing.content_addressing import calculate_content_hash, verify_integrity
 
         content = "原始内容"
         stored_hash = calculate_content_hash(content)
@@ -156,10 +150,7 @@ class TestContentAddressReference:
 
     def test_reference_from_content(self):
         """F03-T008b: 从内容创建引用"""
-        from f03_content_addressing.content_addressing import (
-            create_reference_from_content,
-            calculate_content_hash
-        )
+        from f03_content_addressing.content_addressing import calculate_content_hash, create_reference_from_content
 
         content = "测试内容段落"
         ref = create_reference_from_content(content)

@@ -10,19 +10,18 @@ Mock Temporal Client - 模拟 Temporal SDK 行为，支持 MOCK_TEMPORAL 环境�
 - Heartbeat (long-running activity)
 """
 
-import os
-import uuid
-import time
-import json
 import asyncio
-import logging
-import hashlib
 import functools
+import hashlib
+import logging
+import os
 import traceback
-from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Generic, Union
+import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +39,11 @@ def _make_cache_key(args: tuple, kwargs: dict) -> str:
 
 # ─── Global Idempotency Cache (External Storage) ─────────────────────────────
 # FIX TEMP-012: 使用全局外部存储而不是闭包中的局部变量
-_idempotency_cache: Dict[str, Any] = {}
+_idempotency_cache: dict[str, Any] = {}
 _idempotency_lock = asyncio.Lock()
 
 
-async def get_cached_result(cache_key: str) -> Optional[Any]:
+async def get_cached_result(cache_key: str) -> Any | None:
     """从全局缓存获取幂等结果"""
     return _idempotency_cache.get(cache_key)
 
@@ -93,7 +92,7 @@ class RetryPolicy:
     initial_interval_seconds: int = 1
     backoff_multiplier: float = 2.0
     max_interval_seconds: int = 60
-    non_retryable_errors: List[str] = field(default_factory=lambda: ["ValidationError"])
+    non_retryable_errors: list[str] = field(default_factory=lambda: ["ValidationError"])
 
     def next_delay(self, attempt: int) -> float:
         delay = self.initial_interval_seconds * (self.backoff_multiplier ** (attempt - 1))
@@ -107,7 +106,7 @@ class ActivityOptions:
     schedule_to_close_timeout_seconds: int = 300
     start_to_close_timeout_seconds: int = 120
     retry_policy: RetryPolicy = field(default_factory=RetryPolicy)
-    idempotency_key: Optional[str] = None
+    idempotency_key: str | None = None
     heartbeat_timeout_seconds: int = 30  # TEMP-016: 心跳超时
 
 
@@ -127,25 +126,25 @@ class WorkflowExecutionContext:
     run_id: str
     status: WorkflowStatus = WorkflowStatus.PENDING
     start_time: datetime = field(default_factory=datetime.now)
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
     result: Any = None
-    error: Optional[str] = None
-    signals: Dict[str, Any] = field(default_factory=dict)
-    activity_results: Dict[str, Any] = field(default_factory=dict)
-    child_workflows: Dict[str, "WorkflowExecutionContext"] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    history: List[Dict[str, Any]] = field(default_factory=list)
+    error: str | None = None
+    signals: dict[str, Any] = field(default_factory=dict)
+    activity_results: dict[str, Any] = field(default_factory=dict)
+    child_workflows: dict[str, "WorkflowExecutionContext"] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    history: list[dict[str, Any]] = field(default_factory=list)
     # TEMP-019: 持久化状态存储
-    workflow_state: Dict[str, Any] = field(default_factory=dict)
+    workflow_state: dict[str, Any] = field(default_factory=dict)
 
-    def record_event(self, event_type: str, details: Dict[str, Any] = None):
+    def record_event(self, event_type: str, details: dict[str, Any] = None):
         self.history.append({
             "timestamp": datetime.now().isoformat(),
             "event_type": event_type,
             "details": details or {},
         })
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "workflow_id": self.workflow_id,
             "workflow_type": self.workflow_type,
@@ -168,12 +167,12 @@ class ActivityExecutionContext:
     activity_type: str
     status: ActivityStatus = ActivityStatus.PENDING
     start_time: datetime = field(default_factory=datetime.now)
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     attempt: int = 0
     max_attempts: int = 3
-    idempotency_key: Optional[str] = None
+    idempotency_key: str | None = None
     is_idempotent: bool = False
     last_heartbeat: datetime = field(default_factory=datetime.now)
     heartbeat_count: int = 0
@@ -181,15 +180,15 @@ class ActivityExecutionContext:
 
 # ─── Workflow State Persistence ───────────────────────────────────────────────
 # TEMP-019: 全局状态存储，模拟 Temporal 的状态持久化
-_workflow_state_store: Dict[str, Dict[str, Any]] = {}
+_workflow_state_store: dict[str, dict[str, Any]] = {}
 
 
-def save_workflow_state(workflow_id: str, state: Dict[str, Any]) -> None:
+def save_workflow_state(workflow_id: str, state: dict[str, Any]) -> None:
     """保存工作流状态到持久化存储"""
     _workflow_state_store[workflow_id] = state
 
 
-def load_workflow_state(workflow_id: str) -> Dict[str, Any]:
+def load_workflow_state(workflow_id: str) -> dict[str, Any]:
     """加载工作流状态"""
     return _workflow_state_store.get(workflow_id, {})
 
@@ -203,8 +202,8 @@ def clear_workflow_state(workflow_id: str) -> None:
 # ─── Decorators ────────────────────────────────────────────────────────────
 
 # Global registries
-_activity_registry: Dict[str, Callable] = {}
-_workflow_registry: Dict[str, type] = {}
+_activity_registry: dict[str, Callable] = {}
+_workflow_registry: dict[str, type] = {}
 
 
 class TemporalActivity:
@@ -282,17 +281,17 @@ class TemporalWorkflow:
 
 class TemporalQuery:
     """Query 装饰器 - 为工作流添加查询处理器"""
-    
+
     def __init__(self, **options):
         self.options = options
-    
+
     def __call__(self, fn: Callable) -> Callable:
         query_name = self.options.get("name", fn.__name__)
         fn._temporal_query = True
         fn._query_name = query_name
         fn._query_options = self.options
         return fn
-    
+
     @staticmethod
     def defn(**options):
         return TemporalQuery(**options)
@@ -309,9 +308,9 @@ class MockTemporalClient:
     _instance: Optional["MockTemporalClient"] = None
 
     def __init__(self):
-        self._workflows: Dict[str, WorkflowExecutionContext] = {}
-        self._activities: Dict[str, ActivityExecutionContext] = {}
-        self._signal_handlers: Dict[str, asyncio.Event] = {}
+        self._workflows: dict[str, WorkflowExecutionContext] = {}
+        self._activities: dict[str, ActivityExecutionContext] = {}
+        self._signal_handlers: dict[str, asyncio.Event] = {}
         self._task_queue: str = "textbook-writing-queue"
         # TEMP-023: 配置常量
         self._config = {
@@ -337,8 +336,8 @@ class MockTemporalClient:
         self,
         workflow_cls: type,
         *args,
-        workflow_id: Optional[str] = None,
-        task_queue: Optional[str] = None,
+        workflow_id: str | None = None,
+        task_queue: str | None = None,
         **kwargs,
     ) -> WorkflowExecutionContext:
         """启动一个顶层工作流"""
@@ -387,12 +386,12 @@ class MockTemporalClient:
 
         return ctx
 
-    async def get_workflow(self, workflow_id: str) -> Optional[WorkflowExecutionContext]:
+    async def get_workflow(self, workflow_id: str) -> WorkflowExecutionContext | None:
         """查询工作流状态"""
         return self._workflows.get(workflow_id)
 
     # TEMP-016: 心跳机制
-    async def send_heartbeat(self, activity_id: str, details: Dict[str, Any] = None) -> None:
+    async def send_heartbeat(self, activity_id: str, details: dict[str, Any] = None) -> None:
         """发送活动心跳"""
         if activity_id in self._activities:
             ctx = self._activities[activity_id]
@@ -415,7 +414,7 @@ class MockTemporalClient:
         self,
         activity_fn: Callable,
         *args,
-        options: Optional[ActivityOptions] = None,
+        options: ActivityOptions | None = None,
         **kwargs,
     ) -> Any:
         """执行一个 Activity，支持重试和超时"""
@@ -517,7 +516,7 @@ class MockTemporalClient:
         self,
         workflow_cls: type,
         *args,
-        options: Optional[ChildWorkflowOptions] = None,
+        options: ChildWorkflowOptions | None = None,
         **kwargs,
     ) -> Any:
         """启动子工作流并等待完成"""
@@ -542,7 +541,7 @@ class MockTemporalClient:
     async def signal_workflow(
         self,
         workflow_id: str,
-        signal_type: Union[str, SignalType],
+        signal_type: str | SignalType,
         payload: Any = None,
     ) -> bool:
         """向工作流发送信号"""
@@ -554,7 +553,7 @@ class MockTemporalClient:
             return False
 
         # TEMP-024: 信号验证
-        if not signal_name or signal_name not in [s.value for s in SignalType] + [s for s in SignalType.__members__.values()]:
+        if not signal_name or signal_name not in [s.value for s in SignalType] + list(SignalType.__members__.values()):
             logger.warning(f"[MockTemporal] Invalid signal type: {signal_name}")
             return False
 
@@ -573,9 +572,9 @@ class MockTemporalClient:
     async def wait_for_signal(
         self,
         workflow_id: str,
-        signal_names: List[str],
-        timeout_seconds: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        signal_names: list[str],
+        timeout_seconds: int | None = None,
+    ) -> dict[str, Any]:
         """等待指定信号之一到达"""
         ctx = self._workflows.get(workflow_id)
         if ctx is None:
@@ -647,14 +646,14 @@ class MockTemporalClient:
 
     # ── State Persistence Operations (TEMP-019) ──────────────────────────
 
-    async def save_state(self, workflow_id: str, state: Dict[str, Any]) -> None:
+    async def save_state(self, workflow_id: str, state: dict[str, Any]) -> None:
         """保存工作流状态 (模拟 Temporal 的状态持久化)"""
         ctx = self._workflows.get(workflow_id)
         if ctx:
             ctx.workflow_state = state
         save_workflow_state(workflow_id, {"_workflow_state": state, "saved_at": datetime.now().isoformat()})
 
-    async def load_state(self, workflow_id: str) -> Dict[str, Any]:
+    async def load_state(self, workflow_id: str) -> dict[str, Any]:
         """加载工作流状态"""
         return load_workflow_state(workflow_id)
 
@@ -665,7 +664,7 @@ class MockTemporalClient:
         workflow_id: str,
         query_type: str,
         args: tuple = (),
-        kwargs: Dict[str, Any] = None,
+        kwargs: dict[str, Any] = None,
     ) -> Any:
         """查询工作流状态"""
         ctx = self._workflows.get(workflow_id)
@@ -707,7 +706,7 @@ class MockTemporalClient:
         if ctx:
             ctx.record_event("TIMER_FIRED", {"seconds": seconds})
 
-    def _get_current_workflow_context(self) -> Optional[WorkflowExecutionContext]:
+    def _get_current_workflow_context(self) -> WorkflowExecutionContext | None:
         """获取当前工作流上下文（简化实现）"""
         # 在完整实现中会使用 contextvars
         return None
@@ -723,10 +722,10 @@ class MockTemporalClient:
             return True
         return False
 
-    def list_workflows(self, status_filter: Optional[WorkflowStatus] = None) -> List[Dict[str, Any]]:
+    def list_workflows(self, status_filter: WorkflowStatus | None = None) -> list[dict[str, Any]]:
         """列出工作流"""
         result = []
-        for wf_id, ctx in self._workflows.items():
+        for _wf_id, ctx in self._workflows.items():
             if status_filter and ctx.status != status_filter:
                 continue
             result.append(ctx.to_dict())

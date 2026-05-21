@@ -7,8 +7,6 @@ F00: 事件定义模块
 import json
 import uuid
 from datetime import datetime
-from typing import Optional
-
 
 # 预定义事件类型集合
 EVENTS = {
@@ -43,7 +41,7 @@ class Event:
         event_type: str,
         timestamp: datetime,
         payload: dict,
-        event_id: Optional[str] = None,
+        event_id: str | None = None,
     ):
         if event_type not in EVENTS:
             raise InvalidEventTypeError(

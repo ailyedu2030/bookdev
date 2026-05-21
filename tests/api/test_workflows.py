@@ -12,12 +12,9 @@ Tests for workflow endpoints:
 - GET /api/workflows/types/list - List workflow types
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import patch, MagicMock
 
-from api.deps import generate_uuid, User
-from tests.api.conftest import get_auth_header, get_csrf_headers
+from api.deps import generate_uuid
 
 
 class TestListWorkflows:
@@ -83,7 +80,7 @@ class TestListWorkflows:
     def test_list_workflows_viewer_forbidden(self, test_client, test_db, test_user_authenticated):
         """Test viewer cannot list workflows"""
         token = test_user_authenticated["access_token"]
-        
+
         response = test_client.get(
             "/api/workflows",
             headers={"Authorization": f"Bearer {token}"},

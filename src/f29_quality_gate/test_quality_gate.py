@@ -9,17 +9,15 @@ F29: CI/CD质量门禁 - TDD RED阶段测试
 - 单元测试覆盖率 ≥85%
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, Mock
-from typing import List, Dict, Optional, Any
+from unittest.mock import MagicMock, patch
 
 from f29_quality_gate.quality_gate import (
-    CheckStatus,
     CheckResult,
-    QualityGateResult,
-    LinterChecker,
-    SecurityScanner,
+    CheckStatus,
     CoverageTracker,
+    LinterChecker,
+    QualityGateResult,
+    SecurityScanner,
 )
 
 
@@ -204,8 +202,8 @@ class TestSecurityScanner:
 
     def test_security_scanner_detects_hardcoded_secret(self):
         """F29-T019: 能检测硬编码密钥"""
-        import tempfile
         import os
+        import tempfile
 
         scanner = SecurityScanner()
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -240,8 +238,8 @@ class TestLinterCheckerDetailed:
 
     def test_linter_checks_file_with_syntax_error(self):
         """F29-T022: 能检测文件语法错误"""
-        import tempfile
         import os
+        import tempfile
 
         linter = LinterChecker()
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -257,8 +255,8 @@ class TestLinterCheckerDetailed:
 
     def test_linter_checks_valid_file(self):
         """F29-T023: 有效文件通过检查"""
-        import tempfile
         import os
+        import tempfile
 
         linter = LinterChecker()
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -273,8 +271,8 @@ class TestLinterCheckerDetailed:
 
     def test_linter_checks_directory(self):
         """F29-T024: 能检查目录"""
-        import tempfile
         import os
+        import tempfile
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -286,8 +284,8 @@ class TestLinterCheckerDetailed:
 
     def test_linter_checks_directory_with_syntax_error(self):
         """F29-T024b: 目录中文件有语法错误时返回FAIL"""
-        import tempfile
         import os
+        import tempfile
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -306,8 +304,8 @@ class TestSecurityScannerDetailed:
 
     def test_security_scanner_detects_api_key(self):
         """F29-T025: 能检测API密钥"""
-        import tempfile
         import os
+        import tempfile
 
         scanner = SecurityScanner()
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -322,8 +320,8 @@ class TestSecurityScannerDetailed:
 
     def test_security_scanner_detects_password(self):
         """F29-T026: 能检测硬编码密码"""
-        import tempfile
         import os
+        import tempfile
 
         scanner = SecurityScanner()
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -338,8 +336,8 @@ class TestSecurityScannerDetailed:
 
     def test_security_scanner_scans_directory(self):
         """F29-T027: 能扫描目录"""
-        import tempfile
         import os
+        import tempfile
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -351,8 +349,8 @@ class TestSecurityScannerDetailed:
 
     def test_security_scanner_skips_conftest_files(self):
         """F29-T027b: conftest文件被跳过"""
-        import tempfile
         import os
+        import tempfile
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -370,8 +368,8 @@ class TestCoverageTrackerDetailed:
 
     def test_coverage_tracker_parses_coverage_file(self):
         """F29-T028: 能解析覆盖率文件"""
-        import tempfile
         import os
+        import tempfile
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -387,8 +385,8 @@ class TestCoverageTrackerDetailed:
 
     def test_coverage_tracker_handles_empty_coverage(self):
         """F29-T029: 能处理空覆盖率文件"""
-        import tempfile
         import os
+        import tempfile
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -443,7 +441,6 @@ class TestEdgeCases:
     def test_linter_handles_read_error(self):
         """F29-T032: Linter处理读取错误"""
         import tempfile
-        import os
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -470,8 +467,8 @@ class TestEdgeCases:
 
     def test_security_scanner_handles_read_error(self):
         """F29-T035: SecurityScanner处理读取错误"""
-        import tempfile
         import os
+        import tempfile
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -482,8 +479,8 @@ class TestEdgeCases:
 
     def test_coverage_tracker_handles_empty_coverage_file(self):
         """F29-T036: CoverageTracker处理空覆盖率文件"""
-        import tempfile
         import os
+        import tempfile
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -529,6 +526,7 @@ class TestEdgeCases:
     def test_linter_invalid_path_returns_pass(self):
         """F29-T040: Linter检查无效路径返回PASS (覆盖line 58)"""
         import tempfile
+
         from f29_quality_gate.quality_gate import LinterChecker
 
         linter = LinterChecker()
@@ -545,9 +543,10 @@ class TestEdgeCases:
 
     def test_coverage_below_threshold_returns_fail(self):
         """F29-T041: 覆盖率低于阈值返回FAIL (覆盖lines 224-230)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         checker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -561,7 +560,7 @@ class TestEdgeCases:
 
     def test_summary_counts_skipped(self):
         """F29-T042: 汇总统计包含SKIP计数 (覆盖lines 360-361)"""
-        from f29_quality_gate.quality_gate import QualityGate, CheckResult, CheckStatus
+        from f29_quality_gate.quality_gate import CheckResult, CheckStatus, QualityGate
 
         gate = QualityGate()
         with patch.object(gate, '_run_linter_check') as mock_linter:
@@ -581,9 +580,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_linter_check_directory_via_check_method(self):
         """F29-T049: LinterChecker.check调用_check_directory (覆盖line 56)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -596,9 +596,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_linter_check_directory_with_pycache(self):
         """F29-T050: LinterChecker跳过__pycache__目录 (覆盖line 95)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -616,8 +617,8 @@ class TestF29CoverageGapsRemaining:
     def test_coverage_tracker_no_coverage_file_returns_warning(self):
         """F29-T054: CoverageTracker无覆盖率文件返回WARNING (覆盖line 207)"""
         import tempfile
-        import os
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
+
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -629,9 +630,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_linter_check_file_via_check_method(self):
         """F29-T043: LinterChecker.check调用_check_file (覆盖line 54)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -646,7 +648,7 @@ class TestF29CoverageGapsRemaining:
 
     def test_coverage_above_threshold_returns_pass(self):
         """F29-T044: 覆盖率高于阈值返回PASS (覆盖line 218)"""
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
         with patch.object(tracker, '_parse_coverage_file', return_value=90.0):
@@ -657,7 +659,7 @@ class TestF29CoverageGapsRemaining:
 
     def test_run_coverage_check_exception_returns_warning(self):
         """F29-T045: _run_coverage_check异常时返回WARNING (覆盖lines 232-233)"""
-        from f29_quality_gate.quality_gate import QualityGate, CoverageTracker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, QualityGate
 
         gate = QualityGate()
         with patch.object(gate.coverage_tracker, '_parse_coverage_file', side_effect=Exception("parse error")):
@@ -676,7 +678,6 @@ class TestF29CoverageGapsRemaining:
 
     def test_parse_coverage_file_subprocess_path(self):
         """F29-T047: _parse_coverage_file通过subprocess解析 (覆盖lines 252-260)"""
-        import subprocess
         from f29_quality_gate.quality_gate import CoverageTracker
 
         tracker = CoverageTracker()
@@ -702,9 +703,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_linter_check_skips_pycache_in_directory(self):
         """F29-T049: LinterChecker跳过__pycache__目录 (覆盖line 95)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -720,9 +722,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_linter_check_skips_pytest_cache_in_directory(self):
         """F29-T050: LinterChecker跳过.pytest_cache目录 (覆盖line 95)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -738,9 +741,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_security_scanner_skips_pycache(self):
         """F29-T051: SecurityScanner跳过__pycache__目录 (覆盖line 137)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import SecurityScanner, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, SecurityScanner
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -756,9 +760,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_security_scanner_skips_git_directory(self):
         """F29-T052: SecurityScanner跳过.git目录 (覆盖line 137)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import SecurityScanner, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, SecurityScanner
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -774,9 +779,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_security_scanner_skips_non_py_files(self):
         """F29-T053: SecurityScanner跳过非.py文件 (覆盖line 140)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import SecurityScanner, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, SecurityScanner
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -790,9 +796,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_security_scanner_skips_test_files(self):
         """F29-T054: SecurityScanner跳过test_开头文件 (覆盖line 142)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import SecurityScanner, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, SecurityScanner
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -806,8 +813,9 @@ class TestF29CoverageGapsRemaining:
 
     def test_coverage_tracker_parses_subprocess_coverage(self):
         """F29-T055: CoverageTracker通过subprocess解析覆盖率 (覆盖lines 252-260)"""
-        import tempfile
         import os
+        import tempfile
+
         from f29_quality_gate.quality_gate import CoverageTracker
 
         tracker = CoverageTracker()
@@ -821,9 +829,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_security_scanner_skips_conftest(self):
         """F29-T056: SecurityScanner跳过conftest文件 (覆盖line 144)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import SecurityScanner, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, SecurityScanner
 
         scanner = SecurityScanner()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -847,9 +856,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_track_with_subprocess_coverage_output(self):
         """F29-T061: CoverageTracker通过subprocess解析真实覆盖率 (覆盖lines 256-260)"""
-        import tempfile
         import os
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
+        import tempfile
+
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -864,9 +874,9 @@ class TestF29CoverageGapsRemaining:
 
     def test_track_parses_exception_from_parse(self):
         """F29-T062: CoverageTracker.track异常处理 (覆盖lines 232-233)"""
-        import tempfile
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
         from unittest.mock import patch
+
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
 
@@ -881,9 +891,10 @@ class TestF29CoverageGapsRemaining:
 
     def test_parse_coverage_file_via_subprocess(self):
         """F29-T063: CoverageTracker通过subprocess解析TOTAL行 (覆盖lines 256-260)"""
-        import tempfile
         import os
         import subprocess
+        import tempfile
+
         from f29_quality_gate.quality_gate import CoverageTracker
 
         tracker = CoverageTracker()

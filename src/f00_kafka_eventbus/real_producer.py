@@ -2,10 +2,11 @@
 Real Kafka Producer using aiokafka
 """
 
-from aiokafka import AIOKafkaProducer
-from typing import Optional, Dict, Any, List
 import json
 import logging
+from typing import Any
+
+from aiokafka import AIOKafkaProducer
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class RealKafkaProducer:
         self.max_in_flight_requests_per_connection = max_in_flight_requests_per_connection
         self.request_timeout_ms = request_timeout_ms
         self.max_batch_size = max_batch_size
-        self._producer: Optional[AIOKafkaProducer] = None
+        self._producer: AIOKafkaProducer | None = None
 
     async def start(self) -> None:
         """Start the producer and establish connection to Kafka"""
@@ -93,10 +94,10 @@ class RealKafkaProducer:
     async def send(
         self,
         topic: str,
-        value: Dict[str, Any],
-        key: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        value: dict[str, Any],
+        key: str | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """
         Send message to Kafka topic with retry logic
 
@@ -163,7 +164,7 @@ class RealKafkaProducer:
         self,
         topic: str,
         messages: list
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send batch of messages to Kafka topic
 

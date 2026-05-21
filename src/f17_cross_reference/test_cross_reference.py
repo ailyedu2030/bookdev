@@ -10,8 +10,6 @@ F17: 跨章引用解析器 - TDD RED阶段测试
 - 检测循环引用
 """
 
-import pytest
-from typing import Optional
 
 
 class ReferencePattern:
@@ -135,7 +133,7 @@ class TestReferenceParser:
 
         has_cycle = parser.detect_circular_reference(references)
 
-        assert has_cycle == True
+        assert has_cycle is True
 
     def test_no_false_positive_for_non_circular(self):
         """F17-T008: 非循环引用不报错"""
@@ -150,7 +148,7 @@ class TestReferenceParser:
 
         has_cycle = parser.detect_circular_reference(references)
 
-        assert has_cycle == False
+        assert has_cycle is False
 
     def test_self_reference_detection(self):
         """F17-T009: 检测自我引用"""
@@ -170,8 +168,9 @@ class TestReferenceResolver:
 
     def test_resolve_definition_reference(self):
         """F17-T010: 解析定义引用"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "人工智能概述", 1)
@@ -185,8 +184,9 @@ class TestReferenceResolver:
 
     def test_resolve_nonexistent_reference(self):
         """F17-T011: 解析不存在的引用"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -198,8 +198,9 @@ class TestReferenceResolver:
 
     def test_validate_reference_chain(self):
         """F17-T012: 验证引用链完整性"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -210,12 +211,13 @@ class TestReferenceResolver:
         resolver = ReferenceResolver(kg)
         is_valid = resolver.validate_reference_chain("sec-001")
 
-        assert is_valid == True
+        assert is_valid is True
 
     def test_validate_broken_chain(self):
         """F17-T013: 验证断裂的引用链"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -227,12 +229,13 @@ class TestReferenceResolver:
         # sec-001 引用了一个不存在的目标
         is_valid = resolver.validate_reference_chain("sec-001", referenced_target="nonexistent")
 
-        assert is_valid == False
+        assert is_valid is False
 
     def test_get_all_references_from_section(self):
         """F17-T014: 获取章节所有引用"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -249,8 +252,9 @@ class TestReferenceResolver:
 
     def test_get_all_references_to_section(self):
         """F17-T015: 获取引用到章节的所有来源"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -267,8 +271,9 @@ class TestReferenceResolver:
 
     def test_validate_reference_chain_with_matching_target(self):
         """F17-T022: 验证引用链时找到匹配目标 (覆盖line 53)"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -287,9 +292,10 @@ class TestCrossReferenceIntegration:
 
     def test_full_reference_lifecycle(self):
         """F17-T016: 完整引用生命周期"""
+        from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
         from f17_cross_reference.reference_parser import ReferenceParser
         from f17_cross_reference.reference_resolver import ReferenceResolver
-        from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
 
         # 1. 创建图谱
         kg = KnowledgeGraph()
@@ -314,8 +320,9 @@ class TestCrossReferenceIntegration:
 
     def test_reference_consistency_check(self):
         """F17-T017: 引用一致性检查"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -330,12 +337,13 @@ class TestCrossReferenceIntegration:
         # sec-001 应该是逻辑起点了
         consistency = resolver.check_reference_consistency(["sec-001", "sec-002", "sec-003"])
 
-        assert consistency["is_consistent"] == True
+        assert consistency["is_consistent"] is True
 
     def test_validate_reference_chain_nonexistent_target(self):
         """F17-T019: 验证引用链但目标不存在 (覆盖lines 51-55)"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -346,12 +354,13 @@ class TestCrossReferenceIntegration:
         resolver = ReferenceResolver(kg)
         is_valid = resolver.validate_reference_chain("sec-001", referenced_target="nonexistent_target")
 
-        assert is_valid == False
+        assert is_valid is False
 
     def test_check_reference_consistency_external_reference(self):
         """F17-T020: 检测外部引用问题 (覆盖lines 124-129)"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -362,14 +371,15 @@ class TestCrossReferenceIntegration:
         resolver = ReferenceResolver(kg)
         consistency = resolver.check_reference_consistency(["sec-001"])
 
-        assert consistency["is_consistent"] == False
+        assert consistency["is_consistent"] is False
         assert len(consistency["issues"]) > 0
         assert consistency["issues"][0]["type"] == "external_reference"
 
     def test_check_reference_consistency_duplicate_reference(self):
         """F17-T021: 检测重复引用问题 (覆盖lines 130-137)"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)
@@ -381,14 +391,15 @@ class TestCrossReferenceIntegration:
         resolver = ReferenceResolver(kg)
         consistency = resolver.check_reference_consistency(["sec-001", "sec-002"])
 
-        assert consistency["is_consistent"] == False
+        assert consistency["is_consistent"] is False
         has_duplicate = any(issue["type"] == "duplicate_reference" for issue in consistency["issues"])
-        assert has_duplicate == True
+        assert has_duplicate is True
 
     def test_generate_reference_report(self):
         """F17-T018: 生成引用报告"""
-        from f17_cross_reference.reference_resolver import ReferenceResolver
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+
+        from f17_cross_reference.reference_resolver import ReferenceResolver
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "第一章", 1)

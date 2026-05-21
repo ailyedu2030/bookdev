@@ -5,7 +5,7 @@ F27: GraphRAG问答系统
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
+from typing import Any
 
 
 @dataclass
@@ -13,7 +13,7 @@ class GraphNode:
     """知识图谱节点"""
     id: str
     label: str
-    properties: Dict[str, Any] = field(default_factory=dict)
+    properties: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -22,14 +22,14 @@ class GraphEdge:
     source: str
     target: str
     relation: str
-    properties: Dict[str, Any] = field(default_factory=dict)
+    properties: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class KnowledgeGraph:
     """知识图谱"""
-    nodes: List[GraphNode] = field(default_factory=list)
-    edges: List[GraphEdge] = field(default_factory=list)
+    nodes: list[GraphNode] = field(default_factory=list)
+    edges: list[GraphEdge] = field(default_factory=list)
 
     def add_node(self, node: GraphNode):
         """添加节点"""
@@ -39,17 +39,17 @@ class KnowledgeGraph:
         """添加边"""
         self.edges.append(edge)
 
-    def find_node(self, node_id: str) -> Optional[GraphNode]:
+    def find_node(self, node_id: str) -> GraphNode | None:
         """查找节点"""
         for node in self.nodes:
             if node.id == node_id:
                 return node
         return None
 
-    def find_path(self, start: str, end: str, max_depth: int = 10) -> List[str]:
+    def find_path(self, start: str, end: str, max_depth: int = 10) -> list[str]:
         """
         查找路径（简单BFS）
-        
+
         Fixed: Added max_depth to prevent infinite loops and improve safety
         """
         if start == end:
@@ -62,7 +62,7 @@ class KnowledgeGraph:
         while queue:
             current, path = queue.pop(0)
             current_depth = depth_count.get(current, 0)
-            
+
             # Safety check to prevent infinite traversal
             if current_depth >= max_depth:
                 continue
@@ -84,20 +84,20 @@ class RAGDocument:
     """RAG文档"""
     id: str
     content: str
-    embedding: List[float] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    embedding: list[float] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class RAGEngine:
     """RAG引擎"""
-    documents: List[RAGDocument] = field(default_factory=list)
+    documents: list[RAGDocument] = field(default_factory=list)
 
     def add_document(self, doc: RAGDocument):
         """添加文档"""
         self.documents.append(doc)
 
-    def search(self, query: str, top_k: int = 5) -> List[RAGDocument]:
+    def search(self, query: str, top_k: int = 5) -> list[RAGDocument]:
         """搜索文档（简单关键词匹配）"""
         query_lower = query.lower()
         scored = []
@@ -121,9 +121,9 @@ class GraphRAGAnswer:
     """GraphRAG答案"""
     answer: str
     confidence: float
-    sources: List[str]
-    graph_paths: List[List[str]]
-    evidence: List[str]
+    sources: list[str]
+    graph_paths: list[list[str]]
+    evidence: list[str]
 
 
 class GraphRAGQuery:
@@ -181,7 +181,7 @@ class GraphRAGQuery:
             evidence=graph_context + rag_context
         )
 
-    def _parse_intent(self, question: str) -> Dict[str, Any]:
+    def _parse_intent(self, question: str) -> dict[str, Any]:
         """解析问题意图
 
         Args:
@@ -205,7 +205,7 @@ class GraphRAGQuery:
 
         return intent
 
-    def _get_graph_context(self, intent: Dict[str, Any]) -> List[str]:
+    def _get_graph_context(self, intent: dict[str, Any]) -> list[str]:
         """获取知识图谱上下文
 
         Args:
@@ -230,7 +230,7 @@ class GraphRAGQuery:
 
         return context[:10]
 
-    def _get_rag_context(self, question: str) -> List[str]:
+    def _get_rag_context(self, question: str) -> list[str]:
         """获取RAG上下文
 
         Args:
@@ -242,7 +242,7 @@ class GraphRAGQuery:
         results = self._vector_search(question, top_k=3)
         return [doc.content for doc in results]
 
-    def _vector_search(self, query: str, top_k: int = 5) -> List[RAGDocument]:
+    def _vector_search(self, query: str, top_k: int = 5) -> list[RAGDocument]:
         """向量搜索
 
         Args:
@@ -254,7 +254,7 @@ class GraphRAGQuery:
         """
         return self.rag.search(query, top_k)
 
-    def _find_graph_paths(self, start: str, end: str, max_depth: int = 10) -> List[List[str]]:
+    def _find_graph_paths(self, start: str, end: str, max_depth: int = 10) -> list[list[str]]:
         """
         查找图谱路径
 
@@ -272,8 +272,8 @@ class GraphRAGQuery:
     def _generate_answer(
         self,
         question: str,
-        graph_context: List[str],
-        rag_context: List[str]
+        graph_context: list[str],
+        rag_context: list[str]
     ) -> str:
         """生成答案
 

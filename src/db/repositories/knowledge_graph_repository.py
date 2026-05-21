@@ -7,14 +7,13 @@ KnowledgeGraphRepository - 知识图谱仓储
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any
 
-from sqlalchemy import select, func, and_, or_, text, exists
+from sqlalchemy import and_, exists, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from db.models import GraphNode, GraphEdge
-from db.repositories.base_repository import BaseRepository
+from db.models import GraphEdge, GraphNode
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class KnowledgeGraphRepository:
         self,
         node_id: str,
         node_type: str,
-        properties: Optional[dict[str, Any]] = None,
+        properties: dict[str, Any] | None = None,
     ) -> GraphNode:
         """创建图谱节点"""
         node = GraphNode(
@@ -42,7 +41,7 @@ class KnowledgeGraphRepository:
         await self._session.refresh(node)
         return node
 
-    async def get_node(self, node_id: str) -> Optional[GraphNode]:
+    async def get_node(self, node_id: str) -> GraphNode | None:
         """获取节点"""
         stmt = select(GraphNode).where(GraphNode.id == node_id)
         result = await self._session.execute(stmt)
@@ -51,7 +50,7 @@ class KnowledgeGraphRepository:
     async def get_all_nodes(
         self,
         *,
-        node_type: Optional[str] = None,
+        node_type: str | None = None,
         limit: int = 1000,
         offset: int = 0,
     ) -> Sequence[GraphNode]:
@@ -65,7 +64,7 @@ class KnowledgeGraphRepository:
 
     async def update_node(
         self, node_id: str, properties: dict[str, Any]
-    ) -> Optional[GraphNode]:
+    ) -> GraphNode | None:
         """更新节点属性（合并）"""
         node = await self.get_node(node_id)
         if node is None:
@@ -88,7 +87,7 @@ class KnowledgeGraphRepository:
 
     async def query_nodes(
         self,
-        node_type: Optional[str] = None,
+        node_type: str | None = None,
         **property_filters,
     ) -> Sequence[GraphNode]:
         """按类型和属性过滤查询节点 - 使用参数化查询防止SQL注入"""
@@ -115,8 +114,8 @@ class KnowledgeGraphRepository:
         source_id: str,
         target_id: str,
         edge_type: str,
-        properties: Optional[dict[str, Any]] = None,
-    ) -> Optional[GraphEdge]:
+        properties: dict[str, Any] | None = None,
+    ) -> GraphEdge | None:
         """创建边"""
         source = await self.get_node(source_id)
         target = await self.get_node(target_id)
@@ -138,7 +137,7 @@ class KnowledgeGraphRepository:
         await self._session.refresh(edge)
         return edge
 
-    async def get_edge(self, edge_id: int) -> Optional[GraphEdge]:
+    async def get_edge(self, edge_id: int) -> GraphEdge | None:
         """获取边"""
         stmt = select(GraphEdge).where(GraphEdge.id == edge_id)
         result = await self._session.execute(stmt)
@@ -147,9 +146,9 @@ class KnowledgeGraphRepository:
     async def get_edges(
         self,
         *,
-        source_id: Optional[str] = None,
-        target_id: Optional[str] = None,
-        edge_type: Optional[str] = None,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        edge_type: str | None = None,
         limit: int = 1000,
     ) -> Sequence[GraphEdge]:
         """查询边"""
@@ -250,7 +249,7 @@ class KnowledgeGraphRepository:
 
     async def find_path(
         self, start_id: str, end_id: str, max_depth: int = 10
-    ) -> Optional[list[str]]:
+    ) -> list[str] | None:
         """使用 BFS 查找路径"""
         if start_id == end_id:
             return [start_id]
@@ -388,7 +387,7 @@ class KnowledgeGraphRepository:
         await self._session.flush()
         return count
 
-    async def count_nodes(self, node_type: Optional[str] = None) -> int:
+    async def count_nodes(self, node_type: str | None = None) -> int:
         """统计节点数量"""
         stmt = select(func.count()).select_from(GraphNode)
         if node_type:
@@ -396,7 +395,7 @@ class KnowledgeGraphRepository:
         result = await self._session.execute(stmt)
         return result.scalar_one()
 
-    async def count_edges(self, edge_type: Optional[str] = None) -> int:
+    async def count_edges(self, edge_type: str | None = None) -> int:
         """统计边数量"""
         stmt = select(func.count()).select_from(GraphEdge)
         if edge_type:

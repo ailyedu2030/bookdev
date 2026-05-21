@@ -7,8 +7,9 @@ F05: 图查询引擎
 - 子图查询
 """
 
-from typing import Any, Callable, Optional
 from collections import defaultdict
+from collections.abc import Callable
+from typing import Any
 
 
 class QueryEngine:

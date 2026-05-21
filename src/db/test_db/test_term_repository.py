@@ -96,7 +96,7 @@ class TestTermRepository:
         mock_term = MagicMock()
         repo = TermRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_term) as mock_create:
-            result = await repo.create_term(
+            await repo.create_term(
                 term="new term",
                 definition="definition",
                 domain="science"
@@ -112,7 +112,7 @@ class TestTermRepository:
         mock_term = MagicMock()
         repo = TermRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_term) as mock_update:
-            result = await repo.lock_term(uuid.uuid4())
+            await repo.lock_term(uuid.uuid4())
 
         mock_update.assert_called_once()
 
@@ -124,7 +124,7 @@ class TestTermRepository:
         mock_term = MagicMock()
         repo = TermRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_term) as mock_update:
-            result = await repo.unlock_term(uuid.uuid4())
+            await repo.unlock_term(uuid.uuid4())
 
         mock_update.assert_called_once()
 
@@ -243,7 +243,7 @@ class TestConceptRepository:
         mock_concept = MagicMock()
         repo = ConceptRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_concept) as mock_create:
-            result = await repo.create_concept(
+            await repo.create_concept(
                 name="new concept",
                 definition="description"
             )
@@ -258,7 +258,7 @@ class TestConceptRepository:
         mock_concept = MagicMock()
         repo = ConceptRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_concept) as mock_update:
-            result = await repo.lock_concept(uuid.uuid4())
+            await repo.lock_concept(uuid.uuid4())
 
         mock_update.assert_called_once()
 
@@ -270,7 +270,7 @@ class TestConceptRepository:
         mock_concept = MagicMock()
         repo = ConceptRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_concept) as mock_update:
-            result = await repo.unlock_concept(uuid.uuid4())
+            await repo.unlock_concept(uuid.uuid4())
 
         mock_update.assert_called_once()
 
@@ -378,7 +378,7 @@ class TestTermRepositorySynonymOperations:
 
         repo = TermRepository(mock_session)
         with patch.object(repo, "get_by_id", return_value=mock_term):
-            result = await repo.add_synonym(uuid.uuid4(), "new_synonym")
+            await repo.add_synonym(uuid.uuid4(), "new_synonym")
 
         assert "new_synonym" in mock_term.synonyms
         mock_session.flush.assert_called()
@@ -409,7 +409,7 @@ class TestTermRepositorySynonymOperations:
 
         repo = TermRepository(mock_session)
         with patch.object(repo, "get_by_id", return_value=mock_term):
-            result = await repo.add_synonym(uuid.uuid4(), "existing")
+            await repo.add_synonym(uuid.uuid4(), "existing")
 
         assert mock_session.flush.call_count == 0
 
@@ -425,7 +425,7 @@ class TestTermRepositorySynonymOperations:
 
         repo = TermRepository(mock_session)
         with patch.object(repo, "get_by_id", return_value=mock_term):
-            result = await repo.remove_synonym(uuid.uuid4(), "to_remove")
+            await repo.remove_synonym(uuid.uuid4(), "to_remove")
 
         assert "to_remove" not in mock_term.synonyms
         mock_session.flush.assert_called()
@@ -456,7 +456,7 @@ class TestTermRepositorySynonymOperations:
 
         repo = TermRepository(mock_session)
         with patch.object(repo, "get_by_id", return_value=mock_term):
-            result = await repo.remove_synonym(uuid.uuid4(), "nonexistent")
+            await repo.remove_synonym(uuid.uuid4(), "nonexistent")
 
         assert mock_session.flush.call_count == 0
 
@@ -566,7 +566,7 @@ class TestConceptRepositoryRelatedTerms:
 
         repo = ConceptRepository(mock_session)
         with patch.object(repo, "get_by_id", return_value=mock_concept):
-            result = await repo.add_related_term(uuid.uuid4(), "new_term")
+            await repo.add_related_term(uuid.uuid4(), "new_term")
 
         assert "new_term" in mock_concept.related_terms
         mock_session.flush.assert_called()
@@ -597,7 +597,7 @@ class TestConceptRepositoryRelatedTerms:
 
         repo = ConceptRepository(mock_session)
         with patch.object(repo, "get_by_id", return_value=mock_concept):
-            result = await repo.add_related_term(uuid.uuid4(), "existing")
+            await repo.add_related_term(uuid.uuid4(), "existing")
 
         assert mock_session.flush.call_count == 0
 
@@ -613,7 +613,7 @@ class TestConceptRepositoryRelatedTerms:
 
         repo = ConceptRepository(mock_session)
         with patch.object(repo, "get_by_id", return_value=mock_concept):
-            result = await repo.remove_related_term(uuid.uuid4(), "to_remove")
+            await repo.remove_related_term(uuid.uuid4(), "to_remove")
 
         assert "to_remove" not in mock_concept.related_terms
         mock_session.flush.assert_called()

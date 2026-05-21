@@ -5,7 +5,6 @@ F18: 术语一致性检查器
 """
 
 from enum import Enum
-from typing import Optional
 
 from f18_term_glossary.term_glossary_service import TermGlossaryService
 
@@ -26,7 +25,7 @@ class ConsistencyChecker:
     def check_consistency(
         self,
         term_name: str,
-        new_definition: Optional[str] = None
+        new_definition: str | None = None
     ) -> ConsistencyStatus:
         """检查术语一致性
 

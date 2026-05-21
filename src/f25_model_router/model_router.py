@@ -6,7 +6,6 @@ F25: 模型路由引擎
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
 
 
 class TaskType(Enum):
@@ -23,7 +22,7 @@ class Task:
     """任务数据类"""
     task_type: TaskType
     prompt: str
-    context: Optional[Dict] = None
+    context: dict | None = None
 
 
 @dataclass
@@ -51,7 +50,7 @@ class ModelRouter:
         "gpt4o": {"name": "GPT-4o", "strengths": ["code", "general"]},
     }
 
-    def __init__(self, routing_rules: Optional[Dict[str, str]] = None):
+    def __init__(self, routing_rules: dict[str, str] | None = None):
         """初始化路由器
 
         Args:
@@ -72,7 +71,7 @@ class ModelRouter:
         task_type_key = task.task_type.value
         return self.ROUTING_RULES.get(task_type_key, self.ROUTING_RULES.get("general", "gpt4o"))
 
-    def select_model_for_prompt(self, prompt: str, context: Dict) -> ModelSelection:
+    def select_model_for_prompt(self, prompt: str, context: dict) -> ModelSelection:
         """为提示选择模型
 
         Args:
@@ -111,7 +110,7 @@ class ModelRouter:
                 reason="默认模型选择"
             )
 
-    def get_available_models(self) -> List[str]:
+    def get_available_models(self) -> list[str]:
         """获取可用模型列表
 
         Returns:

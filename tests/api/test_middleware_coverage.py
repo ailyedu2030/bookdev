@@ -4,31 +4,27 @@ Additional Middleware Tests for Coverage
 Tests for uncovered code paths in middleware modules.
 """
 
-import pytest
 import time
-from unittest.mock import MagicMock, AsyncMock, patch
-from fastapi import Request, HTTPException
+from unittest.mock import MagicMock, patch
 
+import pytest
 from api.middleware.csrf import (
-    CSRFTokenManager,
-    CSRFMiddleware,
-    csrf_protect,
-    csrf_token_manager,
     CSRF_TOKEN_COOKIE_NAME,
-    CSRF_TOKEN_HEADER_NAME,
+    CSRFMiddleware,
+    CSRFTokenManager,
 )
 from api.middleware.rate_limit import (
     InMemoryRateLimiter,
     RateLimitConfig,
     SlidingWindowEntry,
     get_client_identifier,
-    RateLimitMiddleware,
     rate_limit,
 )
 from api.middleware.security_headers import (
     SecurityHeadersConfig,
     SecurityHeadersMiddleware,
 )
+from fastapi import HTTPException, Request
 
 
 class TestCSRFTokenManagerUncovered:

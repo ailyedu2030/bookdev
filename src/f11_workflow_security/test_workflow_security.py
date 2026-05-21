@@ -9,11 +9,9 @@ P0漏洞: W-001 状态机绕过-审核节点跳过
 4. 时间戳验证
 """
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, MagicMock
-import hashlib
-import json
+
+import pytest
 
 
 class TestWorkflowSecurity:
@@ -21,10 +19,7 @@ class TestWorkflowSecurity:
 
     def test_direct_signal_blocked(self):
         """F11-T001: 直接Signal调用被阻断"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            SecurityException
-        )
+        from f11_workflow_security.workflow_security_manager import SecurityException, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -41,9 +36,9 @@ class TestWorkflowSecurity:
     def test_callback_without_signature_rejected(self):
         """F11-T002: 缺少签名的回调被拒绝"""
         from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
+            ReviewCallback,
             SecurityException,
-            ReviewCallback
+            WorkflowSecurityManager,
         )
 
         security = WorkflowSecurityManager()
@@ -66,9 +61,8 @@ class TestWorkflowSecurity:
     def test_callback_with_invalid_signature_rejected(self):
         """F11-T003: 无效签名的回调被拒绝"""
         from f11_workflow_security.workflow_security_manager import (
+            ReviewCallback,
             WorkflowSecurityManager,
-            SecurityException,
-            ReviewCallback
         )
 
         security = WorkflowSecurityManager()
@@ -76,7 +70,7 @@ class TestWorkflowSecurity:
         security.register_workflow("wf-001", {"content": "test"})
 
         now = datetime.utcnow()
-        valid_sig = security._generate_signature(
+        security._generate_signature(
             "wf-001", "task-001", "abc123", "reviewer-001", now
         )
 
@@ -96,10 +90,7 @@ class TestWorkflowSecurity:
 
     def test_callback_content_hash_mismatch_rejected(self):
         """F11-T004: 内容哈希不匹配的回调被拒绝"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -126,10 +117,7 @@ class TestWorkflowSecurity:
 
     def test_callback_timestamp_too_old_rejected(self):
         """F11-T005: 时间戳过旧的回调被拒绝"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -159,10 +147,7 @@ class TestWorkflowSecurity:
 
     def test_callback_workflow_not_found_rejected(self):
         """F11-T006: workflow_id不存在时回调被拒绝"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -182,10 +167,7 @@ class TestWorkflowSecurity:
 
     def test_valid_callback_accepted(self):
         """F11-T007: 合法回调被接受"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -214,11 +196,8 @@ class TestWorkflowSecurity:
 
     def test_callback_signature_verification_with_hsm(self):
         """F11-T008: 使用HSM进行回调签名验证"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
         from f11_workflow_security.hsm_client import MockHSMClient
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager(hsm_client=MockHSMClient())
 
@@ -248,10 +227,7 @@ class TestWorkflowSecurity:
 
     def test_replay_attack_detection(self):
         """F11-T009: 重放攻击检测"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -321,10 +297,7 @@ class TestWorkflowSecurity:
 
     def test_multiple_reviewers_multi_approval(self):
         """F11-T011: 多重审批验证"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager(require_multi_approval=True)
 
@@ -372,14 +345,11 @@ class TestWorkflowSecurity:
 
     def test_signal_whitelist_only(self):
         """F11-T012: 仅允许白名单中的Signal"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            SecurityException
-        )
+        from f11_workflow_security.workflow_security_manager import SecurityException, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
-        with pytest.raises(SecurityException) as exc_info:
+        with pytest.raises(SecurityException):
             security.receive_signal(
                 signal_type="SubmitOutlineReview",
                 direct_call=True,
@@ -397,10 +367,7 @@ class TestWorkflowSecurity:
 
     def test_callback_content_hash_calculation(self):
         """F11-T013: 内容哈希计算验证"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -429,10 +396,7 @@ class TestWorkflowSecurity:
 
     def test_workflow_state_advance_after_valid_callback(self):
         """F11-T014: 有效回调后工作流状态推进"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            ReviewCallback
-        )
+        from f11_workflow_security.workflow_security_manager import ReviewCallback, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -525,9 +489,10 @@ class TestCallbackVerifierUncovered:
 
     def test_verify_missing_signature(self):
         """verify处理缺失签名 (覆盖line 30)"""
+        from datetime import datetime
+
         from f11_workflow_security.callback_verifier import CallbackVerifier
         from f11_workflow_security.external_review_service import ReviewCallback
-        from datetime import datetime
 
         verifier = CallbackVerifier()
 
@@ -547,10 +512,11 @@ class TestCallbackVerifierUncovered:
 
     def test_verify_replay_detected(self):
         """verify处理重放攻击 (覆盖line 34)"""
+        import hashlib
+        from datetime import datetime
+
         from f11_workflow_security.callback_verifier import CallbackVerifier
         from f11_workflow_security.external_review_service import ReviewCallback
-        from datetime import datetime
-        import hashlib
 
         verifier = CallbackVerifier()
 
@@ -588,9 +554,10 @@ class TestCallbackVerifierUncovered:
 
     def test_verify_invalid_signature(self):
         """verify处理无效签名 (覆盖line 37)"""
+        from datetime import datetime
+
         from f11_workflow_security.callback_verifier import CallbackVerifier
         from f11_workflow_security.external_review_service import ReviewCallback
-        from datetime import datetime
 
         verifier = CallbackVerifier()
 
@@ -610,10 +577,11 @@ class TestCallbackVerifierUncovered:
 
     def test_verify_with_hsm_client(self):
         """verify使用HSM客户端验证 (覆盖lines 49-50)"""
+        from datetime import datetime
+
         from f11_workflow_security.callback_verifier import CallbackVerifier
         from f11_workflow_security.external_review_service import ReviewCallback
         from f11_workflow_security.hsm_client import MockHSMClient
-        from datetime import datetime
 
         hsm = MockHSMClient()
         verifier = CallbackVerifier(hsm_client=hsm)
@@ -638,10 +606,7 @@ class TestCallbackVerifierUncovered:
 
     def test_get_workflow_state_not_found(self):
         """get_workflow_state处理不存在的workflow (覆盖line 82)"""
-        from f11_workflow_security.workflow_security_manager import (
-            WorkflowSecurityManager,
-            SecurityException
-        )
+        from f11_workflow_security.workflow_security_manager import SecurityException, WorkflowSecurityManager
 
         security = WorkflowSecurityManager()
 
@@ -668,9 +633,10 @@ class TestExternalReviewServiceUncovered:
 
     def test_sign_review_with_hsm_client(self):
         """_sign_review使用HSM客户端签名 (覆盖lines 84-85)"""
+        from datetime import datetime
+
         from f11_workflow_security.external_review_service import ExternalReviewService, ReviewSession
         from f11_workflow_security.hsm_client import MockHSMClient
-        from datetime import datetime
 
         hsm_client = MockHSMClient()
         service = ExternalReviewService(hsm_client=hsm_client)
@@ -691,8 +657,9 @@ class TestExternalReviewServiceUncovered:
 
     def test_sign_review_without_hsm_client(self):
         """_sign_review不使用HSM时使用hashlib (覆盖lines 87-88)"""
-        from f11_workflow_security.external_review_service import ExternalReviewService, ReviewSession
         from datetime import datetime
+
+        from f11_workflow_security.external_review_service import ExternalReviewService, ReviewSession
 
         service = ExternalReviewService(hsm_client=None)
 

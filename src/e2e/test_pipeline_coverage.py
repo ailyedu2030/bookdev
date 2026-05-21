@@ -11,11 +11,8 @@
 7. 边界情况和错误处理测试
 """
 
+
 import pytest
-import asyncio
-import json
-from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
 
 
 class TestRiskThresholdsComplete:
@@ -219,9 +216,9 @@ class TestReviewSchedulerComplete:
 
         scheduler = ReviewScheduler()
 
-        task1 = scheduler.schedule_review("ch-1", "LOW", "h1")
-        task2 = scheduler.schedule_review("ch-2", "CRITICAL", "h2")
-        task3 = scheduler.schedule_review("ch-3", "MEDIUM", "h3")
+        scheduler.schedule_review("ch-1", "LOW", "h1")
+        scheduler.schedule_review("ch-2", "CRITICAL", "h2")
+        scheduler.schedule_review("ch-3", "MEDIUM", "h3")
 
         pending = scheduler.get_pending_reviews()
         assert len(pending) == 3
@@ -281,13 +278,11 @@ class TestReviewSchedulerComplete:
 
     def test_get_tasks_by_status(self):
         """RS-T012: 按状态获取任务"""
-        from f21_risk_classification.review_scheduler import (
-            ReviewScheduler, ReviewStatus
-        )
+        from f21_risk_classification.review_scheduler import ReviewScheduler, ReviewStatus
 
         scheduler = ReviewScheduler()
         task1 = scheduler.schedule_review("ch-1", "HIGH", "h1")
-        task2 = scheduler.schedule_review("ch-2", "LOW", "h2")
+        scheduler.schedule_review("ch-2", "LOW", "h2")
 
         scheduler.complete_review(task1.task_id, "approved", "r1")
 
@@ -607,9 +602,8 @@ class TestConsistencyCheckerComplete:
         注意：check_domain_consistency 调用 check_consistency(term.term)
         不传第二个参数，因此永远不会触发 INCONSISTENT 分支（行126是死代码）
         """
-        from f18_term_glossary.consistency_checker import ConsistencyChecker
+        from f18_term_glossary.consistency_checker import ConsistencyChecker, ConsistencyStatus
         from f18_term_glossary.term_glossary_service import TermGlossaryService
-        from f18_term_glossary.consistency_checker import ConsistencyStatus
 
         svc = TermGlossaryService()
         svc.register_term("AI", "人工智能", "CS")
@@ -866,8 +860,8 @@ class TestGoldenDatasetEvaluatorComplete:
 
     def test_evaluate_with_golden_sample(self):
         """GD-T002: 使用GoldenSample对象评估"""
-        from f30_golden_dataset.evaluator import GoldenDatasetEvaluator
         from f30_golden_dataset.dataset_builder import GoldenSample
+        from f30_golden_dataset.evaluator import GoldenDatasetEvaluator
 
         evaluator = GoldenDatasetEvaluator()
 
@@ -1008,7 +1002,6 @@ class TestGoldenDatasetEvaluatorComplete:
     def test_generate_evaluation_report(self):
         """GD-T013: 生成评估报告"""
         from f30_golden_dataset.evaluator import GoldenDatasetEvaluator
-        from f30_golden_dataset.dataset_builder import GoldenSample
 
         evaluator = GoldenDatasetEvaluator()
 
@@ -1235,8 +1228,8 @@ class TestKnowledgeGraphQueryEngine:
 
     def test_query_engine_with_knowledge_graph(self):
         """KG-QE-T001: 查询引擎初始化"""
-        from f05_knowledge_graph.query_engine import QueryEngine
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+        from f05_knowledge_graph.query_engine import QueryEngine
 
         kg = KnowledgeGraph()
         engine = QueryEngine(knowledge_graph=kg)
@@ -1401,10 +1394,8 @@ class TestCitationIntegrityManagerComplete:
 
     def test_verify_citation_empty_doi(self):
         """CIM-T001: 空DOI返回无效"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager, IntegrityStatus
-        )
         from f03_content_addressing.content_addressing import calculate_content_hash
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager, IntegrityStatus
 
         manager = CitationIntegrityManager()
         content_hash = calculate_content_hash("test content")
@@ -1415,9 +1406,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_verify_citation_whitespace_doi(self):
         """CIM-T002: 空白DOI返回无效"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager, IntegrityStatus
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager, IntegrityStatus
 
         manager = CitationIntegrityManager()
         result = manager.verify_citation_integrity("   ", "hash", "test")
@@ -1426,9 +1415,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_verify_citation_invalid_format(self):
         """CIM-T003: 无效DOI格式返回INVALID_FORMAT"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager, IntegrityStatus
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager, IntegrityStatus
 
         manager = CitationIntegrityManager()
         result = manager.verify_citation_integrity("not-a-doi", "hash", "test")
@@ -1437,9 +1424,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_verify_citation_hash_mismatch(self):
         """CIM-T004: 内容哈希不匹配"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager, IntegrityStatus
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager, IntegrityStatus
 
         manager = CitationIntegrityManager()
         result = manager.verify_citation_integrity(
@@ -1452,10 +1437,8 @@ class TestCitationIntegrityManagerComplete:
 
     def test_verify_citation_valid(self):
         """CIM-T005: 有效引用验证通过"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager, IntegrityStatus
-        )
         from f03_content_addressing.content_addressing import calculate_content_hash
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager, IntegrityStatus
 
         manager = CitationIntegrityManager()
         content = "test content"
@@ -1467,9 +1450,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_register_unverified_citation(self):
         """CIM-T006: 注册未验证引用"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         reg_id = manager.register_unverified_citation("10.1234/test", "hash123")
@@ -1478,9 +1459,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_get_unverified_citations(self):
         """CIM-T007: 获取未验证引用"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         manager.register_unverified_citation("10.1234/test", "hash1")
@@ -1490,21 +1469,17 @@ class TestCitationIntegrityManagerComplete:
 
     def test_mark_citation_verified(self):
         """CIM-T008: 标记引用已验证"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
-        reg_id = manager.register_unverified_citation("10.1234/test", "hash1")
+        manager.register_unverified_citation("10.1234/test", "hash1")
 
         result = manager.mark_citation_verified("10.1234/test", "hash1")
         assert result is True
 
     def test_mark_citation_verified_not_found(self):
         """CIM-T009: 标记不存在的引用"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         result = manager.mark_citation_verified("10.DOES/NOT", "hash")
@@ -1512,9 +1487,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_validate_citation_chain_valid(self):
         """CIM-T010: 有效引用链验证"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         dois = ["10.1234/a", "10.5678/b"]
@@ -1525,9 +1498,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_validate_citation_chain_invalid_doi(self):
         """CIM-T011: 无效DOI格式导致引用链无效"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         dois = ["10.1234/a", "invalid-doi"]
@@ -1538,9 +1509,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_validate_citation_chain_self_reference(self):
         """CIM-T012: 自引用DOI检测"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         dois = ["10.1234/a", "10.1234/a"]
@@ -1551,9 +1520,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_validate_citation_chain_nonexistent_doi(self):
         """CIM-T013: 不存在的DOI检测"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         dois = ["10.DOES.NOT.EXIST"]
@@ -1564,9 +1531,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_detect_fact_collision(self):
         """CIM-T014: 检测事实冲突"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         manager.register_unverified_citation("10.1234/a", "same_hash")
@@ -1578,9 +1543,7 @@ class TestCitationIntegrityManagerComplete:
 
     def test_get_citation_statistics(self):
         """CIM-T015: 获取引用统计"""
-        from f14_citation_integrity.citation_integrity_manager import (
-            CitationIntegrityManager
-        )
+        from f14_citation_integrity.citation_integrity_manager import CitationIntegrityManager
 
         manager = CitationIntegrityManager()
         manager.register_unverified_citation("10.1234/test", "hash1")
@@ -1699,7 +1662,7 @@ class TestJudgeServiceComplete:
     @pytest.mark.asyncio
     async def test_judge_content_invalid_json_response(self):
         """JS-T001: LLM返回无效JSON时抛出错误"""
-        from f20_llm_judge.judge_service import JudgeService, JudgeServiceError, BaseLLMClient
+        from f20_llm_judge.judge_service import BaseLLMClient, JudgeService, JudgeServiceError
 
         class InvalidJSONClient(BaseLLMClient):
             async def generate(self, prompt, **kwargs):
@@ -1710,14 +1673,14 @@ class TestJudgeServiceComplete:
 
         try:
             await judge.judge_content(content, "test_chapter")
-            assert False, "应该抛出 JudgeServiceError"
+            raise AssertionError("应该抛出 JudgeServiceError")
         except JudgeServiceError as e:
             assert "Invalid JSON" in str(e) or "Failed to parse" in str(e)
 
     @pytest.mark.asyncio
     async def test_judge_content_missing_fields(self):
         """JS-T002: LLM响应缺少必需字段时抛出错误"""
-        from f20_llm_judge.judge_service import JudgeService, JudgeServiceError, BaseLLMClient
+        from f20_llm_judge.judge_service import BaseLLMClient, JudgeService, JudgeServiceError
 
         class MissingFieldsClient(BaseLLMClient):
             async def generate(self, prompt, **kwargs):
@@ -1727,7 +1690,7 @@ class TestJudgeServiceComplete:
 
         try:
             await judge.judge_content("测试内容", "test_chapter")
-            assert False, "应该抛出 JudgeServiceError"
+            raise AssertionError("应该抛出 JudgeServiceError")
         except JudgeServiceError as e:
             assert "overall_score" in str(e)
 
@@ -1737,8 +1700,8 @@ class TestQualityGateComplete:
 
     def test_parse_coverage_file_with_coverage_command(self, tmp_path):
         """QG-T001: 解析.coverage文件执行coverage命令"""
+
         from f29_quality_gate.quality_gate import CoverageTracker
-        from unittest.mock import patch
 
         tracker = CoverageTracker()
         test_file = tmp_path / "test_module.py"

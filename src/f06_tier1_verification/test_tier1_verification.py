@@ -2,12 +2,10 @@
 F06: Tier1数值核实引擎 - 单元测试
 TDD RED阶段：测试必须失败，因为实现不存在
 """
-import pytest
 import asyncio
-from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
-from unittest.mock import AsyncMock, MagicMock, patch
-import hashlib
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 class TestTier1Verification:
@@ -16,7 +14,7 @@ class TestTier1Verification:
     @pytest.mark.asyncio
     async def test_verify_national_statistics_gdp(self):
         """F06-T001: 核实国家统计局GDP数据"""
-        from f06_tier1_verification.tier1_engine import Tier1Verifier, VerificationResult
+        from f06_tier1_verification.tier1_engine import Tier1Verifier
 
         verifier = Tier1Verifier()
 
@@ -27,13 +25,13 @@ class TestTier1Verification:
             region="中国"
         )
 
-        assert result.is_verified == True
+        assert result.is_verified is True
         assert result.discrepancy < 0.05  # 偏差<5%
 
     @pytest.mark.asyncio
     async def test_detect_fabricated_number(self):
         """F06-T002: 检测捏造数值"""
-        from f06_tier1_verification.tier1_engine import Tier1Verifier, VerificationResult
+        from f06_tier1_verification.tier1_engine import Tier1Verifier
 
         verifier = Tier1Verifier()
 
@@ -43,13 +41,13 @@ class TestTier1Verification:
             year=2023
         )
 
-        assert result.is_verified == False
+        assert result.is_verified is False
         assert "ANOMALY_DETECTED" in result.reason
 
     @pytest.mark.asyncio
     async def test_value_range_validation(self):
         """F06-T003: 数值范围验证"""
-        from f06_tier1_verification.tier1_engine import Tier1Verifier, VerificationResult
+        from f06_tier1_verification.tier1_engine import Tier1Verifier
 
         verifier = Tier1Verifier()
 
@@ -59,7 +57,7 @@ class TestTier1Verification:
             year=2023
         )
 
-        assert result.is_verified == False
+        assert result.is_verified is False
         assert "INVALID_RANGE" in result.reason
 
     @pytest.mark.asyncio
@@ -79,7 +77,7 @@ class TestTier1Verification:
             )
 
             mock_api.assert_called_once()
-            assert result.is_verified == True
+            assert result.is_verified is True
 
 
 class TestDataLineageTracker:
@@ -88,7 +86,7 @@ class TestDataLineageTracker:
     @pytest.mark.asyncio
     async def test_lineage_tracking(self):
         """F06-T004: 传播链追踪"""
-        from f06_tier1_verification.data_lineage_tracker import DataLineageTracker, DataNode, LineageResult
+        from f06_tier1_verification.data_lineage_tracker import DataLineageTracker
 
         tracker = DataLineageTracker()
 
@@ -101,7 +99,7 @@ class TestDataLineageTracker:
 
         lineage = tracker.get_propagation_chain("per-capita")
         assert len(lineage) == 2
-        assert lineage[0].is_raw == True
+        assert lineage[0].is_raw is True
 
     @pytest.mark.asyncio
     async def test_propagation_depth_limit(self):
@@ -117,19 +115,19 @@ class TestDataLineageTracker:
             formula="data-0 * 0.5",
             input_data_ids=["data-0"]
         )
-        assert r1.rejected == False
+        assert r1.rejected is False
         r2 = tracker.register_derived_data(
             "data-2",
             formula="data-1 * 0.5",
             input_data_ids=["data-1"]
         )
-        assert r2.rejected == False
+        assert r2.rejected is False
         r3 = tracker.register_derived_data(
             "data-3",
             formula="data-2 * 0.5",
             input_data_ids=["data-2"]
         )
-        assert r3.rejected == False
+        assert r3.rejected is False
 
         # 深度超过3应被阻断 - data-4的depth是4
         result = tracker.register_derived_data(
@@ -138,7 +136,7 @@ class TestDataLineageTracker:
             input_data_ids=["data-3"]
         )
 
-        assert result.rejected == True
+        assert result.rejected is True
         assert "DEPTH_EXCEEDED" in result.reason
 
     @pytest.mark.asyncio
@@ -150,12 +148,12 @@ class TestDataLineageTracker:
 
         result = tracker.register_raw_data("test-data", 5000, "测试来源")
 
-        assert result.success == True
+        assert result.success is True
         assert result.node is not None
         assert result.node.data_id == "test-data"
         assert result.node.value == 5000
         assert result.node.source == "测试来源"
-        assert result.node.is_raw == True
+        assert result.node.is_raw is True
 
     @pytest.mark.asyncio
     async def test_derive_data_without_formula_rejected(self):
@@ -171,7 +169,7 @@ class TestDataLineageTracker:
             input_data_ids=["data-0"]
         )
 
-        assert result.rejected == True
+        assert result.rejected is True
         assert "MISSING_FORMULA" in result.reason
 
     @pytest.mark.asyncio
@@ -184,7 +182,7 @@ class TestDataLineageTracker:
         # 注册不可能的数值（人口为负数）
         result = tracker.register_raw_data("population", -1000, "恶意来源")
 
-        assert result.rejected == True
+        assert result.rejected is True
         assert "INVALID_RANGE" in result.reason
 
     @pytest.mark.asyncio
@@ -233,7 +231,7 @@ class TestDataLineageTracker:
             formula="data-4 * 0.5",
             input_data_ids=["data-4"]
         )
-        assert result.rejected == False
+        assert result.rejected is False
 
         # 超过最大链长度应被拒绝（chain length = 6 > 5）
         result2 = tracker.register_derived_data(
@@ -241,7 +239,7 @@ class TestDataLineageTracker:
             formula="data-5 * 0.5",
             input_data_ids=["data-5"]
         )
-        assert result2.rejected == True
+        assert result2.rejected is True
         assert "DERIVATION_CHAIN_EXCEEDED" in result2.reason
 
 
@@ -265,7 +263,7 @@ class TestExternalDataVerifier:
                 region="中国"
             )
 
-            assert result.is_verified == True
+            assert result.is_verified is True
 
     @pytest.mark.asyncio
     async def test_discrepancy_calculation(self):
@@ -307,7 +305,7 @@ class TestExternalDataVerifier:
             year=2023
         )
 
-        assert result.is_verified == False
+        assert result.is_verified is False
         assert result.status == VerificationStatus.TIMEOUT
 
 
@@ -328,7 +326,7 @@ class TestSecurityTests:
             year=2023
         )
 
-        assert result.is_verified == False
+        assert result.is_verified is False
         assert "ANOMALY_DETECTED" in result.reason or "INVALID_RANGE" in result.reason
 
     @pytest.mark.asyncio
@@ -367,14 +365,14 @@ class TestSecurityTests:
                 input_data_ids=[f"layer-{i}"]
             )
             if i >= 4:
-                assert result.rejected == True
+                assert result.rejected is True
 
     @pytest.mark.asyncio
     async def test_race_condition_in_lineage_registration(self):
         """F06-S004: 竞态条件防护"""
-        from f06_tier1_verification.data_lineage_tracker import DataLineageTracker
         import asyncio
-        import uuid
+
+        from f06_tier1_verification.data_lineage_tracker import DataLineageTracker
 
         tracker = DataLineageTracker()
 
@@ -402,7 +400,7 @@ class TestSecurityTests:
             year=2023
         )
 
-        assert result.is_verified == False
+        assert result.is_verified is False
         assert "INVALID_RANGE" in result.reason
 
 
@@ -412,8 +410,8 @@ class TestIntegrationTests:
     @pytest.mark.asyncio
     async def test_verifier_and_tracker_integration(self):
         """F06-I001: 核实引擎与追踪器集成"""
-        from f06_tier1_verification.tier1_engine import Tier1Verifier
         from f06_tier1_verification.data_lineage_tracker import DataLineageTracker
+        from f06_tier1_verification.tier1_engine import Tier1Verifier
 
         verifier = Tier1Verifier()
         tracker = DataLineageTracker()
@@ -428,21 +426,21 @@ class TestIntegrationTests:
             year=2023
         )
 
-        assert result.is_verified == True
+        assert result.is_verified is True
         lineage = tracker.get_propagation_chain("gdp-2023")
         assert len(lineage) == 1
 
     @pytest.mark.asyncio
     async def test_full_verification_workflow(self):
         """F06-I002: 完整核实工作流"""
-        from f06_tier1_verification.tier1_engine import Tier1Verifier
         from f06_tier1_verification.data_lineage_tracker import DataLineageTracker
+        from f06_tier1_verification.tier1_engine import Tier1Verifier
 
-        verifier = Tier1Verifier()
+        Tier1Verifier()
         tracker = DataLineageTracker()
 
         # 1. 注册原始数据
-        node = tracker.register_raw_data("gdp-2023", 12900000000000, "国家统计局")
+        tracker.register_raw_data("gdp-2023", 12900000000000, "国家统计局")
 
         # 2. 派生计算
         derived = tracker.register_derived_data(
@@ -450,12 +448,12 @@ class TestIntegrationTests:
             formula="gdp-2023 / population-2023",
             input_data_ids=["gdp-2023"]
         )
-        assert derived.rejected == False
+        assert derived.rejected is False
 
         # 3. 验证派生数据
         lineage = tracker.get_propagation_chain("per-capita-gdp")
         assert len(lineage) == 2
-        assert lineage[0].is_raw == True
+        assert lineage[0].is_raw is True
 
 
 class TestTier1EngineUncoveredBranches:
@@ -478,8 +476,9 @@ class TestTier1EngineUncoveredBranches:
     @pytest.mark.asyncio
     async def test_verify_external_api_unavailable(self):
         """verify处理外部API不可用 (覆盖line 91)"""
-        from f06_tier1_verification.tier1_engine import Tier1Verifier
         from unittest.mock import patch
+
+        from f06_tier1_verification.tier1_engine import Tier1Verifier
 
         verifier = Tier1Verifier()
 
@@ -496,8 +495,9 @@ class TestTier1EngineUncoveredBranches:
     @pytest.mark.asyncio
     async def test_verify_exception_handling(self):
         """verify处理异常情况 (覆盖lines 115-116)"""
-        from f06_tier1_verification.tier1_engine import Tier1Verifier
         from unittest.mock import patch
+
+        from f06_tier1_verification.tier1_engine import Tier1Verifier
 
         verifier = Tier1Verifier()
 
@@ -543,7 +543,7 @@ class TestDataLineageTrackerUncovered:
             input_data_ids=["data-a"]
         )
 
-        chain = tracker.get_propagation_chain("data-a")
+        tracker.get_propagation_chain("data-a")
 
         chain_with_visited = []
         visited = set()

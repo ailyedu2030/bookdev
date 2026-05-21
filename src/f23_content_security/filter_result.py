@@ -1,9 +1,9 @@
 """
 F23: 内容安全过滤 - 过滤结果数据结构
 """
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Any, Optional
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class FilterAction(Enum):
@@ -35,7 +35,7 @@ class Violation:
     length: int = 0
     description: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.type,
             "category": self.category,
@@ -52,13 +52,13 @@ class FilterResult:
     """内容安全过滤结果"""
     is_safe: bool = True
     confidence_score: float = 1.0
-    categories: List[str] = field(default_factory=list)
-    violations: List[Violation] = field(default_factory=list)
+    categories: list[str] = field(default_factory=list)
+    violations: list[Violation] = field(default_factory=list)
     action: str = FilterAction.PASS.value
     details: str = ""
     processing_time_ms: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "is_safe": self.is_safe,
             "confidence_score": self.confidence_score,

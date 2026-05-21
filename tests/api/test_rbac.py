@@ -10,16 +10,13 @@ Tests for role-based permission enforcement:
 - System Admin: full system access
 """
 
-import pytest
-from datetime import datetime
 
-from api.deps import generate_uuid, create_access_token, ROLE_PERMISSIONS
+from api.deps import generate_uuid
+
 from tests.api.conftest import (
-    create_test_project,
     create_test_chapter,
+    create_test_project,
     create_test_term,
-    get_auth_header,
-    get_csrf_headers,
 )
 
 
@@ -551,7 +548,7 @@ class TestAdminPermissions:
     ):
         """Test admin can update user roles"""
         token = test_admin_authenticated["access_token"]
-        admin = test_admin_authenticated["user"]
+        test_admin_authenticated["user"]
 
         target_user = test_db.create_user({
             "username": "targetuser",
@@ -576,7 +573,7 @@ class TestAdminPermissions:
     ):
         """Test admin can delete users"""
         token = test_admin_authenticated["access_token"]
-        admin = test_admin_authenticated["user"]
+        test_admin_authenticated["user"]
 
         target_user = test_db.create_user({
             "username": "todelete",
@@ -708,7 +705,7 @@ class TestCrossRoleScenarios:
         author_token = author_authenticated["access_token"]
         reviewer_token = reviewer_authenticated["access_token"]
         author_user = author_authenticated["user"]
-        reviewer_user = reviewer_authenticated["user"]
+        reviewer_authenticated["user"]
 
         project = create_test_project(test_db, owner_id=author_user.id)
         chapter = create_test_chapter(

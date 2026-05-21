@@ -7,13 +7,13 @@ UserRepository - 用户仓储
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional, Sequence
+from collections.abc import Sequence
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 
-from db.models import User, Role, Permission, UserRole, RolePermission
+from db.models import Permission, Role, RolePermission, User, UserRole
 from db.repositories.base_repository import BaseRepository
 
 
@@ -23,15 +23,15 @@ class UserRepository(BaseRepository[User]):
     def __init__(self, session: AsyncSession):
         super().__init__(User, session)
 
-    async def get_by_username(self, username: str) -> Optional[User]:
+    async def get_by_username(self, username: str) -> User | None:
         """根据用户名获取用户"""
         return await self.get_one(username=username)
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         """根据邮箱获取用户"""
         return await self.get_one(email=email)
 
-    async def get_with_roles(self, user_id: uuid.UUID) -> Optional[User]:
+    async def get_with_roles(self, user_id: uuid.UUID) -> User | None:
         """获取用户及其角色信息"""
         stmt = (
             select(User)
@@ -41,7 +41,7 @@ class UserRepository(BaseRepository[User]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_with_permissions(self, user_id: uuid.UUID) -> Optional[User]:
+    async def get_with_permissions(self, user_id: uuid.UUID) -> User | None:
         """获取用户及其所有权限 - 使用joinedload避免N+1查询"""
         stmt = (
             select(User)
@@ -72,13 +72,13 @@ class UserRepository(BaseRepository[User]):
 
     async def update_password(
         self, user_id: uuid.UUID, password_hash: str
-    ) -> Optional[User]:
+    ) -> User | None:
         """更新密码"""
         return await self.update(user_id, password_hash=password_hash)
 
     async def update_email(
         self, user_id: uuid.UUID, email: str
-    ) -> Optional[User]:
+    ) -> User | None:
         """更新邮箱"""
         return await self.update(user_id, email=email)
 
@@ -157,11 +157,11 @@ class RoleRepository(BaseRepository[Role]):
     def __init__(self, session: AsyncSession):
         super().__init__(Role, session)
 
-    async def get_by_name(self, name: str) -> Optional[Role]:
+    async def get_by_name(self, name: str) -> Role | None:
         """根据名称获取角色"""
         return await self.get_one(name=name)
 
-    async def get_with_permissions(self, role_id: uuid.UUID) -> Optional[Role]:
+    async def get_with_permissions(self, role_id: uuid.UUID) -> Role | None:
         """获取角色及其权限"""
         stmt = (
             select(Role)
@@ -217,7 +217,7 @@ class PermissionRepository(BaseRepository[Permission]):
 
     async def get_by_resource_action(
         self, resource: str, action: str
-    ) -> Optional[Permission]:
+    ) -> Permission | None:
         """根据资源和动作获取权限"""
         return await self.get_one(resource=resource, action=action)
 

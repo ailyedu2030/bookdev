@@ -7,11 +7,8 @@ F25: 模型路由引擎 - TDD RED阶段测试
 - 单元测试覆盖率 ≥83%
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
-from typing import Dict, List, Optional
 
-from f25_model_router.model_router import TaskType, Task, ModelSelection
+from f25_model_router.model_router import ModelSelection, Task
 
 
 class TestModelRouter:

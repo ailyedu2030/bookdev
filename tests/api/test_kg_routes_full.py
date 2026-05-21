@@ -4,9 +4,8 @@ Knowledge Graph API Route Tests - Full Coverage
 Tests all endpoints with proper state isolation and permission coverage.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 
+import pytest
 from api.deps import generate_uuid
 
 
@@ -730,8 +729,8 @@ class TestInitializeGraph:
         """Test initializing graph with sample data"""
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
-        from tests.api.conftest import create_test_project, create_test_chapter
-        project = create_test_project(test_db, owner_id=user.id, name="Any Name")
+        from tests.api.conftest import create_test_chapter, create_test_project
+        create_test_project(test_db, owner_id=user.id, name="Any Name")
         chapter1 = create_test_chapter(test_db, project_id="demo-project", title="Chapter 1")
         chapter2 = create_test_chapter(test_db, project_id="demo-project", title="Chapter 2")
         test_db._chapters[chapter1["id"]]["project_id"] = "demo-project"

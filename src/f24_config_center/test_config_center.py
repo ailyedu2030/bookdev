@@ -4,8 +4,10 @@ F24: 配置中心 - 测试文件
 TDD RED阶段：编写失败测试
 """
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, timezone
+
 from f24_config_center import ConfigCenter, ConfigVersion
 
 
@@ -61,9 +63,9 @@ class TestConfigCenterSetConfig:
     def test_set_config_records_timestamp(self):
         """F24-UT008: 设置配置记录时间戳"""
         cc = ConfigCenter()
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         version = cc.set_config("key", "value")
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
         assert before <= version.timestamp <= after
 
     def test_set_config_records_previous_value(self):

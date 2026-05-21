@@ -7,13 +7,13 @@ ProjectRepository - 项目仓储
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional, Sequence
+from collections.abc import Sequence
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
-from db.models import Project, ProjectMember, Chapter, User
+from db.models import Project, ProjectMember
 from db.repositories.base_repository import BaseRepository
 
 
@@ -23,7 +23,7 @@ class ProjectRepository(BaseRepository[Project]):
     def __init__(self, session: AsyncSession):
         super().__init__(Project, session)
 
-    async def get_with_owner(self, project_id: uuid.UUID) -> Optional[Project]:
+    async def get_with_owner(self, project_id: uuid.UUID) -> Project | None:
         """获取项目及其所有者信息"""
         stmt = (
             select(Project)
@@ -33,7 +33,7 @@ class ProjectRepository(BaseRepository[Project]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_with_members(self, project_id: uuid.UUID) -> Optional[Project]:
+    async def get_with_members(self, project_id: uuid.UUID) -> Project | None:
         """获取项目及其成员信息"""
         stmt = (
             select(Project)
@@ -43,7 +43,7 @@ class ProjectRepository(BaseRepository[Project]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_with_chapters(self, project_id: uuid.UUID) -> Optional[Project]:
+    async def get_with_chapters(self, project_id: uuid.UUID) -> Project | None:
         """获取项目及其章节列表"""
         stmt = (
             select(Project)
@@ -53,7 +53,7 @@ class ProjectRepository(BaseRepository[Project]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_full_project(self, project_id: uuid.UUID) -> Optional[Project]:
+    async def get_full_project(self, project_id: uuid.UUID) -> Project | None:
         """获取完整项目信息（包含所有者、成员、章节）"""
         stmt = (
             select(Project)
@@ -68,7 +68,7 @@ class ProjectRepository(BaseRepository[Project]):
         return result.scalar_one_or_none()
 
     async def get_by_owner(
-        self, owner_id: uuid.UUID, *, status: Optional[str] = None
+        self, owner_id: uuid.UUID, *, status: str | None = None
     ) -> Sequence[Project]:
         """获取用户拥有的项目"""
         filters = {"owner_id": owner_id}
@@ -77,7 +77,7 @@ class ProjectRepository(BaseRepository[Project]):
         return await self.find_all(filters=filters, order_by="created_at")
 
     async def get_by_status(
-        self, status: str, *, limit: Optional[int] = None
+        self, status: str, *, limit: int | None = None
     ) -> Sequence[Project]:
         """根据状态获取项目"""
         return await self.find_all(
@@ -90,7 +90,7 @@ class ProjectRepository(BaseRepository[Project]):
         self,
         name: str,
         owner_id: uuid.UUID,
-        description: Optional[str] = None,
+        description: str | None = None,
         **kwargs,
     ) -> Project:
         """创建项目的便捷方法"""
@@ -103,19 +103,19 @@ class ProjectRepository(BaseRepository[Project]):
 
     async def update_progress(
         self, project_id: uuid.UUID, current_progress: int
-    ) -> Optional[Project]:
+    ) -> Project | None:
         """更新项目进度"""
         return await self.update(project_id, current_progress=current_progress)
 
     async def update_status(
         self, project_id: uuid.UUID, status: str
-    ) -> Optional[Project]:
+    ) -> Project | None:
         """更新项目状态"""
         return await self.update(project_id, status=status)
 
     async def increment_chapter_count(
         self, project_id: uuid.UUID
-    ) -> Optional[Project]:
+    ) -> Project | None:
         """增加章节计数"""
         project = await self.get_by_id(project_id)
         if project:
@@ -127,7 +127,7 @@ class ProjectRepository(BaseRepository[Project]):
 
     async def decrement_chapter_count(
         self, project_id: uuid.UUID
-    ) -> Optional[Project]:
+    ) -> Project | None:
         """减少章节计数"""
         project = await self.get_by_id(project_id)
         if project and project.total_chapters > 0:
@@ -202,7 +202,7 @@ class ProjectMemberRepository(BaseRepository[ProjectMember]):
 
     async def get_member_role(
         self, project_id: uuid.UUID, user_id: uuid.UUID
-    ) -> Optional[str]:
+    ) -> str | None:
         """获取用户在项目中的角色"""
         stmt = select(ProjectMember.role).where(
             and_(
@@ -215,7 +215,7 @@ class ProjectMemberRepository(BaseRepository[ProjectMember]):
 
     async def update_member_role(
         self, project_id: uuid.UUID, user_id: uuid.UUID, role: str
-    ) -> Optional[ProjectMember]:
+    ) -> ProjectMember | None:
         """更新成员角色"""
         member = await self.get_one(project_id=project_id, user_id=user_id)
         if member:

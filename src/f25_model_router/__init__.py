@@ -6,9 +6,9 @@ F25: 模型路由引擎
 
 from f25_model_router.model_router import (
     ModelRouter,
-    TaskType,
-    Task,
     ModelSelection,
+    Task,
+    TaskType,
 )
 
 __all__ = ["ModelRouter", "TaskType", "Task", "ModelSelection"]

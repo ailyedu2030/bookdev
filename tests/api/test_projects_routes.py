@@ -12,16 +12,12 @@ Tests for project endpoints:
 - GET /api/projects/my/projects - List current user's projects
 """
 
-import pytest
-from datetime import datetime
 
-from api.deps import generate_uuid, create_access_token
+from api.deps import generate_uuid
+
 from tests.api.conftest import (
-    create_test_project,
     create_test_chapter,
-    create_test_user,
-    get_auth_header,
-    get_csrf_headers,
+    create_test_project,
 )
 
 
@@ -364,7 +360,7 @@ class TestDeleteProject:
     ):
         """Test admin can delete any project"""
         token = test_admin_authenticated["access_token"]
-        admin = test_admin_authenticated["user"]
+        test_admin_authenticated["user"]
 
         other_user = test_db.create_user({
             "username": "otheruser",
@@ -389,7 +385,7 @@ class TestDeleteProject:
     ):
         """Test non-owner cannot delete project"""
         token = author_authenticated["access_token"]
-        user = author_authenticated["user"]
+        author_authenticated["user"]
 
         other_user = test_db.create_user({
             "username": "otherowner",
@@ -510,7 +506,7 @@ class TestAddProjectMember:
     ):
         """Test adding member to non-existent project"""
         token = content_admin_authenticated["access_token"]
-        user = content_admin_authenticated["user"]
+        content_admin_authenticated["user"]
 
         new_member = test_db.create_user({
             "username": "member2",

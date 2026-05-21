@@ -2,10 +2,9 @@
 F11: 外部审核服务
 """
 
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Dict, Any
-import uuid
 
 
 @dataclass
@@ -25,7 +24,7 @@ class ExternalReviewService:
 
     def __init__(self, hsm_client=None):
         self.hsm_client = hsm_client
-        self._sessions: Dict[str, ReviewSession] = {}
+        self._sessions: dict[str, ReviewSession] = {}
 
     def initiate_review(
         self,

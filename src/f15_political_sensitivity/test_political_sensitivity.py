@@ -2,11 +2,6 @@
 F15: 政治敏感分析 - 单元测试
 TDD RED阶段：测试必须失败，因为实现不存在
 """
-import pytest
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Set, Any, Tuple
-from datetime import datetime, timezone
-from enum import Enum
 
 
 class TestPoliticalTracker:
@@ -72,7 +67,7 @@ class TestPoliticalTracker:
 
         analysis = tracker.cross_topic_analysis(["台湾", "香港"])
 
-        assert analysis.is_aggregated_risk == True
+        assert analysis.is_aggregated_risk is True
 
 
 class TestSentimentAnalyzer:
@@ -80,7 +75,7 @@ class TestSentimentAnalyzer:
 
     def test_analyze_sentiment_positive(self):
         """F15-T006: 正面情感分析"""
-        from f15_political_sensitivity.sentiment_analyzer import SentimentAnalyzer, Sentiment
+        from f15_political_sensitivity.sentiment_analyzer import Sentiment, SentimentAnalyzer
 
         analyzer = SentimentAnalyzer()
 
@@ -90,7 +85,7 @@ class TestSentimentAnalyzer:
 
     def test_analyze_sentiment_negative(self):
         """F15-T007: 负面情感分析"""
-        from f15_political_sensitivity.sentiment_analyzer import SentimentAnalyzer, Sentiment
+        from f15_political_sensitivity.sentiment_analyzer import Sentiment, SentimentAnalyzer
 
         analyzer = SentimentAnalyzer()
 
@@ -100,7 +95,7 @@ class TestSentimentAnalyzer:
 
     def test_analyze_sentiment_neutral(self):
         """F15-T008: 中性情感分析"""
-        from f15_political_sensitivity.sentiment_analyzer import SentimentAnalyzer, Sentiment
+        from f15_political_sensitivity.sentiment_analyzer import Sentiment, SentimentAnalyzer
 
         analyzer = SentimentAnalyzer()
 
@@ -116,7 +111,7 @@ class TestSentimentAnalyzer:
 
         result = analyzer.analyze("完全是垃圾政策，愚蠢透顶！")
 
-        assert result.is_polarized == True
+        assert result.is_polarized is True
 
     def test_sentiment_intensity_score(self):
         """F15-T010: 情感强度评分"""
@@ -178,7 +173,7 @@ class TestInfiltrationDetector:
             content="今天学习了人工智能的基础知识"
         )
 
-        assert result.is_safe == True
+        assert result.is_safe is True
 
     def test_detect_coordinated_behavior(self):
         """F15-T015: 检测协调行为"""
@@ -234,7 +229,7 @@ class TestSecurityTests:
         content = "好" * 100
         result = analyzer.analyze(content)
 
-        assert result.is_polarized == True
+        assert result.is_polarized is True
 
     def test_adversarial_pattern_evasion(self):
         """F15-S004: 对抗模式规避检测"""
@@ -244,7 +239,7 @@ class TestSecurityTests:
 
         result = detector.detect("使 用 某 些 手 段 操 纵 舆 论")
 
-        assert result.is_safe == False or result.confidence >= 0.5
+        assert result.is_safe is False or result.confidence >= 0.5
 
     def test_sentiment_analysis_dos_prevention(self):
         """F15-S005: 情感分析DoS预防"""
@@ -260,8 +255,9 @@ class TestSecurityTests:
 
     def test_race_condition_in_tracking(self):
         """F15-S006: 追踪中的竞态条件"""
-        from f15_political_sensitivity.political_tracker import PoliticalTracker, SensitivityLevel
         import threading
+
+        from f15_political_sensitivity.political_tracker import PoliticalTracker, SensitivityLevel
 
         tracker = PoliticalTracker()
         results = []
@@ -284,9 +280,9 @@ class TestIntegrationTests:
 
     def test_full_political_analysis_workflow(self):
         """F15-I001: 完整政治分析工作流"""
+        from f15_political_sensitivity.infiltration_detector import InfiltrationDetector
         from f15_political_sensitivity.political_tracker import PoliticalTracker, SensitivityLevel
         from f15_political_sensitivity.sentiment_analyzer import SentimentAnalyzer
-        from f15_political_sensitivity.infiltration_detector import InfiltrationDetector
 
         tracker = PoliticalTracker()
         analyzer = SentimentAnalyzer()
@@ -303,13 +299,13 @@ class TestIntegrationTests:
 
     def test_tracker_analyzer_detector_integration(self):
         """F15-I002: 追踪器-分析器-检测器集成"""
+        from f15_political_sensitivity.infiltration_detector import InfiltrationDetector
         from f15_political_sensitivity.political_tracker import PoliticalTracker, SensitivityLevel
         from f15_political_sensitivity.sentiment_analyzer import SentimentAnalyzer
-        from f15_political_sensitivity.infiltration_detector import InfiltrationDetector
 
         tracker = PoliticalTracker()
-        analyzer = SentimentAnalyzer()
-        detector = InfiltrationDetector()
+        SentimentAnalyzer()
+        InfiltrationDetector()
 
         tracker.track_topic("敏感话题", SensitivityLevel.HIGH)
 
@@ -384,7 +380,7 @@ class TestSentimentAnalyzerUncovered:
 
     def test_is_polarized_short_text(self):
         """line 48: 短文本满足标点条件判定为极化"""
-        from f15_political_sensitivity.sentiment_analyzer import SentimentAnalyzer, Sentiment
+        from f15_political_sensitivity.sentiment_analyzer import Sentiment, SentimentAnalyzer
 
         analyzer = SentimentAnalyzer()
 
@@ -399,7 +395,7 @@ class TestSentimentAnalyzerUncovered:
 
     def test_is_polarized_multiple_punctuation(self):
         """line 48: 多感叹号或多问号满足极化条件"""
-        from f15_political_sensitivity.sentiment_analyzer import SentimentAnalyzer, Sentiment
+        from f15_political_sensitivity.sentiment_analyzer import Sentiment, SentimentAnalyzer
 
         analyzer = SentimentAnalyzer()
 

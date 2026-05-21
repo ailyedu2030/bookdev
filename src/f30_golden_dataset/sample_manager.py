@@ -6,8 +6,8 @@ F30: Golden Dataset系统 - 样本管理器
 
 import json
 import os
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, fields
+from typing import Any
 
 
 @dataclass
@@ -16,11 +16,11 @@ class GoldenSample:
     sample_id: str
     quality_level: str
     expected_score: float
-    content: Dict[str, Any]
-    quality_metrics: Dict[str, float]
-    metadata: Dict[str, Any]
-    hallucination_markers: List[Dict[str, Any]] = None
-    regulation_errors: List[Dict[str, Any]] = None
+    content: dict[str, Any]
+    quality_metrics: dict[str, float]
+    metadata: dict[str, Any]
+    hallucination_markers: list[dict[str, Any]] = None
+    regulation_errors: list[dict[str, Any]] = None
 
     def __post_init__(self):
         if self.hallucination_markers is None:
@@ -36,7 +36,7 @@ class GoldenSample:
         """支持字典式get访问"""
         return getattr(self, key, default)
 
-    def copy_with_updates(self, updates: Dict[str, Any]) -> "GoldenSample":
+    def copy_with_updates(self, updates: dict[str, Any]) -> "GoldenSample":
         """
         创建样本的副本并应用更新（保持不可变性）
 
@@ -48,12 +48,12 @@ class GoldenSample:
         """
         # Get all current field values
         current_values = {f.name: getattr(self, f.name) for f in fields(self)}
-        
+
         # Apply updates
         for key, value in updates.items():
             if key in current_values:
                 current_values[key] = value
-        
+
         # Return new instance with updated values
         return GoldenSample(**current_values)
 
@@ -69,7 +69,7 @@ class SampleManager:
             samples_dir: 样本文件目录
         """
         self._samples_dir = samples_dir
-        self._samples: Dict[str, GoldenSample] = {}
+        self._samples: dict[str, GoldenSample] = {}
         if samples_dir:
             self._load_all()
 
@@ -81,12 +81,12 @@ class SampleManager:
         for filename in os.listdir(self._samples_dir):
             if filename.endswith(".json"):
                 filepath = os.path.join(self._samples_dir, filename)
-                with open(filepath, "r", encoding="utf-8") as f:
+                with open(filepath, encoding="utf-8") as f:
                     data = json.load(f)
                     sample = self._parse_sample(data)
                     self._samples[sample.sample_id] = sample
 
-    def _parse_sample(self, data: Dict[str, Any]) -> GoldenSample:
+    def _parse_sample(self, data: dict[str, Any]) -> GoldenSample:
         """解析样本数据"""
         return GoldenSample(
             sample_id=data["sample_id"],
@@ -99,7 +99,7 @@ class SampleManager:
             regulation_errors=data.get("regulation_errors", [])
         )
 
-    def get_sample_by_id(self, sample_id: str) -> Optional[GoldenSample]:
+    def get_sample_by_id(self, sample_id: str) -> GoldenSample | None:
         """
         通过ID获取样本
 
@@ -111,7 +111,7 @@ class SampleManager:
         """
         return self._samples.get(sample_id)
 
-    def list_all_sample_ids(self) -> List[str]:
+    def list_all_sample_ids(self) -> list[str]:
         """
         列出所有样本ID
 
@@ -120,7 +120,7 @@ class SampleManager:
         """
         return list(self._samples.keys())
 
-    def get_hallucination_samples(self) -> List[GoldenSample]:
+    def get_hallucination_samples(self) -> list[GoldenSample]:
         """
         获取幻觉样本
 
@@ -132,7 +132,7 @@ class SampleManager:
             if sample.quality_level == "hallucination"
         ]
 
-    def get_regulation_error_samples(self) -> List[GoldenSample]:
+    def get_regulation_error_samples(self) -> list[GoldenSample]:
         """
         获取法规错误样本
 
@@ -147,8 +147,8 @@ class SampleManager:
     def update_sample(
         self,
         sample_id: str,
-        updates: Dict[str, Any]
-    ) -> Optional[GoldenSample]:
+        updates: dict[str, Any]
+    ) -> GoldenSample | None:
         """
         更新样本（保持不可变性）
 
@@ -187,7 +187,7 @@ class SampleManager:
             return True
         return False
 
-    def add_sample(self, sample_data: Dict[str, Any]) -> GoldenSample:
+    def add_sample(self, sample_data: dict[str, Any]) -> GoldenSample:
         """
         添加样本
 

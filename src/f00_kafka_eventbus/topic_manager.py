@@ -2,10 +2,11 @@
 Kafka Topic Manager - creates and manages topics
 """
 
-from aiokafka.admin import AIOKafkaAdminClient, NewTopic
-from typing import List, Optional, Dict, Any
 import asyncio
 import logging
+from typing import Any
+
+from aiokafka.admin import AIOKafkaAdminClient, NewTopic
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class KafkaTopicManager:
 
     # KAFKA-009: Added 'ordered' flag for topics that require message ordering
     # KAFKA-011: Changed default replicas to 2 for production HA
-    TOPICS: Dict[str, Dict[str, Any]] = {
+    TOPICS: dict[str, dict[str, Any]] = {
         "chapter_events": {
             "partitions": 3,
             "replicas": 2,
@@ -61,7 +62,7 @@ class KafkaTopicManager:
     def __init__(self, bootstrap_servers: str = "localhost:9092"):
         self.bootstrap_servers = bootstrap_servers
         # INF-004: Reuse admin client instead of creating/destroying per operation
-        self._admin: Optional[AIOKafkaAdminClient] = None
+        self._admin: AIOKafkaAdminClient | None = None
         self._admin_lock = asyncio.Lock()
 
     async def _get_admin(self) -> AIOKafkaAdminClient:
@@ -89,7 +90,7 @@ class KafkaTopicManager:
         # so we just keep it open and rely on TCP keepalive
         pass
 
-    async def create_topics(self, topics: Optional[List[dict]] = None) -> None:
+    async def create_topics(self, topics: list[dict] | None = None) -> None:
         """
         Create topics if they don't exist
 
@@ -138,7 +139,7 @@ class KafkaTopicManager:
                 raise
         # Note: We don't close admin client here to allow connection reuse (INF-004)
 
-    async def delete_topics(self, topic_names: List[str]) -> None:
+    async def delete_topics(self, topic_names: list[str]) -> None:
         """
         Delete topics
 
@@ -157,7 +158,7 @@ class KafkaTopicManager:
             logger.error(f"Error deleting topics: {e}")
             raise
 
-    async def list_topics(self) -> List[str]:
+    async def list_topics(self) -> list[str]:
         """
         List all topics
 
@@ -187,7 +188,7 @@ class KafkaTopicManager:
                     self._admin = None
                     logger.debug("Admin client closed")
 
-    def _get_default_topics(self) -> List[dict]:
+    def _get_default_topics(self) -> list[dict]:
         """Get default topic configurations"""
         return [
             {"name": name, **config}
@@ -195,12 +196,12 @@ class KafkaTopicManager:
         ]
 
     @classmethod
-    def get_standard_topics(cls) -> Dict[str, Dict[str, Any]]:
+    def get_standard_topics(cls) -> dict[str, dict[str, Any]]:
         """Get standard topic definitions"""
         return cls.TOPICS.copy()
 
     @classmethod
-    def get_topic_config(cls, topic_name: str) -> Optional[Dict[str, Any]]:
+    def get_topic_config(cls, topic_name: str) -> dict[str, Any] | None:
         """Get configuration for a specific topic"""
         return cls.TOPICS.get(topic_name)
 

@@ -12,10 +12,10 @@ F20: LLM-as-Judge评分系统 - TDD RED阶段测试
 - 单元测试覆盖率 ≥85%
 """
 
-import pytest
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
+from unittest.mock import AsyncMock
+
+import pytest
 
 
 class TestJudgeDimensions:
@@ -42,7 +42,7 @@ class TestJudgeDimensions:
         """F20-T003: 每个维度必须有描述"""
         from f20_llm_judge.scoring_engine import JUDGE_DIMENSIONS
 
-        for dim_key, dim_value in JUDGE_DIMENSIONS.items():
+        for _dim_key, dim_value in JUDGE_DIMENSIONS.items():
             assert "description" in dim_value
             assert len(dim_value["description"]) > 0
 
@@ -225,7 +225,7 @@ class TestScoringEngine:
 
         is_valid, errors = engine.validate_dimension_scores(valid_scores)
 
-        assert is_valid == True
+        assert is_valid is True
         assert errors == []
 
     def test_validate_dimension_scores_missing(self):
@@ -239,7 +239,7 @@ class TestScoringEngine:
 
         is_valid, errors = engine.validate_dimension_scores(incomplete_scores)
 
-        assert is_valid == False
+        assert is_valid is False
         assert len(errors) > 0
 
     def test_validate_dimension_scores_out_of_range(self):
@@ -257,7 +257,7 @@ class TestScoringEngine:
 
         is_valid, errors = engine.validate_dimension_scores(invalid_scores)
 
-        assert is_valid == False
+        assert is_valid is False
         assert len(errors) >= 2
 
     def test_get_weight_for_known_dimension(self):
@@ -508,8 +508,9 @@ class TestJudgeService:
 
     def test_judge_result_to_dict(self):
         """F20-T036e: JudgeResult转字典"""
-        from f20_llm_judge.judge_service import JudgeResult, JudgeStatus
         from datetime import datetime
+
+        from f20_llm_judge.judge_service import JudgeResult, JudgeStatus
 
         result = JudgeResult(
             scores={"terminology_consistency": 0.9},
@@ -780,7 +781,7 @@ class TestMockLLMClientCoverage:
     @pytest.mark.asyncio
     async def test_mock_llm_client_raises_when_should_fail_true(self):
         """F20-T057: MockLLMClient在should_fail=True时抛出异常 (覆盖line 75)"""
-        from f20_llm_judge.judge_service import MockLLMClient, JudgeService, JudgeServiceError
+        from f20_llm_judge.judge_service import JudgeService, JudgeServiceError, MockLLMClient
 
         mock_client = MockLLMClient(should_fail=True)
         service = JudgeService(llm_client=mock_client)
@@ -791,7 +792,7 @@ class TestMockLLMClientCoverage:
     @pytest.mark.asyncio
     async def test_mock_llm_client_default_response(self):
         """F20-T058: MockLLMClient默认响应 (覆盖line 81)"""
-        from f20_llm_judge.judge_service import MockLLMClient, JudgeService
+        from f20_llm_judge.judge_service import JudgeService, MockLLMClient
 
         mock_client = MockLLMClient()
         service = JudgeService(llm_client=mock_client)
@@ -806,7 +807,7 @@ class TestMockLLMClientCoverage:
     @pytest.mark.asyncio
     async def test_judge_content_json_decode_error_handler(self):
         """F20-T059: JudgeService处理JSONDecodeError (覆盖line 152)"""
-        from f20_llm_judge.judge_service import MockLLMClient, JudgeService, JudgeServiceError
+        from f20_llm_judge.judge_service import JudgeService, JudgeServiceError, MockLLMClient
 
         mock_client = MockLLMClient(response="invalid json {")
         service = JudgeService(llm_client=mock_client)
@@ -817,7 +818,7 @@ class TestMockLLMClientCoverage:
     @pytest.mark.asyncio
     async def test_judge_content_general_exception_handler(self):
         """F20-T060: JudgeService处理通用异常 (覆盖line 154)"""
-        from f20_llm_judge.judge_service import MockLLMClient, JudgeService, JudgeServiceError
+        from f20_llm_judge.judge_service import JudgeService, JudgeServiceError, MockLLMClient
 
         class RaisingMockClient(MockLLMClient):
             async def generate(self, prompt: str, **kwargs) -> str:

@@ -4,11 +4,10 @@ F20: LLM-as-Judge评分系统 - 评分引擎
 负责评分维度权重计算和分数验证
 """
 
-from typing import Dict, Any, List
 from dataclasses import dataclass
+from typing import Any
 
-
-JUDGE_DIMENSIONS: Dict[str, Dict[str, Any]] = {
+JUDGE_DIMENSIONS: dict[str, dict[str, Any]] = {
     "terminology_consistency": {
         "weight": 0.25,
         "description": "术语使用与术语表的一致性"
@@ -43,7 +42,7 @@ class DimensionScore:
 class ScoringEngine:
     """评分引擎"""
 
-    def __init__(self, dimensions: Dict[str, Dict[str, Any]] = None):
+    def __init__(self, dimensions: dict[str, dict[str, Any]] = None):
         """
         初始化评分引擎
 
@@ -54,7 +53,7 @@ class ScoringEngine:
 
     def calculate_weighted_score(
         self,
-        dimension_scores: Dict[str, float]
+        dimension_scores: dict[str, float]
     ) -> float:
         """
         计算加权总分
@@ -80,7 +79,7 @@ class ScoringEngine:
 
         # 验证分数范围
         for dim_key, score in dimension_scores.items():
-            if not isinstance(score, (int, float)):
+            if not isinstance(score, int | float):
                 raise ValueError(f"Score for {dim_key} must be numeric")
             if score < 0.0 or score > 1.0:
                 raise ValueError(
@@ -98,8 +97,8 @@ class ScoringEngine:
 
     def get_dimension_scores_with_weights(
         self,
-        dimension_scores: Dict[str, float]
-    ) -> List[DimensionScore]:
+        dimension_scores: dict[str, float]
+    ) -> list[DimensionScore]:
         """
         获取带权重的维度分数详情
 
@@ -121,8 +120,8 @@ class ScoringEngine:
 
     def validate_dimension_scores(
         self,
-        dimension_scores: Dict[str, float]
-    ) -> tuple[bool, List[str]]:
+        dimension_scores: dict[str, float]
+    ) -> tuple[bool, list[str]]:
         """
         验证维度分数
 
@@ -159,6 +158,6 @@ class ScoringEngine:
             return self.dimensions[dimension]["weight"]
         return 0.0
 
-    def get_all_dimensions(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_dimensions(self) -> dict[str, dict[str, Any]]:
         """获取所有维度配置"""
         return self.dimensions.copy()

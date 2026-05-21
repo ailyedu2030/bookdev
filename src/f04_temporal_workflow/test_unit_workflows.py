@@ -11,8 +11,9 @@
 7. 子工作流执行
 """
 
-import os
 import asyncio
+import os
+
 import pytest
 
 # 确保 mock 模式
@@ -28,7 +29,6 @@ from src.f04_temporal_workflow.workflows.mock_client import (
     WorkflowStatus,
     get_mock_client,
 )
-
 
 # ─── Fixtures ───────────────────────────────────────────────────────────────
 
@@ -257,7 +257,6 @@ async def test_08_child_workflow_execution(client):
 @pytest.mark.asyncio
 async def test_09_workflow_cancellation(client):
     """测试工作流取消"""
-    wf_id = "test-cancel-wf"
 
     @TemporalWorkflow.defn(name="LongRunningWorkflow")
     class LongRunningWorkflow:

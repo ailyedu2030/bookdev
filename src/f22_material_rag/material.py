@@ -3,7 +3,7 @@ F22: 素材数据结构
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Any
+from typing import Any
 
 
 @dataclass

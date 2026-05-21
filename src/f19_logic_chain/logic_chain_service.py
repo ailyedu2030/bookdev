@@ -4,9 +4,7 @@ F19: 逻辑链服务
 维护章节间的逻辑依赖关系，提供依赖分析、拓扑排序功能
 """
 
-import uuid
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -29,16 +27,16 @@ class Issue:
     """问题"""
     type: str
     description: str
-    source: Optional[str] = None
-    target: Optional[str] = None
+    source: str | None = None
+    target: str | None = None
 
 
 @dataclass
 class AddDependencyResult:
     """添加依赖结果"""
     success: bool
-    dependency: Optional[Dependency] = None
-    error: Optional[str] = None
+    dependency: Dependency | None = None
+    error: str | None = None
 
 
 class LogicChainService:
@@ -209,7 +207,7 @@ class LogicChainService:
         ordered = self.get_topological_order()
         lines = ["# 逻辑链文档\n"]
 
-        for i, node in enumerate(ordered):
+        for _i, node in enumerate(ordered):
             deps = self.get_dependencies(node)
             if deps:
                 dep_ids = [d.target for d in deps]

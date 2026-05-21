@@ -2,11 +2,8 @@
 F08: 法规引用核实系统 - 单元测试
 TDD RED阶段：测试必须失败，因为实现不存在
 """
+
 import pytest
-import asyncio
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestRegulationVerification:
@@ -15,7 +12,7 @@ class TestRegulationVerification:
     @pytest.mark.asyncio
     async def test_verify_law_exists_in_whitelist(self):
         """F08-T001: 验证白名单法规存在"""
-        from f08_regulation_verification.regulation_verifier import RegulationVerifier, RegulationResult
+        from f08_regulation_verification.regulation_verifier import RegulationVerifier
 
         verifier = RegulationVerifier()
 
@@ -24,13 +21,13 @@ class TestRegulationVerification:
             article_num=28
         )
 
-        assert result.law_exists == True
-        assert result.article_exists == True
+        assert result.law_exists is True
+        assert result.article_exists is True
 
     @pytest.mark.asyncio
     async def test_reject_law_not_in_whitelist(self):
         """F08-T002: 拒绝非白名单法规"""
-        from f08_regulation_verification.regulation_verifier import RegulationVerifier, RegulationResult
+        from f08_regulation_verification.regulation_verifier import RegulationVerifier
 
         verifier = RegulationVerifier()
 
@@ -39,7 +36,7 @@ class TestRegulationVerification:
             article_num=1
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert "WHITELIST_VIOLATION" in result.reason
 
     @pytest.mark.asyncio
@@ -55,7 +52,7 @@ class TestRegulationVerification:
             article_num=100  # 超出范围
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert "ARTICLE_OUT_OF_RANGE" in result.reason
 
     @pytest.mark.asyncio
@@ -71,8 +68,8 @@ class TestRegulationVerification:
             cited_content="人工智能企业应当对算法进行备案..."
         )
 
-        assert result.tier1_passed == True
-        assert result.tier2_passed == True
+        assert result.tier1_passed is True
+        assert result.tier2_passed is True
         assert result.tier3_score > 0.8
 
     @pytest.mark.asyncio
@@ -87,7 +84,7 @@ class TestRegulationVerification:
             context="一般性描述"
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert "VAGUE_REFERENCE" in result.reason
 
     @pytest.mark.asyncio
@@ -104,7 +101,7 @@ class TestRegulationVerification:
         )
 
         assert result.score < 0.5
-        assert result.is_valid == False
+        assert result.is_valid is False
 
     @pytest.mark.asyncio
     async def test_whitelisted_laws_list(self):
@@ -130,7 +127,7 @@ class TestRegulationVerification:
             issuing_body="全国人民代表大会"
         )
 
-        assert result == True
+        assert result is True
         assert "新法规" in manager.get_whitelisted_laws()
 
     @pytest.mark.asyncio
@@ -174,7 +171,7 @@ class TestRegulationVerification:
             issuing_body="全国人民代表大会"
         )
 
-        assert result == False
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_remove_custom_law(self):
@@ -191,7 +188,7 @@ class TestRegulationVerification:
 
         result = manager.remove_law("临时法规")
 
-        assert result == True
+        assert result is True
         assert "临时法规" not in manager.get_whitelisted_laws()
 
     @pytest.mark.asyncio
@@ -203,7 +200,7 @@ class TestRegulationVerification:
 
         result = manager.remove_law("完全不存在的法规")
 
-        assert result == False
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_validate_article_number_nonexistent_law(self):
@@ -214,7 +211,7 @@ class TestRegulationVerification:
 
         result = manager.validate_article_number("不存在的法规", 1)
 
-        assert result == False
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_validate_article_number_valid(self):
@@ -225,7 +222,7 @@ class TestRegulationVerification:
 
         result = manager.validate_article_number("人工智能法", 50)
 
-        assert result == True
+        assert result is True
 
 
 class TestSecurityTests:
@@ -243,7 +240,7 @@ class TestSecurityTests:
             article_num=1
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert "WHITELIST_VIOLATION" in result.reason
 
     @pytest.mark.asyncio
@@ -258,7 +255,7 @@ class TestSecurityTests:
             article_num=999  # 不存在的条款
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert "ARTICLE_OUT_OF_RANGE" in result.reason
 
     @pytest.mark.asyncio
@@ -294,7 +291,7 @@ class TestSecurityTests:
                 citation=phrase,
                 context="任何描述"
             )
-            assert result.is_valid == False
+            assert result.is_valid is False
             assert "VAGUE_REFERENCE" in result.reason
 
 
@@ -314,8 +311,8 @@ class TestIntegrationTests:
             cited_content="人工智能企业应当对算法进行备案..."
         )
 
-        assert result.law_exists == True
-        assert result.article_exists == True
+        assert result.law_exists is True
+        assert result.article_exists is True
         assert result.tier3_score > 0.8
 
     @pytest.mark.asyncio
@@ -332,7 +329,7 @@ class TestIntegrationTests:
             article_num=45
         )
 
-        assert result.law_exists == True
+        assert result.law_exists is True
 
 
 class TestRegulationVerifierUncovered:
@@ -349,7 +346,7 @@ class TestRegulationVerifierUncovered:
             context="人工智能企业应当遵守相关法规"
         )
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     @pytest.mark.asyncio
     async def test_verify_content_relevance(self):

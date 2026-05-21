@@ -2,11 +2,8 @@
 F09: 素材安全管理 - 单元测试
 TDD RED阶段：测试必须失败，因为实现不存在
 """
+
 import pytest
-import asyncio
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestMaterialSecurity:
@@ -15,7 +12,11 @@ class TestMaterialSecurity:
     @pytest.mark.asyncio
     async def test_material_must_have_source(self):
         """F09-T001: 素材必须有来源"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, MaterialValidationError
+        from f09_material_security.material_security_manager import (
+            Material,
+            MaterialSecurityManager,
+            MaterialValidationError,
+        )
 
         manager = MaterialSecurityManager()
 
@@ -30,7 +31,7 @@ class TestMaterialSecurity:
     @pytest.mark.asyncio
     async def test_trust_score_calculation(self):
         """F09-T002: 可信度评分计算"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
@@ -48,7 +49,7 @@ class TestMaterialSecurity:
     @pytest.mark.asyncio
     async def test_low_trust_material_blocked(self):
         """F09-T003: 低可信度素材被阻断"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
@@ -67,7 +68,7 @@ class TestMaterialSecurity:
     @pytest.mark.asyncio
     async def test_whitelisted_source_auto_approved(self):
         """F09-T004: 白名单来源自动批准"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
@@ -123,7 +124,7 @@ class TestSourceRegistry:
         )
 
         result = await registry.register_source(source)
-        assert result.registered == True
+        assert result.registered is True
 
     @pytest.mark.asyncio
     async def test_register_duplicate_source_rejected(self):
@@ -147,8 +148,8 @@ class TestSourceRegistry:
 
         registry = MaterialSourceRegistry()
 
-        assert registry.is_whitelisted("国家统计局") == True
-        assert registry.is_whitelisted("未知来源") == False
+        assert registry.is_whitelisted("国家统计局") is True
+        assert registry.is_whitelisted("未知来源") is False
 
     @pytest.mark.asyncio
     async def test_is_whitelisted_registered_source(self):
@@ -294,12 +295,12 @@ class TestSecurityTests:
         tampered_content = "被篡改的内容"
 
         result = manager.detect_tampering(original_content, tampered_content)
-        assert result["tampering_detected"] == True
+        assert result["tampering_detected"] is True
 
     @pytest.mark.asyncio
     async def test_whitelist_trust_boost(self):
         """F09-S003: 白名单来源信任度提升"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
@@ -314,7 +315,7 @@ class TestSecurityTests:
     @pytest.mark.asyncio
     async def test_untrusted_source_penalty(self):
         """F09-S004: 不可信来源惩罚"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
@@ -333,7 +334,7 @@ class TestIntegrationTests:
     @pytest.mark.asyncio
     async def test_full_registration_workflow(self):
         """F09-I001: 完整注册工作流"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
@@ -365,7 +366,7 @@ class TestMaterialSecurityUncoveredBranches:
     @pytest.mark.asyncio
     async def test_register_duplicate_material(self):
         """register_material处理重复注册 (覆盖lines 108-110)"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
@@ -375,7 +376,7 @@ class TestMaterialSecurityUncoveredBranches:
             source=SourceInfo(name="Test", trust_level="VERIFIED")
         )
 
-        result1 = await manager.register_material(material)
+        await manager.register_material(material)
         result2 = await manager.register_material(material)
 
         assert result2.status == "REJECTED"
@@ -384,7 +385,7 @@ class TestMaterialSecurityUncoveredBranches:
     @pytest.mark.asyncio
     async def test_register_material_blocked_by_scan(self):
         """register_material处理扫描阻断 (覆盖line 121)"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
@@ -398,7 +399,7 @@ class TestMaterialSecurityUncoveredBranches:
 
     def test_calculate_trust_score_no_source(self):
         """calculate_trust_score处理无来源 (覆盖lines 189-190)"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager
 
         manager = MaterialSecurityManager()
 
@@ -410,11 +411,11 @@ class TestMaterialSecurityUncoveredBranches:
 
     def test_get_retrieval_weight_cached(self):
         """get_retrieval_weight返回缓存权重 (覆盖lines 200-201)"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo
+        from f09_material_security.material_security_manager import Material, MaterialSecurityManager, SourceInfo
 
         manager = MaterialSecurityManager()
 
-        material = Material(
+        Material(
             material_id="cached-material",
             content="Test content",
             source=SourceInfo(name="Test", trust_level="VERIFIED")
@@ -437,7 +438,11 @@ class TestMaterialSecurityUncoveredBranches:
     @pytest.mark.asyncio
     async def test_register_material_unknown_trust_status_pending(self):
         """register_material处理UNKNOWN trust_level且trust_score>=阈值时status=PENDING (覆盖line 141)"""
-        from f09_material_security.material_security_manager import MaterialSecurityManager, Material, SourceInfo, ScanStatus
+        from f09_material_security.material_security_manager import (
+            Material,
+            MaterialSecurityManager,
+            SourceInfo,
+        )
 
         class TestableManager(MaterialSecurityManager):
             BLOCK_THRESHOLDS = {"min_trust_score": 0.3, "min_scan_score": 0.9}

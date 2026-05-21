@@ -7,11 +7,11 @@ Implements double-submit cookie pattern for CSRF protection.
 import hashlib
 import secrets
 import time
-from typing import Callable, List, Optional
-from fastapi import Request, HTTPException, status
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response, JSONResponse
+from collections.abc import Callable
 
+from fastapi import HTTPException, Request, status
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse, Response
 
 CSRF_TOKEN_COOKIE_NAME = "csrf_token"
 CSRF_TOKEN_HEADER_NAME = "X-CSRF-Token"
@@ -65,13 +65,13 @@ class CSRFTokenManager:
         except (ValueError, IndexError):
             return False
 
-    def extract_token_from_header(self, request: Request) -> Optional[str]:
+    def extract_token_from_header(self, request: Request) -> str | None:
         """Extract CSRF token from request header"""
         return request.headers.get(CSRF_TOKEN_HEADER_NAME) or request.headers.get(
             CSRF_TOKEN_REQUEST_HEADER_NAME
         )
 
-    def extract_token_from_cookie(self, request: Request) -> Optional[str]:
+    def extract_token_from_cookie(self, request: Request) -> str | None:
         """Extract CSRF token from cookies"""
         return request.cookies.get(CSRF_TOKEN_COOKIE_NAME)
 
@@ -91,8 +91,8 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         self,
         app,
         token_manager: CSRFTokenManager = None,
-        safe_paths: List[str] = None,
-        exclude_paths: List[str] = None,
+        safe_paths: list[str] = None,
+        exclude_paths: list[str] = None,
     ):
         super().__init__(app)
         self.token_manager = token_manager or csrf_token_manager

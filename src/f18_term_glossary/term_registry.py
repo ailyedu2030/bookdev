@@ -4,9 +4,7 @@ F18: 术语注册表
 追踪术语的首次定义位置和重新定义情况
 """
 
-import uuid
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 
 @dataclass
@@ -60,7 +58,7 @@ class TermRegistry:
         else:
             self._redefinitions[term].append(registration)
 
-    def get_first_definition_location(self, term: str) -> Optional[str]:
+    def get_first_definition_location(self, term: str) -> str | None:
         """获取术语首次定义位置
 
         Args:

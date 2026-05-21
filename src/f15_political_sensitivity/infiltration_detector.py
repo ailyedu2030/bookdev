@@ -5,7 +5,6 @@ TDD GREEN阶段：最小实现让测试通过
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
 
 
 class ThreatType(Enum):
@@ -22,7 +21,7 @@ class DetectionResult:
     threat_type: ThreatType
     is_safe: bool
     confidence: float
-    matched_patterns: List[str]
+    matched_patterns: list[str]
 
 
 class InfiltrationDetector:
@@ -53,7 +52,7 @@ class InfiltrationDetector:
         r'攻击',
     ]
 
-    def _match_patterns(self, content: str, patterns: List[str]) -> List[str]:
+    def _match_patterns(self, content: str, patterns: list[str]) -> list[str]:
         matched = []
         for pattern in patterns:
             if re.search(pattern, content):
@@ -110,7 +109,7 @@ class InfiltrationDetector:
             matched_patterns=[]
         )
 
-    def detect_coordinated_behavior(self, accounts: List[str]) -> Optional[DetectionResult]:
+    def detect_coordinated_behavior(self, accounts: list[str]) -> DetectionResult | None:
         if len(accounts) >= 3:
             unique_accounts = set(accounts)
             if len(unique_accounts) < len(accounts) * 0.5:

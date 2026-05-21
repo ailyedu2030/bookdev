@@ -7,13 +7,14 @@ ChapterRepository - 章节仓储
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any
 
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
-from db.models import Chapter, ChapterContent, Section, Review
+from db.models import Chapter, ChapterContent, Review, Section
 from db.repositories.base_repository import BaseRepository
 
 
@@ -27,7 +28,7 @@ class ChapterRepository(BaseRepository[Chapter]):
         self,
         project_id: uuid.UUID,
         *,
-        status: Optional[str] = None,
+        status: str | None = None,
         order_by: str = "order_num",
     ) -> Sequence[Chapter]:
         """获取项目下的所有章节"""
@@ -36,7 +37,7 @@ class ChapterRepository(BaseRepository[Chapter]):
             filters["status"] = status
         return await self.find_all(filters=filters, order_by=order_by)
 
-    async def get_with_contents(self, chapter_id: uuid.UUID) -> Optional[Chapter]:
+    async def get_with_contents(self, chapter_id: uuid.UUID) -> Chapter | None:
         """获取章节及其内容"""
         stmt = (
             select(Chapter)
@@ -46,7 +47,7 @@ class ChapterRepository(BaseRepository[Chapter]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_with_sections(self, chapter_id: uuid.UUID) -> Optional[Chapter]:
+    async def get_with_sections(self, chapter_id: uuid.UUID) -> Chapter | None:
         """获取章节及其小节"""
         stmt = (
             select(Chapter)
@@ -56,7 +57,7 @@ class ChapterRepository(BaseRepository[Chapter]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_with_reviews(self, chapter_id: uuid.UUID) -> Optional[Chapter]:
+    async def get_with_reviews(self, chapter_id: uuid.UUID) -> Chapter | None:
         """获取章节及其审核记录"""
         stmt = (
             select(Chapter)
@@ -66,7 +67,7 @@ class ChapterRepository(BaseRepository[Chapter]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_full_chapter(self, chapter_id: uuid.UUID) -> Optional[Chapter]:
+    async def get_full_chapter(self, chapter_id: uuid.UUID) -> Chapter | None:
         """获取完整的章节信息（包含内容、小节、审核记录）"""
         stmt = (
             select(Chapter)
@@ -97,19 +98,19 @@ class ChapterRepository(BaseRepository[Chapter]):
             **kwargs,
         )
 
-    async def update_status(self, chapter_id: uuid.UUID, status: str) -> Optional[Chapter]:
+    async def update_status(self, chapter_id: uuid.UUID, status: str) -> Chapter | None:
         """更新章节状态"""
         return await self.update(chapter_id, status=status)
 
     async def update_content_hash(
         self, chapter_id: uuid.UUID, content_hash: str
-    ) -> Optional[Chapter]:
+    ) -> Chapter | None:
         """更新内容哈希"""
         return await self.update(chapter_id, content_hash=content_hash)
 
     async def update_word_count(
         self, chapter_id: uuid.UUID, word_count: int
-    ) -> Optional[Chapter]:
+    ) -> Chapter | None:
         """更新字数统计"""
         return await self.update(chapter_id, word_count=word_count)
 
@@ -158,7 +159,7 @@ class ChapterContentRepository(BaseRepository[ChapterContent]):
             order_by="created_at",
         )
 
-    async def get_latest(self, chapter_id: uuid.UUID) -> Optional[ChapterContent]:
+    async def get_latest(self, chapter_id: uuid.UUID) -> ChapterContent | None:
         """获取章节的最新内容"""
         stmt = (
             select(ChapterContent)
@@ -175,7 +176,7 @@ class ChapterContentRepository(BaseRepository[ChapterContent]):
         content: str,
         version: str,
         content_hash: str,
-        created_by: Optional[uuid.UUID] = None,
+        created_by: uuid.UUID | None = None,
     ) -> ChapterContent:
         """创建新的章节内容版本"""
         return await self.create(
@@ -188,7 +189,7 @@ class ChapterContentRepository(BaseRepository[ChapterContent]):
 
     async def get_by_hash(
         self, chapter_id: uuid.UUID, content_hash: str
-    ) -> Optional[ChapterContent]:
+    ) -> ChapterContent | None:
         """根据内容哈希获取内容"""
         return await self.get_one(chapter_id=chapter_id, content_hash=content_hash)
 
@@ -200,7 +201,7 @@ class SectionRepository(BaseRepository[Section]):
         super().__init__(Section, session)
 
     async def get_by_chapter(
-        self, chapter_id: uuid.UUID, *, status: Optional[str] = None
+        self, chapter_id: uuid.UUID, *, status: str | None = None
     ) -> Sequence[Section]:
         """获取章节下的所有小节"""
         filters = {"chapter_id": chapter_id}
@@ -208,7 +209,7 @@ class SectionRepository(BaseRepository[Section]):
             filters["status"] = status
         return await self.find_all(filters=filters, order_by="order_num")
 
-    async def get_with_parent(self, section_id: uuid.UUID) -> Optional[Section]:
+    async def get_with_parent(self, section_id: uuid.UUID) -> Section | None:
         """获取小节及其父小节"""
         stmt = (
             select(Section)

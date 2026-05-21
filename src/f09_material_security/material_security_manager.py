@@ -1,13 +1,12 @@
 """
 F09: 素材安全管理 - 素材安全管理器
 """
-import asyncio
 import hashlib
 import re
 import unicodedata
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
 from enum import Enum
+from typing import Any
 
 from f09_material_security.source_registry import MaterialSourceRegistry, SourceInfo
 
@@ -35,7 +34,7 @@ class ScanStatus(Enum):
 class Material:
     material_id: str = ""
     content: str = ""
-    source: Optional[SourceInfo] = None
+    source: SourceInfo | None = None
     trust_score: float = 0.0
     security_status: str = "PENDING"
 
@@ -46,7 +45,7 @@ class SecurityScanResult:
     sensitive_word_count: int = 0
     malicious_pattern_count: int = 0
     tampering_detected: bool = False
-    details: List[str] = field(default_factory=list)
+    details: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -106,14 +105,14 @@ class MaterialSecurityManager:
         "UNTRUSTED": 0.0
     }
 
-    def __init__(self, source_registry: Optional[MaterialSourceRegistry] = None):
+    def __init__(self, source_registry: MaterialSourceRegistry | None = None):
         self.source_registry = source_registry or MaterialSourceRegistry()
-        self._registered_materials: Dict[str, Material] = {}
-        self._material_weights: Dict[str, float] = {}
+        self._registered_materials: dict[str, Material] = {}
+        self._material_weights: dict[str, float] = {}
 
     def _normalize_content(self, content: str) -> str:
         """F09-001 FIX: 规范化内容以防止编码绕过
-        
+
         1. Unicode NFKC规范化
         2. 移除零宽度字符
         3. 全角转半角
@@ -121,13 +120,13 @@ class MaterialSecurityManager:
         # 移除零宽度字符
         for zwc, replacement in self.ENCODING_VARIANTS.items():
             content = content.replace(zwc, replacement)
-        
+
         # Unicode NFKC规范化
         content = unicodedata.normalize('NFKC', content)
-        
+
         # 全角转半角
         content = self._fullwidth_to_halfwidth(content)
-        
+
         return content
 
     def _fullwidth_to_halfwidth(self, text: str) -> str:
@@ -204,7 +203,7 @@ class MaterialSecurityManager:
 
     async def security_scan(self, content: str) -> SecurityScanResult:
         """安全扫描
-        
+
         F09-001 FIX: 使用正则和Unicode规范化防止编码绕过
         """
         sensitive_count = 0
@@ -272,7 +271,7 @@ class MaterialSecurityManager:
         self,
         original_content: str,
         current_content: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """检测篡改"""
         original_hash = hashlib.sha256(original_content.encode()).hexdigest()
         current_hash = hashlib.sha256(current_content.encode()).hexdigest()

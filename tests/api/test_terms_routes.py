@@ -4,10 +4,9 @@ Additional Terms API Tests for Higher Coverage
 Tests additional endpoints and edge cases for terms routes.
 """
 
-import pytest
-from datetime import datetime
 
-from api.deps import generate_uuid
+import pytest
+
 from tests.api.conftest import create_test_term
 
 

@@ -188,7 +188,7 @@ class TestAuditLogRepository:
         mock_log = MagicMock()
         repo = AuditLogRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_log) as mock_create:
-            result = await repo.create_log(
+            await repo.create_log(
                 event_type="login",
                 action="authenticate",
                 result="success"

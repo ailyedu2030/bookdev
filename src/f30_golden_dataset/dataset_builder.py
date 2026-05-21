@@ -6,8 +6,8 @@ F30: Golden Dataset系统 - Dataset构建器
 
 import json
 import os
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -16,11 +16,11 @@ class GoldenSample:
     sample_id: str
     quality_level: str
     expected_score: float
-    content: Dict[str, Any]
-    quality_metrics: Dict[str, float]
-    metadata: Dict[str, Any]
-    hallucination_markers: List[Dict[str, Any]] = None
-    regulation_errors: List[Dict[str, Any]] = None
+    content: dict[str, Any]
+    quality_metrics: dict[str, float]
+    metadata: dict[str, Any]
+    hallucination_markers: list[dict[str, Any]] = None
+    regulation_errors: list[dict[str, Any]] = None
 
     def __post_init__(self):
         if self.hallucination_markers is None:
@@ -48,9 +48,9 @@ class DatasetBuilder:
             samples_dir: 样本文件目录
         """
         self._samples_dir = samples_dir
-        self._samples: Dict[str, GoldenSample] = {}
+        self._samples: dict[str, GoldenSample] = {}
 
-    def load_all_samples(self) -> Dict[str, GoldenSample]:
+    def load_all_samples(self) -> dict[str, GoldenSample]:
         """
         加载所有样本
 
@@ -63,14 +63,14 @@ class DatasetBuilder:
         for filename in os.listdir(self._samples_dir):
             if filename.endswith(".json"):
                 filepath = os.path.join(self._samples_dir, filename)
-                with open(filepath, "r", encoding="utf-8") as f:
+                with open(filepath, encoding="utf-8") as f:
                     data = json.load(f)
                     sample = self._parse_sample(data)
                     self._samples[sample.sample_id] = sample
 
         return self._samples
 
-    def _parse_sample(self, data: Dict[str, Any]) -> GoldenSample:
+    def _parse_sample(self, data: dict[str, Any]) -> GoldenSample:
         """
         解析样本数据
 
@@ -93,7 +93,7 @@ class DatasetBuilder:
             regulation_errors=data.get("regulation_errors", [])
         )
 
-    def load_samples_by_quality(self, quality_level: str) -> List[GoldenSample]:
+    def load_samples_by_quality(self, quality_level: str) -> list[GoldenSample]:
         """
         按质量等级加载样本
 
@@ -115,7 +115,7 @@ class DatasetBuilder:
         self,
         min_score: float = 0.0,
         max_score: float = 10.0
-    ) -> List[GoldenSample]:
+    ) -> list[GoldenSample]:
         """
         按分数范围加载样本
 
@@ -134,7 +134,7 @@ class DatasetBuilder:
             if min_score <= sample.expected_score <= max_score
         ]
 
-    def get_calibration_samples(self) -> List[GoldenSample]:
+    def get_calibration_samples(self) -> list[GoldenSample]:
         """
         获取校准用样本
 
@@ -147,7 +147,7 @@ class DatasetBuilder:
         # 返回所有样本作为校准集
         return list(self._samples.values())
 
-    def add_sample(self, sample_data: Dict[str, Any]) -> GoldenSample:
+    def add_sample(self, sample_data: dict[str, Any]) -> GoldenSample:
         """
         添加样本到数据集
 
@@ -161,7 +161,7 @@ class DatasetBuilder:
         self._samples[sample.sample_id] = sample
         return sample
 
-    def validate_sample_structure(self, sample_data: Dict[str, Any]) -> bool:
+    def validate_sample_structure(self, sample_data: dict[str, Any]) -> bool:
         """
         验证样本结构
 

@@ -12,10 +12,9 @@ F21: 风险分级复核系统 - TDD RED阶段测试
 - 单元测试覆盖率 ≥84%
 """
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 RISK_LEVELS = {
     "CRITICAL": {
@@ -57,7 +56,7 @@ class TestRiskLevels:
         """F21-T002: 每个风险等级必须有分数范围"""
         from f21_risk_classification.risk_thresholds import RISK_LEVELS
 
-        for level, config in RISK_LEVELS.items():
+        for _level, config in RISK_LEVELS.items():
             assert "score_range" in config
             assert len(config["score_range"]) == 2
             assert config["score_range"][0] < config["score_range"][1]
@@ -85,7 +84,7 @@ class TestRiskLevels:
         """F21-T005: auto_approve必须是布尔值"""
         from f21_risk_classification.risk_thresholds import RISK_LEVELS
 
-        for level, config in RISK_LEVELS.items():
+        for _level, config in RISK_LEVELS.items():
             assert "auto_approve" in config
             assert isinstance(config["auto_approve"], bool)
 
@@ -523,8 +522,8 @@ class TestRiskClassificationIntegration:
 
     def test_full_classification_workflow(self):
         """F21-T050: 完整分类工作流"""
-        from f21_risk_classification.risk_classifier import RiskClassifier
         from f21_risk_classification.review_scheduler import ReviewScheduler
+        from f21_risk_classification.risk_classifier import RiskClassifier
 
         classifier = RiskClassifier()
         scheduler = ReviewScheduler()
@@ -582,8 +581,9 @@ class TestReviewSchedulerUncovered:
 
     def test_review_task_string_status_conversion(self):
         """ReviewTask接受string status并转换为enum (覆盖line 51)"""
-        from f21_risk_classification.review_scheduler import ReviewTask, ReviewStatus
         from datetime import datetime, timedelta
+
+        from f21_risk_classification.review_scheduler import ReviewStatus, ReviewTask
 
         task = ReviewTask(
             task_id="t1",

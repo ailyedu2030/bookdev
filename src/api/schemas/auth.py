@@ -2,9 +2,9 @@
 Authentication Schemas
 """
 
-from datetime import datetime, timezone
-from typing import Optional, Literal
-from pydantic import BaseModel, Field, EmailStr
+from typing import Literal
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 # User role literals - externalized enum values
@@ -37,8 +37,8 @@ class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=100)
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
-    role: Optional[str] = Field(default=UserRole.VIEWER)
-    organization_id: Optional[str] = None
+    role: str | None = Field(default=UserRole.VIEWER)
+    organization_id: str | None = None
 
 
 class UserLogin(BaseModel):
@@ -53,18 +53,18 @@ class UserResponse(BaseModel):
     username: str
     email: str
     role: str
-    organization_id: Optional[str] = None
+    organization_id: str | None = None
     clearance_level: int = Field(default=1, ge=1, le=5)
     created_at: str
-    updated_at: Optional[str] = None
+    updated_at: str | None = None
 
 
 class UserUpdate(BaseModel):
     """User update schema"""
-    username: Optional[str] = Field(default=None, min_length=3, max_length=100)
-    email: Optional[EmailStr] = None
-    organization_id: Optional[str] = None
-    clearance_level: Optional[int] = Field(default=None, ge=1, le=5)
+    username: str | None = Field(default=None, min_length=3, max_length=100)
+    email: EmailStr | None = None
+    organization_id: str | None = None
+    clearance_level: int | None = Field(default=None, ge=1, le=5)
 
 
 class UserRoleUpdate(BaseModel):
@@ -116,7 +116,7 @@ class RoleResponse(BaseModel):
     """Role response schema"""
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     created_at: str
 
 
@@ -125,4 +125,4 @@ class PermissionResponse(BaseModel):
     id: str
     resource: str
     action: str
-    description: Optional[str] = None
+    description: str | None = None

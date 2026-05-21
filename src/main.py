@@ -16,10 +16,10 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from api.router import api_router
-from api.middleware.rate_limit import RateLimitMiddleware, RateLimitConfig
-from api.middleware.security_headers import SecurityHeadersMiddleware, SecurityHeadersConfig
 from api.middleware.csrf import CSRFMiddleware
+from api.middleware.rate_limit import RateLimitConfig, RateLimitMiddleware
+from api.middleware.security_headers import SecurityHeadersConfig, SecurityHeadersMiddleware
+from api.router import api_router
 
 
 @asynccontextmanager
@@ -109,7 +109,6 @@ def create_app() -> FastAPI:
 
     @app.websocket("/ws")
     async def websocket_route(websocket):
-        from fastapi import WebSocket
         await websocket_endpoint(websocket)
 
     @app.exception_handler(Exception)

@@ -1,9 +1,9 @@
 """流水线阶段定义 — 定义教材编写流水线的8个阶段及其状态机。"""
 
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
 
 
 class PipelineStageStatus(Enum):
@@ -45,7 +45,7 @@ class PipelineStage(Enum):
 STAGES = list(PipelineStage)
 STAGE_ORDER = {s: i for i, s in enumerate(STAGES)}
 
-STAGE_DEPENDENCIES: Dict[PipelineStage, List[PipelineStage]] = {
+STAGE_DEPENDENCIES: dict[PipelineStage, list[PipelineStage]] = {
     PipelineStage.INITIALIZATION: [],
     PipelineStage.OUTLINE_GENERATION: [PipelineStage.INITIALIZATION],
     PipelineStage.CONTEXT_SETUP: [PipelineStage.OUTLINE_GENERATION],
@@ -56,7 +56,7 @@ STAGE_DEPENDENCIES: Dict[PipelineStage, List[PipelineStage]] = {
     PipelineStage.FINAL_GATE: [PipelineStage.QUALITY_ASSESSMENT],
 }
 
-STAGE_MODULES: Dict[PipelineStage, List[str]] = {
+STAGE_MODULES: dict[PipelineStage, list[str]] = {
     PipelineStage.INITIALIZATION: ["F00", "F01", "F24", "F28"],
     PipelineStage.OUTLINE_GENERATION: ["F04", "F05", "F25", "F22", "F27"],
     PipelineStage.CONTEXT_SETUP: ["F02", "F03"],
@@ -72,14 +72,14 @@ STAGE_MODULES: Dict[PipelineStage, List[str]] = {
 class StageResult:
     stage: PipelineStage
     status: PipelineStageStatus = PipelineStageStatus.PENDING
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     duration_seconds: float = 0.0
-    modules_executed: List[str] = field(default_factory=list)
-    modules_failed: List[str] = field(default_factory=list)
-    output: Dict[str, Any] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
-    metrics: Dict[str, float] = field(default_factory=dict)
+    modules_executed: list[str] = field(default_factory=list)
+    modules_failed: list[str] = field(default_factory=list)
+    output: dict[str, Any] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    metrics: dict[str, float] = field(default_factory=dict)
 
     @property
     def success(self) -> bool:
@@ -89,7 +89,7 @@ class StageResult:
     def has_errors(self) -> bool:
         return len(self.errors) > 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "stage": self.stage.value,
             "status": self.status.value,
@@ -107,14 +107,14 @@ class StageResult:
 @dataclass
 class PipelineState:
     pipeline_id: str
-    current_stage: Optional[PipelineStage] = None
-    stage_results: Dict[PipelineStage, StageResult] = field(default_factory=dict)
-    completed_stages: List[PipelineStage] = field(default_factory=list)
-    failed_stages: List[PipelineStage] = field(default_factory=list)
-    checkpoints: List[Dict[str, Any]] = field(default_factory=list)
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    current_stage: PipelineStage | None = None
+    stage_results: dict[PipelineStage, StageResult] = field(default_factory=dict)
+    completed_stages: list[PipelineStage] = field(default_factory=list)
+    failed_stages: list[PipelineStage] = field(default_factory=list)
+    checkpoints: list[dict[str, Any]] = field(default_factory=list)
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def new(cls, pipeline_id: str) -> "PipelineState":
@@ -124,7 +124,7 @@ class PipelineState:
         return state
 
     @classmethod
-    def from_checkpoint(cls, checkpoint_data: Dict[str, Any]) -> "PipelineState":
+    def from_checkpoint(cls, checkpoint_data: dict[str, Any]) -> "PipelineState":
         state = cls(pipeline_id=checkpoint_data["pipeline_id"])
         current_stage_val = checkpoint_data.get("current_stage")
         if current_stage_val is not None:
@@ -152,7 +152,7 @@ class PipelineState:
 
         return state
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "pipeline_id": self.pipeline_id,
             "current_stage": self.current_stage.value if self.current_stage else None,

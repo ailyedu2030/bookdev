@@ -4,7 +4,6 @@ F19: 连贯性分析器
 分析章节间的逻辑连贯性，检测逻辑缺口
 """
 
-from typing import Optional
 
 from f19_logic_chain.dependency_graph import DependencyGraph
 
@@ -45,7 +44,7 @@ class CoherenceAnalyzer:
         gaps = []
         nodes = self.graph.get_all_nodes()
 
-        for i, node in enumerate(nodes):
+        for _i, node in enumerate(nodes):
             deps = self.graph.get_dependencies(node)
 
             if not deps:

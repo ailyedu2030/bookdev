@@ -2,12 +2,10 @@
 F07: DOI强制解析服务 - 单元测试
 TDD RED阶段：测试必须失败，因为实现不存在
 """
-import pytest
 import asyncio
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
-from unittest.mock import AsyncMock, MagicMock, patch
-import hashlib
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 class TestDOIVerification:
@@ -16,25 +14,25 @@ class TestDOIVerification:
     @pytest.mark.asyncio
     async def test_verify_valid_doi(self):
         """F07-T001: 验证有效DOI"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, DOIResult
+        from f07_doi_verification.doi_verifier import DOIVerifier
 
         verifier = DOIVerifier()
 
         result = await verifier.verify("10.1234/example.123")
 
-        assert result.exists == True
+        assert result.exists is True
         assert result.metadata is not None
 
     @pytest.mark.asyncio
     async def test_reject_doi_without_prefix(self):
         """F07-T002: 拒绝无前缀DOI"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, DOIResult
+        from f07_doi_verification.doi_verifier import DOIVerifier
 
         verifier = DOIVerifier()
 
         result = await verifier.verify("invalid-doi")
 
-        assert result.exists == False
+        assert result.exists is False
         assert "INVALID_FORMAT" in result.reason
 
     @pytest.mark.asyncio
@@ -46,12 +44,12 @@ class TestDOIVerification:
 
         result = await verifier.verify("10.9999/nonexistent")
 
-        assert result.exists == False
+        assert result.exists is False
 
     @pytest.mark.asyncio
     async def test_citation_must_include_fact_hash(self):
         """F07-T004: 引用必须包含fact_hash"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, Citation, CitationValidationError
+        from f07_doi_verification.doi_verifier import Citation, CitationValidationError, DOIVerifier
 
         verifier = DOIVerifier()
 
@@ -80,12 +78,12 @@ class TestDOIVerification:
             cited_content=content
         )
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     @pytest.mark.asyncio
     async def test_circular_reference_detection(self):
         """F07-T006: 循环引用检测"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, FactRegistry, Citation
+        from f07_doi_verification.doi_verifier import Citation, DOIVerifier, FactRegistry
 
         registry = FactRegistry()
         verifier = DOIVerifier(fact_registry=registry)
@@ -99,7 +97,7 @@ class TestDOIVerification:
         ]
 
         has_cycle = verifier.detect_circular_reference(citations)
-        assert has_cycle == True
+        assert has_cycle is True
 
     @pytest.mark.asyncio
     async def test_doi_format_validation(self):
@@ -115,7 +113,7 @@ class TestDOIVerification:
         ]
 
         for doi in valid_dois:
-            assert verifier._is_valid_doi_format(doi) == True
+            assert verifier._is_valid_doi_format(doi) is True
 
         invalid_dois = [
             "invalid",
@@ -124,7 +122,7 @@ class TestDOIVerification:
         ]
 
         for doi in invalid_dois:
-            assert verifier._is_valid_doi_format(doi) == False
+            assert verifier._is_valid_doi_format(doi) is False
 
     @pytest.mark.asyncio
     async def test_crossref_api_called(self):
@@ -197,7 +195,7 @@ class TestFactRegistry:
         content = "原始内容"
         fact_hash = registry.register_fact(content, ["doi-A"])
 
-        new_hash = registry.add_version(fact_hash, "更新内容", "修正错误")
+        registry.add_version(fact_hash, "更新内容", "修正错误")
 
         history = registry.get_fact_history(fact_hash)
         assert len(history) == 2
@@ -216,7 +214,7 @@ class TestSecurityTests:
         # 明显捏造的DOI前缀
         result = await verifier.verify("10.99999/fabricated")
 
-        assert result.exists == False
+        assert result.exists is False
 
     @pytest.mark.asyncio
     async def test_citation_hash_tampering_detection(self):
@@ -238,12 +236,12 @@ class TestSecurityTests:
             cited_content=tampered_content
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
 
     @pytest.mark.asyncio
     async def test_self_reference_cycle_detection(self):
         """F07-S003: 自我引用循环检测"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, FactRegistry, Citation
+        from f07_doi_verification.doi_verifier import Citation, DOIVerifier, FactRegistry
 
         registry = FactRegistry()
         verifier = DOIVerifier(fact_registry=registry)
@@ -256,7 +254,7 @@ class TestSecurityTests:
         ]
 
         has_cycle = verifier.detect_circular_reference(citations)
-        assert has_cycle == False  # 自己引用自己不算循环
+        assert has_cycle is False  # 自己引用自己不算循环
 
         # A引用B，B引用A
         hash_a2 = registry.register_fact("事实A", ["doi-B"])
@@ -268,12 +266,12 @@ class TestSecurityTests:
         ]
 
         has_cycle2 = verifier.detect_circular_reference(citations2)
-        assert has_cycle2 == True
+        assert has_cycle2 is True
 
     @pytest.mark.asyncio
     async def test_long_chain_cycle_detection(self):
         """F07-S004: 长链循环检测"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, FactRegistry, Citation
+        from f07_doi_verification.doi_verifier import Citation, DOIVerifier, FactRegistry
 
         registry = FactRegistry()
         verifier = DOIVerifier(fact_registry=registry)
@@ -300,12 +298,12 @@ class TestSecurityTests:
         ]
 
         has_cycle = verifier.detect_circular_reference(citations)
-        assert has_cycle == True
+        assert has_cycle is True
 
     @pytest.mark.asyncio
     async def test_missing_fact_hash_rejection(self):
         """F07-S005: 缺少fact_hash的引用被拒绝"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, Citation, CitationValidationError
+        from f07_doi_verification.doi_verifier import Citation, CitationValidationError, DOIVerifier
 
         verifier = DOIVerifier()
 
@@ -332,7 +330,7 @@ class TestIntegrationTests:
 
         # 2. 验证DOI存在
         doi_result = await verifier.verify("10.1234/ai-research")
-        assert doi_result.exists == True
+        assert doi_result.exists is True
 
         # 3. 验证引用内容
         citation_result = await verifier.verify_citation_content(
@@ -340,12 +338,12 @@ class TestIntegrationTests:
             fact_hash=fact_hash,
             cited_content=content
         )
-        assert citation_result.is_valid == True
+        assert citation_result.is_valid is True
 
     @pytest.mark.asyncio
     async def test_verifier_and_registry_integration(self):
         """F07-I002: 核实器与注册表集成"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, FactRegistry, Citation
+        from f07_doi_verification.doi_verifier import Citation, DOIVerifier, FactRegistry
 
         registry = FactRegistry()
         verifier = DOIVerifier(fact_registry=registry)
@@ -361,7 +359,7 @@ class TestIntegrationTests:
 
         # 验证无循环引用
         has_cycle = verifier.detect_circular_reference(citations)
-        assert has_cycle == False
+        assert has_cycle is False
 
 
 class TestFactRegistryUncoveredBranches:
@@ -375,7 +373,7 @@ class TestFactRegistryUncoveredBranches:
         registry = FactRegistry()
         result = registry.verify_fact("nonexistent_hash", "verifier_001")
 
-        assert result == False
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_add_version_not_found(self):
@@ -396,10 +394,10 @@ class TestFactRegistryUncoveredBranches:
 
         result = registry.verify_fact(hash1, "verifier_001")
 
-        assert result == True
+        assert result is True
         fact = registry._facts.get(hash1)
         assert fact is not None
-        assert fact.is_verified == True
+        assert fact.is_verified is True
         assert fact.verifier_id == "verifier_001"
 
     def test_get_fact_history_not_found(self):
@@ -442,8 +440,9 @@ class TestDOIVerifierUncovered:
     @pytest.mark.asyncio
     async def test_verify_timeout(self):
         """verify处理超时 (覆盖lines 176-182)"""
+        from unittest.mock import AsyncMock, patch
+
         from f07_doi_verification.doi_verifier import DOIVerifier
-        from unittest.mock import patch, AsyncMock
 
         verifier = DOIVerifier()
 
@@ -452,14 +451,15 @@ class TestDOIVerifierUncovered:
 
             result = await verifier.verify("10.1234/test")
 
-            assert result.exists == False
+            assert result.exists is False
             assert "TIMEOUT" in result.reason
 
     @pytest.mark.asyncio
     async def test_verify_exception(self):
         """verify处理异常 (覆盖lines 183-189)"""
+        from unittest.mock import AsyncMock, patch
+
         from f07_doi_verification.doi_verifier import DOIVerifier
-        from unittest.mock import patch, AsyncMock
 
         verifier = DOIVerifier()
 
@@ -468,7 +468,7 @@ class TestDOIVerifierUncovered:
 
             result = await verifier.verify("10.1234/test")
 
-            assert result.exists == False
+            assert result.exists is False
             assert "ERROR:" in result.reason
 
     def test_is_valid_doi_format_empty(self):
@@ -477,7 +477,7 @@ class TestDOIVerifierUncovered:
 
         verifier = DOIVerifier()
         result = verifier._is_valid_doi_format("")
-        assert result == False
+        assert result is False
 
 
 class TestCitationValidationUncovered:
@@ -485,7 +485,7 @@ class TestCitationValidationUncovered:
 
     def test_validate_citation_format_missing_fact_hash(self):
         """validate_citation_format处理缺失fact_hash (覆盖lines 211-213)"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, Citation, CitationValidationError
+        from f07_doi_verification.doi_verifier import Citation, CitationValidationError, DOIVerifier
 
         verifier = DOIVerifier()
         citation = Citation(doi="10.1234/test", fact_hash=None)
@@ -495,7 +495,7 @@ class TestCitationValidationUncovered:
 
     def test_validate_citation_format_missing_doi(self):
         """validate_citation_format处理缺失DOI (覆盖lines 215-216)"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, Citation, CitationValidationError
+        from f07_doi_verification.doi_verifier import Citation, CitationValidationError, DOIVerifier
 
         verifier = DOIVerifier()
         citation = Citation(doi="", fact_hash="abc123")
@@ -505,7 +505,7 @@ class TestCitationValidationUncovered:
 
     def test_validate_citation_format_invalid_format(self):
         """validate_citation_format处理无效DOI格式 (覆盖lines 218-221)"""
-        from f07_doi_verification.doi_verifier import DOIVerifier, Citation, CitationValidationError
+        from f07_doi_verification.doi_verifier import Citation, CitationValidationError, DOIVerifier
 
         verifier = DOIVerifier()
         citation = Citation(doi="invalid-format", fact_hash="abc123")

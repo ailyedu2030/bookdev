@@ -1,8 +1,8 @@
 # F00: Kafka事件总线系统
 
-from f00_kafka_eventbus.event_bus import create_event_bus, RealEventBus
+from f00_kafka_eventbus.event_bus import RealEventBus, create_event_bus
+from f00_kafka_eventbus.event_definitions import EVENTS, Event, InvalidEventTypeError
 from f00_kafka_eventbus.mock_bus import MockEventBus
-from f00_kafka_eventbus.event_definitions import Event, EVENTS, InvalidEventTypeError
 from f00_kafka_eventbus.producer import KafkaConfig
 
 try:

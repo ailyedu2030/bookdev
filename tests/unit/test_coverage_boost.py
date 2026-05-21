@@ -17,15 +17,13 @@ Coverage Boost Tests - TDD阶段测试
 - f31_minimax_client/rate_limiter.py (97%)
 """
 
-import pytest
+import json
 import os
 import sys
 import tempfile
-import asyncio
-import json
-import subprocess
-from unittest.mock import MagicMock, AsyncMock, patch
-from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -35,7 +33,7 @@ class TestF18ConsistencyCheckerCoverage:
 
     def test_check_all_terms_inconsistent_status(self):
         """F18-CG001: check_all_terms中INCONSISTENT状态分支 (覆盖lines 68-69)"""
-        from f18_term_glossary.consistency_checker import ConsistencyChecker, ConsistencyStatus
+        from f18_term_glossary.consistency_checker import ConsistencyChecker
         from f18_term_glossary.term_glossary_service import TermGlossaryService
 
         glossary = TermGlossaryService()
@@ -50,7 +48,7 @@ class TestF18ConsistencyCheckerCoverage:
 
     def test_check_all_terms_undefined_status(self):
         """F18-CG002: check_all_terms中UNDEFINED状态分支 (覆盖lines 70-71)"""
-        from f18_term_glossary.consistency_checker import ConsistencyChecker, ConsistencyStatus
+        from f18_term_glossary.consistency_checker import ConsistencyChecker
         from f18_term_glossary.term_glossary_service import TermGlossaryService
 
         glossary = TermGlossaryService()
@@ -64,7 +62,7 @@ class TestF18ConsistencyCheckerCoverage:
 
     def test_check_domain_consistency_with_terms(self):
         """F18-CG003: check_domain_consistency正常调用 (覆盖line 126)"""
-        from f18_term_glossary.consistency_checker import ConsistencyChecker, ConsistencyStatus
+        from f18_term_glossary.consistency_checker import ConsistencyChecker
         from f18_term_glossary.term_glossary_service import TermGlossaryService
 
         glossary = TermGlossaryService()
@@ -84,7 +82,7 @@ class TestF20JudgeServiceCoverage:
 
     def test_mock_llm_client_raises_exception(self):
         """F20-CG001: MockLLMClient生成时抛出异常 (覆盖line 75)"""
-        from f20_llm_judge.judge_service import MockLLMClient, JudgeService
+        from f20_llm_judge.judge_service import MockLLMClient
 
         client = MockLLMClient(should_fail=True)
 
@@ -116,8 +114,9 @@ class TestF20JudgeServiceCoverage:
 
         service = JudgeService(llm_client=mock_client)
 
-        import pytest
         import asyncio
+
+        import pytest
         with pytest.raises(JudgeServiceError):
             asyncio.run(service.judge_content("test content"))
 
@@ -127,7 +126,7 @@ class TestF16SamplingEngineCoverage:
 
     def test_default_strata_empty_chapters(self):
         """F16-CG001: _default_strata处理空列表 (覆盖line 109)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         result = engine._default_strata([])
@@ -136,7 +135,7 @@ class TestF16SamplingEngineCoverage:
 
     def test_systematic_sampling_interval_zero(self):
         """F16-CG002: systematic_sampling处理interval为0 (覆盖line 131)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -150,7 +149,7 @@ class TestF16SamplingEngineCoverage:
 
     def test_systematic_sampling_interval_zero_returns_chapters(self):
         """F16-CG003: systematic_sampling interval为0时返回前sample_size个 (覆盖line 136)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -164,7 +163,7 @@ class TestF16SamplingEngineCoverage:
 
     def test_cluster_sampling_returns_single_chapter(self):
         """F16-CG004: cluster_sampling单章节时返回该章节 (覆盖line 162)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -213,7 +212,7 @@ class TestF27GraphRAGCoverage:
 
     def test_find_path_start_equals_end(self):
         """F27-CG001: find_path处理start==end (覆盖line 52)"""
-        from f27_graph_rag.graph_rag_query import KnowledgeGraph, GraphNode, GraphEdge
+        from f27_graph_rag.graph_rag_query import GraphNode, KnowledgeGraph
 
         kg = KnowledgeGraph()
         node = GraphNode(id="a", label="A")
@@ -225,7 +224,7 @@ class TestF27GraphRAGCoverage:
 
     def test_find_path_no_path_found(self):
         """F27-CG002: find_path未找到路径 (覆盖line 68)"""
-        from f27_graph_rag.graph_rag_query import KnowledgeGraph, GraphNode, GraphEdge
+        from f27_graph_rag.graph_rag_query import GraphNode, KnowledgeGraph
 
         kg = KnowledgeGraph()
         node_a = GraphNode(id="a", label="A")
@@ -239,7 +238,7 @@ class TestF27GraphRAGCoverage:
 
     def test_rag_search_no_matches(self):
         """F27-CG003: RAGEngine.search无匹配时 (覆盖line 102)"""
-        from f27_graph_rag.graph_rag_query import RAGEngine, RAGDocument
+        from f27_graph_rag.graph_rag_query import RAGDocument, RAGEngine
 
         engine = RAGEngine()
         doc = RAGDocument(id="d1", content="This is about machine learning", embedding=[])
@@ -288,7 +287,7 @@ class TestF29QualityGateCoverage:
 
     def test_linter_check_directory_not_file_or_dir(self):
         """F29-CG001: LinterChecker检查既不是文件也不是目录 (覆盖line 58)"""
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         with patch("os.path.exists", return_value=True):
@@ -300,7 +299,7 @@ class TestF29QualityGateCoverage:
 
     def test_linter_check_file_with_exception(self):
         """F29-CG002: LinterChecker._check_file处理异常 (覆盖line 83-88)"""
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         with patch("builtins.open", side_effect=Exception("Read error")):
@@ -310,7 +309,7 @@ class TestF29QualityGateCoverage:
 
     def test_coverage_tracker_threshold_not_met(self):
         """F29-CG003: CoverageTracker覆盖率未达阈值 (覆盖lines 218, 225-230)"""
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
         with patch.object(tracker, "_parse_coverage_file", return_value=50.0):
@@ -323,7 +322,7 @@ class TestF29QualityGateCoverage:
 
     def test_coverage_tracker_no_coverage_file(self):
         """F29-CG004: CoverageTracker无覆盖率文件 (覆盖lines 206-212)"""
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
         with patch("os.path.exists", return_value=False):
@@ -398,7 +397,7 @@ class TestDbInitCoverage:
 
             with patch("db._get_session_maker", return_value=session_maker_mock):
                 try:
-                    async with get_db_session() as session:
+                    async with get_db_session():
                         pass
                 except Exception:
                     pass
@@ -419,7 +418,7 @@ class TestDbInitCoverage:
             session_maker_mock.return_value.__aexit__.return_value = None
 
             with patch("db._get_session_maker", return_value=session_maker_mock):
-                async with get_db_session() as session:
+                async with get_db_session():
                     pass
 
                 session_mock.commit.assert_called()
@@ -429,9 +428,8 @@ class TestDbInitCoverage:
 
     def test_lazy_engine_creation(self):
         """DB-CG003: 懒加载引擎创建 (覆盖lines 46-55)"""
-        from db import _get_engine, _get_session_maker
-
         import db
+        from db import _get_engine, _get_session_maker
         db._engine = None
         db._async_session_maker = None
 
@@ -440,8 +438,8 @@ class TestDbInitCoverage:
                 mock_engine.return_value = MagicMock()
                 mock_session_maker.return_value = MagicMock()
 
-                engine = _get_engine()
-                maker = _get_session_maker()
+                _get_engine()
+                _get_session_maker()
 
                 mock_engine.assert_called_once()
 
@@ -499,6 +497,7 @@ class TestF31RateLimiterCoverage:
     def test_wait_for_available_no_requests_in_window(self):
         """F31-CG001: wait_for_available窗口内无请求 (覆盖line 85)"""
         import asyncio
+
         from f31_minimax_client.rate_limiter import RateLimiter
 
         limiter = RateLimiter(max_rpm=60)
@@ -525,7 +524,7 @@ class TestF16AdditionalCoverage:
 
     def test_sampling_engine_stratified_sampling_no_strata(self):
         """F16-CG011: stratified_sampling无strata参数 (覆盖line 73)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -543,7 +542,7 @@ class TestF27AdditionalCoverage:
 
     def test_graph_rag_answer_generation_no_context(self):
         """F27-CG010: _generate_answer无上下文时 (覆盖lines 284-285)"""
-        from f27_graph_rag.graph_rag_query import GraphRAGQuery, KnowledgeGraph, RAGEngine, GraphNode
+        from f27_graph_rag.graph_rag_query import GraphRAGQuery, KnowledgeGraph, RAGEngine
 
         kg = KnowledgeGraph()
         rag = RAGEngine()
@@ -560,7 +559,7 @@ class TestF29AdditionalCoverage:
 
     def test_security_scan_directory_walk(self):
         """F29-CG010: SecurityScanner扫描目录 (覆盖lines 135-146)"""
-        from f29_quality_gate.quality_gate import SecurityScanner, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, SecurityScanner
 
         scanner = SecurityScanner()
 
@@ -576,7 +575,7 @@ class TestF29AdditionalCoverage:
 
     def test_linter_check_file_is_file(self, tmp_path):
         """F29-CG011: LinterChecker检查文件 (覆盖line 54)"""
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         test_file = tmp_path / "test.py"
@@ -588,7 +587,7 @@ class TestF29AdditionalCoverage:
 
     def test_linter_check_file_syntax_error(self, tmp_path):
         """F29-CG012: LinterChecker检查语法错误 (覆盖lines 68-77)"""
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         test_file = tmp_path / "syntax_error.py"
@@ -600,7 +599,7 @@ class TestF29AdditionalCoverage:
 
     def test_linter_check_directory_walk(self, tmp_path):
         """F29-CG013: LinterChecker遍历目录 (覆盖lines 123-156)"""
-        from f29_quality_gate.quality_gate import LinterChecker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, LinterChecker
 
         linter = LinterChecker()
         test_dir = tmp_path / "pkg"
@@ -614,7 +613,7 @@ class TestF29AdditionalCoverage:
 
     def test_coverage_tracker_threshold_met(self, tmp_path):
         """F29-CG014: CoverageTracker达到阈值 (覆盖line 218)"""
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
         cov_file = tmp_path / ".coverage"
@@ -627,7 +626,7 @@ class TestF29AdditionalCoverage:
 
     def test_coverage_tracker_exception_parsing(self, tmp_path):
         """F29-CG015: CoverageTracker解析异常 (覆盖lines 232-233)"""
-        from f29_quality_gate.quality_gate import CoverageTracker, CheckStatus
+        from f29_quality_gate.quality_gate import CheckStatus, CoverageTracker
 
         tracker = CoverageTracker()
         cov_file = tmp_path / ".coverage"
@@ -662,7 +661,7 @@ class TestF16SamplingEngineEdgeCases:
 
     def test_stratified_sampling_single_stratum(self):
         """F16-CG013: stratified_sampling单层 (覆盖line 73)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -724,7 +723,7 @@ class TestF27GraphRAGEdgeCases:
 
     def test_find_path_with_edges(self):
         """F27-CG011: find_path有边的情况 (覆盖lines 52, 68)"""
-        from f27_graph_rag.graph_rag_query import KnowledgeGraph, GraphNode, GraphEdge
+        from f27_graph_rag.graph_rag_query import GraphEdge, GraphNode, KnowledgeGraph
 
         kg = KnowledgeGraph()
         node_a = GraphNode(id="a", label="A")
@@ -743,6 +742,7 @@ class TestF31RateLimiterEdgeCases:
     def test_wait_for_available_no_limit(self):
         """F31-CG010: wait_for_available无限制 (覆盖line 85)"""
         import asyncio
+
         from f31_minimax_client.rate_limiter import RateLimiter
 
         limiter = RateLimiter(max_rpm=999999)
@@ -786,9 +786,10 @@ class TestF18ConsistencyCheckerCoverageGaps:
 
     def test_check_all_terms_inconsistent_and_undefined_counts(self):
         """F18-CG008: check_all_terms处理INCONSISTENT和UNDEFINED计数 (覆盖lines 68-71)"""
+        from unittest.mock import MagicMock
+
         from f18_term_glossary.consistency_checker import ConsistencyChecker, ConsistencyStatus
         from f18_term_glossary.term_glossary_service import TermGlossaryService
-        from unittest.mock import MagicMock
 
         glossary = MagicMock(spec=TermGlossaryService)
         checker = ConsistencyChecker(glossary)
@@ -829,9 +830,10 @@ class TestF18ConsistencyCheckerCoverageGaps:
 
     def test_check_domain_consistency_inconsistencies_found(self):
         """F18-CG009: check_domain_consistency处理INCONSISTENT状态 (覆盖line 126)"""
+        from unittest.mock import MagicMock
+
         from f18_term_glossary.consistency_checker import ConsistencyChecker, ConsistencyStatus
         from f18_term_glossary.term_glossary_service import TermGlossaryService
-        from unittest.mock import MagicMock
 
         glossary = MagicMock(spec=TermGlossaryService)
         checker = ConsistencyChecker(glossary)
@@ -860,7 +862,7 @@ class TestF27GraphRAGCoverageGaps:
 
     def test_rag_engine_search_partial_word_match(self):
         """F27-CG003: RAGEngine.search部分单词匹配 (覆盖line 102)"""
-        from f27_graph_rag.graph_rag_query import RAGEngine, RAGDocument
+        from f27_graph_rag.graph_rag_query import RAGDocument, RAGEngine
 
         engine = RAGEngine()
 
@@ -886,7 +888,7 @@ class TestF16SamplingEngineCoverageGaps:
 
     def test_systematic_sampling_interval_zero_edge(self):
         """F16-CG014: systematic_sampling interval计算为零边界 (覆盖line 136)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -900,7 +902,7 @@ class TestF16SamplingEngineCoverageGaps:
 
     def test_cluster_sampling_no_clusters_edge(self):
         """F16-CG015: cluster_sampling无法形成簇 (覆盖line 162)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = []
@@ -915,10 +917,10 @@ class TestF20JudgeServiceCoverageGaps:
 
     def test_judge_content_json_decode_error_unreachable(self):
         """F20-CG004: judge_content JSONDecodeError (覆盖line 152)"""
-        from f20_llm_judge.judge_service import JudgeService, JudgeServiceError
-        from unittest.mock import AsyncMock
-        import json
         import asyncio
+        from unittest.mock import AsyncMock
+
+        from f20_llm_judge.judge_service import JudgeService, JudgeServiceError
 
         mock_client = AsyncMock()
         mock_client.generate.return_value = "not valid json"

@@ -4,7 +4,6 @@ F19: 依赖图
 提供图数据结构，支持节点和边的操作
 """
 
-from typing import Optional
 
 
 class DependencyGraph:
@@ -61,7 +60,7 @@ class DependencyGraph:
                 independent.append(node)
         return independent
 
-    def find_path(self, start: str, end: str) -> Optional[list[str]]:
+    def find_path(self, start: str, end: str) -> list[str] | None:
         """查找从start到end的路径"""
         if start not in self._nodes or end not in self._nodes:
             return None
@@ -117,7 +116,7 @@ class DependencyGraph:
     def topological_sort(self) -> list[str]:
         """拓扑排序"""
         in_degree = {node: 0 for node in self._nodes}
-        for source, targets in self._adjacency.items():
+        for _source, targets in self._adjacency.items():
             for target in targets:
                 in_degree[target] += 1
 

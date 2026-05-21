@@ -10,33 +10,30 @@ Handles content security operations:
 
 import os
 import sys
-from datetime import datetime
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+from api.deps import (
+    User,
+    require_permission,
+)
+from api.middleware.csrf import csrf_protect
+from api.middleware.rate_limit import RateLimitConfig, rate_limit
 from api.schemas.common import (
     BatchScanRequest,
     ConceptVerifyRequest,
-    ScanRequest,
-    ScanResponse,
     DOIVerifyRequest,
     DOIVerifyResponse,
     RegulationVerifyRequest,
     RegulationVerifyResponse,
+    ScanRequest,
+    ScanResponse,
     SemanticScanRequest,
     SemanticScanResponse,
     SuccessResponse,
 )
-from api.deps import (
-    get_current_active_user,
-    User,
-    require_permission,
-    generate_uuid,
-)
-from api.middleware.csrf import csrf_protect
-from api.middleware.rate_limit import RateLimitConfig, rate_limit
 
 router = APIRouter(prefix="/api/security", tags=["Security"])
 
@@ -246,8 +243,8 @@ async def semantic_scan(
 )
 async def register_material(
     content_hash: str,
-    source_url: Optional[str] = None,
-    copyright_info: Optional[str] = None,
+    source_url: str | None = None,
+    copyright_info: str | None = None,
     user: User = Depends(require_permission("security:material_register")),
 ):
     """

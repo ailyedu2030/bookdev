@@ -11,28 +11,27 @@ Handles project CRUD operations:
 """
 
 from datetime import datetime
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
 
-from api.schemas.project import (
-    ProjectCreate,
-    ProjectUpdate,
-    ProjectResponse,
-    ProjectMemberAdd,
-    ProjectMemberResponse,
-    ProjectListResponse,
-    ProjectStats,
-)
-from api.schemas.common import SuccessResponse, PaginatedResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
 from api.deps import (
-    get_db,
-    get_current_active_user,
     DatabaseSession,
     User,
+    get_current_active_user,
+    get_db,
     require_permission,
-    require_role,
 )
 from api.middleware.csrf import csrf_protect
+from api.schemas.common import SuccessResponse
+from api.schemas.project import (
+    ProjectCreate,
+    ProjectListResponse,
+    ProjectMemberAdd,
+    ProjectMemberResponse,
+    ProjectResponse,
+    ProjectStats,
+    ProjectUpdate,
+)
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
@@ -41,7 +40,7 @@ router = APIRouter(prefix="/api/projects", tags=["Projects"])
 async def list_projects(
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=100),
-    status_filter: Optional[str] = Query(default=None),
+    status_filter: str | None = Query(default=None),
     user: User = Depends(get_current_active_user),
     db: DatabaseSession = Depends(get_db),
 ):

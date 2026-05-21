@@ -4,18 +4,18 @@ CSRF Middleware Tests
 Tests for CSRF protection middleware and token management.
 """
 
-import pytest
 import time
-from unittest.mock import MagicMock, patch, AsyncMock
-from fastapi import HTTPException
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from api.middleware.csrf import (
-    CSRFTokenManager,
-    CSRFMiddleware,
-    csrf_protect,
     CSRF_TOKEN_COOKIE_NAME,
     CSRF_TOKEN_HEADER_NAME,
+    CSRFMiddleware,
+    CSRFTokenManager,
+    csrf_protect,
 )
+from fastapi import HTTPException
 
 
 class TestCSRFTokenManager:

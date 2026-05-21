@@ -9,31 +9,27 @@ Tests for:
 - Utility functions
 """
 
-import pytest
-import time
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, AsyncMock
-from fastapi import HTTPException
+from datetime import timedelta
 
+import pytest
 from api.deps import (
-    User,
-    TokenData,
-    ROLE_PERMISSIONS,
     ROLE_HIERARCHY,
-    verify_password,
-    get_password_hash,
+    ROLE_PERMISSIONS,
+    DatabaseSession,
+    RBACChecker,
+    TokenData,
+    User,
     create_access_token,
     create_refresh_token,
     decode_token,
     generate_uuid,
+    get_password_hash,
     hash_content,
-    RBACChecker,
     require_permission,
     require_role,
-    get_current_user,
-    get_current_active_user,
-    DatabaseSession,
+    verify_password,
 )
+from fastapi import HTTPException
 
 
 class TestPasswordHashing:

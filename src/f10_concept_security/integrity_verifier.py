@@ -3,7 +3,6 @@ F10: 完整性验证器
 """
 import hashlib
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
 
 
 @dataclass
@@ -20,7 +19,7 @@ class SourceChunkResult:
 
 class IntegrityVerifier:
     def __init__(self):
-        self._verified_chunks: Dict[str, bool] = {}
+        self._verified_chunks: dict[str, bool] = {}
 
     def verify_hash(self, content: str, content_hash: str) -> HashVerificationResult:
         computed = hashlib.sha256(content.encode()).hexdigest()

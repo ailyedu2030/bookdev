@@ -9,10 +9,9 @@ P0漏洞: W-002 人工介入欺骗-审批伪装
 4. 多重审批
 """
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, MagicMock
-import hashlib
+
+import pytest
 
 
 class TestApprovalSecurity:
@@ -20,10 +19,7 @@ class TestApprovalSecurity:
 
     def test_approval_record_requires_signature(self):
         """F12-T001: 审批记录必须包含签名"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager,
-            SecurityException
-        )
+        from f12_approval_security.approval_security_manager import ApprovalSecurityManager, SecurityException
 
         manager = ApprovalSecurityManager()
 
@@ -41,10 +37,7 @@ class TestApprovalSecurity:
 
     def test_hsm_signature_required(self):
         """F12-T002: 必须使用HSM签名"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager,
-            ApprovalRecord
-        )
+        from f12_approval_security.approval_security_manager import ApprovalRecord, ApprovalSecurityManager
         from f12_approval_security.hsm_client import MockHSMClient
 
         manager = ApprovalSecurityManager(hsm_client=MockHSMClient())
@@ -68,10 +61,7 @@ class TestApprovalSecurity:
 
     def test_content_hash_verification_on_read(self):
         """F12-T003: 读取时验证内容哈希"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager,
-            ApprovalRecord
-        )
+        from f12_approval_security.approval_security_manager import ApprovalRecord, ApprovalSecurityManager
 
         manager = ApprovalSecurityManager()
 
@@ -108,9 +98,7 @@ class TestApprovalSecurity:
 
     def test_replay_attack_blocked(self):
         """F12-T004: 重放攻击被阻断"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager
-        )
+        from f12_approval_security.approval_security_manager import ApprovalSecurityManager
 
         manager = ApprovalSecurityManager()
 
@@ -134,10 +122,7 @@ class TestApprovalSecurity:
 
     def test_timestamp_validation(self):
         """F12-T005: 时间戳验证"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager,
-            ApprovalRecord
-        )
+        from f12_approval_security.approval_security_manager import ApprovalRecord, ApprovalSecurityManager
 
         manager = ApprovalSecurityManager()
 
@@ -164,9 +149,7 @@ class TestApprovalSecurity:
 
     def test_multi_approval_required_for_high_risk(self):
         """F12-T006: 高风险内容需要多重审批"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager
-        )
+        from f12_approval_security.approval_security_manager import ApprovalSecurityManager
 
         manager = ApprovalSecurityManager(require_multi_approval=True)
 
@@ -190,9 +173,7 @@ class TestApprovalSecurity:
 
     def test_valid_approval_accepted(self):
         """F12-T007: 合法审批被接受"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager
-        )
+        from f12_approval_security.approval_security_manager import ApprovalSecurityManager
 
         manager = ApprovalSecurityManager()
 
@@ -215,9 +196,7 @@ class TestApprovalSecurity:
 
     def test_hsm_client_verification(self):
         """F12-T008: HSM客户端验证"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager
-        )
+        from f12_approval_security.approval_security_manager import ApprovalSecurityManager
         from f12_approval_security.hsm_client import MockHSMClient
 
         manager = ApprovalSecurityManager(hsm_client=MockHSMClient())
@@ -242,12 +221,9 @@ class TestApprovalSecurity:
 
     def test_signature_content_verification(self):
         """F12-T009: 签名内容验证"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager,
-            ApprovalRecord
-        )
+        from f12_approval_security.approval_security_manager import ApprovalRecord, ApprovalSecurityManager
 
-        manager = ApprovalSecurityManager()
+        ApprovalSecurityManager()
 
         record = ApprovalRecord(
             record_id="rec-001",
@@ -303,10 +279,7 @@ class TestApprovalSecurity:
 
     def test_fraud_detection_workflow(self):
         """F12-T012: 欺诈检测工作流"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager,
-            SecurityException
-        )
+        from f12_approval_security.approval_security_manager import ApprovalSecurityManager
 
         manager = ApprovalSecurityManager()
 
@@ -329,9 +302,7 @@ class TestApprovalSecurity:
 
     def test_approval_audit_trail(self):
         """F12-T013: 审批审计追踪"""
-        from f12_approval_security.approval_security_manager import (
-            ApprovalSecurityManager
-        )
+        from f12_approval_security.approval_security_manager import ApprovalSecurityManager
 
         manager = ApprovalSecurityManager()
 
@@ -407,8 +378,9 @@ class TestApprovalRecordUncovered:
 
     def test_to_signable_string(self):
         """to_signable_string构建待签名字符串 (覆盖line 27)"""
-        from f12_approval_security.approval_record import ApprovalRecord
         from datetime import datetime
+
+        from f12_approval_security.approval_record import ApprovalRecord
 
         record = ApprovalRecord(
             record_id="rec-001",

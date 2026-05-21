@@ -1,7 +1,6 @@
 """
 E2E tests for authentication pages: login, register, logout.
 """
-import pytest
 from playwright.sync_api import Page, expect
 
 

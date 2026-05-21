@@ -8,41 +8,39 @@ Handles Temporal workflow operations:
 - POST /api/workflows/{id}/cancel - Cancel workflow
 """
 
-import os
-import sys
 from datetime import datetime
-from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
-from api.schemas.common import SuccessResponse
-from api.deps import get_current_active_user, User, require_permission, generate_uuid
+from api.deps import User, generate_uuid, require_permission
 from api.middleware.csrf import csrf_protect
+from api.schemas.common import SuccessResponse
 
 router = APIRouter(prefix="/api/workflows", tags=["Workflows"])
 
 
-_workflows_store: Dict[str, dict] = {}
+_workflows_store: dict[str, dict] = {}
 
 
 class WorkflowSignalRequest(BaseModel):
     signal_name: str
-    payload: Optional[dict] = None
+    payload: dict | None = None
 
 
 class WorkflowResponse(BaseModel):
     id: str
     name: str
     status: str
-    chapter_id: Optional[str] = None
+    chapter_id: str | None = None
     started_at: str
-    completed_at: Optional[str] = None
+    completed_at: str | None = None
     metadata: dict = {}
 
 
-@router.get("", response_model=List[WorkflowResponse])
+@router.get("", response_model=list[WorkflowResponse])
 async def list_workflows(
-    status_filter: Optional[str] = Query(default=None),
+    status_filter: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=100),
     user: User = Depends(require_permission("workflows:read")),
@@ -59,7 +57,7 @@ async def list_workflows(
     if status_filter:
         workflows = [w for w in workflows if w.get("status") == status_filter]
 
-    total = len(workflows)
+    len(workflows)
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
 
@@ -154,7 +152,7 @@ async def signal_workflow(
 )
 async def cancel_workflow(
     workflow_id: str,
-    reason: Optional[str] = None,
+    reason: str | None = None,
     user: User = Depends(require_permission("workflows:cancel")),
 ):
     """
@@ -218,7 +216,7 @@ async def cancel_workflow(
 )
 async def terminate_workflow(
     workflow_id: str,
-    reason: Optional[str] = None,
+    reason: str | None = None,
     user: User = Depends(require_permission("workflows:terminate")),
 ):
     """
@@ -315,7 +313,7 @@ async def get_workflow_history(
 async def start_chapter_generation_workflow(
     chapter_id: str,
     project_id: str,
-    prompt: Optional[str] = None,
+    prompt: str | None = None,
     user: User = Depends(require_permission("workflows:create")),
 ):
     """
@@ -355,7 +353,7 @@ async def start_chapter_generation_workflow(
     return WorkflowResponse(**workflow)
 
 
-@router.get("/types/list", response_model=List[str])
+@router.get("/types/list", response_model=list[str])
 async def list_workflow_types(
     user: User = Depends(require_permission("workflows:read")),
 ):

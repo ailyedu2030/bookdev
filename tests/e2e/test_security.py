@@ -1,7 +1,6 @@
 """
 E2E tests for the security page.
 """
-import pytest
 from playwright.sync_api import Page, expect
 
 

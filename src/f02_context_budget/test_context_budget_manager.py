@@ -7,8 +7,9 @@ F02: 上下文预算管理器 - TDD RED阶段测试
 3. Refactor: 优化代码质量
 """
 
-import pytest
 from dataclasses import dataclass
+
+import pytest
 
 
 @dataclass

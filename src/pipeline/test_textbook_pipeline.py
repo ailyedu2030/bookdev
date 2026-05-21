@@ -19,32 +19,13 @@
 运行: MOCK_TEMPORAL=true python -m pytest src/pipeline/test_textbook_pipeline.py -v
 """
 
-import asyncio
 import os
-import sys
 import time
+
 import pytest
 
 os.environ["MOCK_TEMPORAL"] = "true"
 
-from src.pipeline.textbook_pipeline import (
-    MockContentAddressing,
-    MockContentSecurityFilter,
-    MockConfigCenter,
-    MockContextBudgetManager,
-    MockEventBus,
-    MockImmutableLog,
-    MockLineageTracker,
-    MockModelRouter,
-    MockQualityGate,
-    TextbookPipeline,
-)
-from src.pipeline.integration_config import MockModeConfig, PipelineConfig
-from src.pipeline.pipeline_stages import (
-    PipelineStage,
-    PipelineStageStatus,
-    PipelineState,
-)
 from src.pipeline.exceptions import (
     BudgetExceededError,
     CheckpointError,
@@ -53,7 +34,21 @@ from src.pipeline.exceptions import (
     SecurityViolationError,
     StageExecutionError,
 )
-
+from src.pipeline.integration_config import MockModeConfig, PipelineConfig
+from src.pipeline.pipeline_stages import (
+    PipelineStage,
+    PipelineStageStatus,
+    PipelineState,
+)
+from src.pipeline.textbook_pipeline import (
+    MockConfigCenter,
+    MockContentAddressing,
+    MockContextBudgetManager,
+    MockLineageTracker,
+    MockModelRouter,
+    MockQualityGate,
+    TextbookPipeline,
+)
 
 # ─── Fixtures ───────────────────────────────────────────────────────────────
 
@@ -249,9 +244,7 @@ async def test_e2e_t008_checkpoint_created_on_milestone():
     snapshot = await pipeline.log.load_snapshot("checkpoint_OUTLINE_GENERATION")
     assert snapshot is not None
     assert snapshot["pipeline_id"] == "ckpt-test"
-    assert PipelineStage.OUTLINE_GENERATION.value in [
-        s for s in snapshot.get("completed_stages", [])
-    ]
+    assert PipelineStage.OUTLINE_GENERATION.value in list(snapshot.get("completed_stages", []))
 
 
 @pytest.mark.asyncio
@@ -438,7 +431,7 @@ async def test_e2e_t016_invalid_checkpoint_raises():
 @pytest.mark.asyncio
 async def test_e2e_t017_event_bus_publishes_stage_events(pipeline):
     """E2E-T017: 事件总线发布所有阶段事件。"""
-    result = await pipeline.run({
+    await pipeline.run({
         "pipeline_id": "eventbus-test",
         "title": "事件总线测试",
         "subject": "低空经济",
@@ -826,7 +819,7 @@ def test_pipeline_stage_index_property():
 
 def test_stage_result_success_property():
     """covers pipeline_stages.py line 86: StageResult.success property"""
-    from src.pipeline.pipeline_stages import StageResult, PipelineStageStatus
+    from src.pipeline.pipeline_stages import PipelineStageStatus, StageResult
 
     sr = StageResult(stage=PipelineStage.INITIALIZATION, status=PipelineStageStatus.COMPLETED)
     assert sr.success is True
@@ -859,6 +852,7 @@ async def test_mock_event_bus_subscribe():
 def test_mock_immutable_log_read_since():
     """covers textbook_pipeline.py line 101: MockImmutableLog.read_since()"""
     import asyncio
+
     from src.pipeline.textbook_pipeline import MockImmutableLog
 
     async def run():
@@ -879,6 +873,7 @@ def test_mock_immutable_log_read_since():
 def test_mock_monitoring_dashboard_stage_latency():
     """covers textbook_pipeline.py lines 369-370: stage_latency() with data"""
     import asyncio
+
     from src.pipeline.textbook_pipeline import MockMonitoringDashboard
 
     async def run():
@@ -897,6 +892,7 @@ def test_mock_monitoring_dashboard_stage_latency():
 def test_mock_content_addressing_retrieve_returns_none():
     """covers textbook_pipeline.py line 404: MockContentAddressing.retrieve returns None"""
     import asyncio
+
     from src.pipeline.textbook_pipeline import MockContentAddressing
 
     async def run():
@@ -911,9 +907,10 @@ def test_mock_content_addressing_retrieve_returns_none():
 def test_pipeline_build_output_with_temporal_output():
     """covers textbook_pipeline.py lines 1009-1011: _build_output when temporal_output exists"""
     import asyncio
-    from src.pipeline.textbook_pipeline import TextbookPipeline
+
     from src.pipeline.integration_config import PipelineConfig
-    from src.pipeline.pipeline_stages import PipelineStage, PipelineStageStatus
+    from src.pipeline.pipeline_stages import PipelineStage
+    from src.pipeline.textbook_pipeline import TextbookPipeline
 
     async def run():
         config = PipelineConfig(testing=True)
@@ -939,9 +936,9 @@ def test_pipeline_build_output_with_temporal_output():
 def test_pipeline_execute_stage_exception_handling():
     """covers textbook_pipeline.py lines 533-536: exception in run() method"""
     import asyncio
-    from src.pipeline.textbook_pipeline import TextbookPipeline
+
     from src.pipeline.integration_config import PipelineConfig
-    from src.pipeline.exceptions import CheckpointError
+    from src.pipeline.textbook_pipeline import TextbookPipeline
 
     async def run():
         config = PipelineConfig(testing=True)
@@ -951,7 +948,7 @@ def test_pipeline_execute_stage_exception_handling():
         try:
             await asyncio.sleep(0)
             raise RuntimeError("Test exception")
-        except Exception as e:
+        except Exception:
             pipeline.state.failed_stages.append(pipeline.state.current_stage or PipelineStage.INITIALIZATION)
 
         assert len(pipeline.state.failed_stages) >= 0
@@ -962,9 +959,10 @@ def test_pipeline_execute_stage_exception_handling():
 def test_pipeline_resume_exception_handling():
     """covers textbook_pipeline.py lines 575-581: resume exception handling"""
     import asyncio
-    from src.pipeline.textbook_pipeline import TextbookPipeline
+
     from src.pipeline.integration_config import PipelineConfig
     from src.pipeline.pipeline_stages import PipelineStage
+    from src.pipeline.textbook_pipeline import TextbookPipeline
 
     async def run():
         config = PipelineConfig(testing=True)
@@ -1153,7 +1151,6 @@ async def test_resume_handles_security_violation():
     """covers textbook_pipeline.py line 576: resume handles SecurityViolationError"""
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
 
-    original_execute = pipeline._execute_stages
 
     async def raise_security_error(textbook_config, resume_from=None):
         raise SecurityViolationError("Security violation during resume")
@@ -1179,7 +1176,6 @@ async def test_resume_handles_abort():
     """covers textbook_pipeline.py line 578: resume handles PipelineAbortedError"""
     pipeline = TextbookPipeline(PipelineConfig(testing=True))
 
-    original_execute = pipeline._execute_stages
 
     async def raise_abort_error(textbook_config, resume_from=None):
         raise PipelineAbortedError("Pipeline aborted during resume")
@@ -1202,7 +1198,7 @@ async def test_resume_handles_abort():
 
 def test_get_stage_config_returns_none_for_missing_stage():
     """covers textbook_pipeline.py line 992: _get_stage_config returns None"""
-    from src.pipeline.integration_config import PipelineConfig, StageConfig, ModuleConfig
+    from src.pipeline.integration_config import ModuleConfig, PipelineConfig, StageConfig
     from src.pipeline.pipeline_stages import PipelineStage
 
     class MinimalConfig(PipelineConfig):

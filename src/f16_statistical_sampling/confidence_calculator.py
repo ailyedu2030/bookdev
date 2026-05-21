@@ -4,7 +4,6 @@ F16: 置信度计算器
 """
 import math
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass

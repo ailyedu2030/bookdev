@@ -8,10 +8,7 @@ Tests for security endpoints:
 - POST /api/security/semantic/scan - Semantic scan
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 
-from tests.api.conftest import get_auth_header, get_csrf_headers
 
 
 class TestContentScan:

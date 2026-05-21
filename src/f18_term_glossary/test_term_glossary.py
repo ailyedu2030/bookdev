@@ -10,8 +10,6 @@ F18: 术语表服务 - TDD RED阶段测试
 - 术语版本控制
 """
 
-import pytest
-from enum import Enum
 
 
 class TestTermGlossaryService:
@@ -29,7 +27,7 @@ class TestTermGlossaryService:
             synonyms=["AI", "Artificial Intelligence"]
         )
 
-        assert result.success == True
+        assert result.success is True
         assert result.term.id is not None
         assert result.term.term == "人工智能"
 
@@ -42,7 +40,7 @@ class TestTermGlossaryService:
 
         result = service.register_term("人工智能", "另一个定义...", "CS")
 
-        assert result.success == False
+        assert result.success is False
         assert "already exists" in result.error
 
     def test_add_synonym_to_existing_term(self):
@@ -54,7 +52,7 @@ class TestTermGlossaryService:
 
         result = service.add_synonym(term.id, "AI智能")
 
-        assert result.success == True
+        assert result.success is True
         updated_term = service.get_term(term.id)
         assert "AI智能" in updated_term.synonyms
 
@@ -110,14 +108,14 @@ class TestTermGlossaryService:
             locked=True
         )
 
-        assert result.term.locked == True
+        assert result.term.locked is True
 
         update_result = service.update_term_definition(
             result.term.id,
             "新定义..."
         )
 
-        assert update_result.success == False
+        assert update_result.success is False
 
     def test_unlock_term_for_revision(self):
         """F18-T008: 解锁术语进行修订"""
@@ -128,14 +126,14 @@ class TestTermGlossaryService:
 
         unlock_result = service.unlock_term(result.term.id)
 
-        assert unlock_result.success == True
+        assert unlock_result.success is True
 
         update_result = service.update_term_definition(
             result.term.id,
             "修订后的定义..."
         )
 
-        assert update_result.success == True
+        assert update_result.success is True
 
     def test_add_synonym_nonexistent_term(self):
         """F18-T008a: 为非存在术语添加同义词"""
@@ -144,7 +142,7 @@ class TestTermGlossaryService:
         service = TermGlossaryService()
         result = service.add_synonym("fake-id", "AI智能")
 
-        assert result.success == False
+        assert result.success is False
         assert "not found" in result.error.lower()
 
     def test_update_term_definition_nonexistent(self):
@@ -154,7 +152,7 @@ class TestTermGlossaryService:
         service = TermGlossaryService()
         result = service.update_term_definition("fake-id", "新定义...")
 
-        assert result.success == False
+        assert result.success is False
         assert "not found" in result.error.lower()
 
     def test_unlock_term_nonexistent(self):
@@ -164,7 +162,7 @@ class TestTermGlossaryService:
         service = TermGlossaryService()
         result = service.unlock_term("fake-id")
 
-        assert result.success == False
+        assert result.success is False
         assert "not found" in result.error.lower()
 
     def test_lock_term(self):
@@ -176,11 +174,11 @@ class TestTermGlossaryService:
 
         lock_result = service.lock_term(result.term.id)
 
-        assert lock_result.success == True
-        assert lock_result.term.locked == True
+        assert lock_result.success is True
+        assert lock_result.term.locked is True
 
         update_result = service.update_term_definition(result.term.id, "新定义...")
-        assert update_result.success == False
+        assert update_result.success is False
 
     def test_lock_term_nonexistent(self):
         """F18-T008e: 锁定不存在的术语"""
@@ -189,7 +187,7 @@ class TestTermGlossaryService:
         service = TermGlossaryService()
         result = service.lock_term("fake-id")
 
-        assert result.success == False
+        assert result.success is False
         assert "not found" in result.error.lower()
 
     def test_add_synonym_duplicate(self):
@@ -203,7 +201,7 @@ class TestTermGlossaryService:
         service.add_synonym(term_id, "AI智能")
         result2 = service.add_synonym(term_id, "AI智能")
 
-        assert result2.success == True
+        assert result2.success is True
 
     def test_service_export_and_import(self):
         """F18-T008g: 术语表服务导出导入"""
@@ -404,7 +402,7 @@ class TestConsistencyChecker:
 
         assert report["domain"] == "计算机科学"
         assert report["total_terms"] == 2
-        assert report["is_consistent"] == True
+        assert report["is_consistent"] is True
         assert len(report["inconsistencies"]) == 0
 
     def test_check_domain_consistency_empty(self):
@@ -419,7 +417,7 @@ class TestConsistencyChecker:
 
         assert report["domain"] == "不存在的领域"
         assert report["total_terms"] == 0
-        assert report["is_consistent"] == True
+        assert report["is_consistent"] is True
         assert len(report["inconsistencies"]) == 0
 
     def test_get_consistency_report(self):
@@ -444,7 +442,7 @@ class TestConsistencyChecker:
 
     def test_check_all_terms_with_mixed_status(self):
         """F18-T013g: check_all_terms处理混合一致性状态 (覆盖lines 68-71)"""
-        from f18_term_glossary.consistency_checker import ConsistencyChecker, ConsistencyStatus
+        from f18_term_glossary.consistency_checker import ConsistencyChecker
         from f18_term_glossary.term_glossary_service import TermGlossaryService
 
         glossary = TermGlossaryService()
@@ -530,9 +528,9 @@ class TestTermRegistry:
         history = registry.get_definition_history("人工智能")
 
         assert len(history) == 2
-        assert history[0]["is_first"] == True
+        assert history[0]["is_first"] is True
         assert history[0]["location"] == "ch01_s01"
-        assert history[1]["is_first"] == False
+        assert history[1]["is_first"] is False
         assert history[1]["location"] == "ch02_s03"
 
     def test_registry_get_definition_history_nonexistent(self):
@@ -554,7 +552,7 @@ class TestTermRegistry:
         history = registry.get_definition_history("人工智能")
 
         assert len(history) == 1
-        assert history[0]["is_first"] == True
+        assert history[0]["is_first"] is True
 
     def test_registry_is_first_definition_true(self):
         """F18-T016d: 注册表is_first_definition返回True"""
@@ -563,7 +561,7 @@ class TestTermRegistry:
         registry = TermRegistry()
         registry.register("ch01_s01", "人工智能", "定义1")
 
-        assert registry.is_first_definition("人工智能", "ch01_s01") == True
+        assert registry.is_first_definition("人工智能", "ch01_s01") is True
 
     def test_registry_is_first_definition_false(self):
         """F18-T016e: 注册表is_first_definition返回False - 不同位置"""
@@ -572,7 +570,7 @@ class TestTermRegistry:
         registry = TermRegistry()
         registry.register("ch01_s01", "人工智能", "定义1")
 
-        assert registry.is_first_definition("人工智能", "ch02_s05") == False
+        assert registry.is_first_definition("人工智能", "ch02_s05") is False
 
     def test_registry_is_first_definition_not_found(self):
         """F18-T016f: 注册表is_first_definition - 术语不存在"""
@@ -580,7 +578,7 @@ class TestTermRegistry:
 
         registry = TermRegistry()
 
-        assert registry.is_first_definition("不存在的术语", "ch01_s01") == False
+        assert registry.is_first_definition("不存在的术语", "ch01_s01") is False
 
     def test_registry_get_redefinitions_none(self):
         """F18-T016g: 注册表获取无重新定义的术语"""
@@ -637,8 +635,8 @@ class TestTermGlossaryIntegration:
 
     def test_full_term_lifecycle(self):
         """F18-T017: 完整术语生命周期"""
-        from f18_term_glossary.term_glossary_service import TermGlossaryService
         from f18_term_glossary.consistency_checker import ConsistencyChecker, ConsistencyStatus
+        from f18_term_glossary.term_glossary_service import TermGlossaryService
 
         # 1. 注册术语
         service = TermGlossaryService()

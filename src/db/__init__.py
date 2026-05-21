@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -92,7 +92,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 async def init_db() -> None:
     """初始化数据库连接"""
     engine = _get_engine()
-    async with engine.begin() as conn:
+    async with engine.begin():
         pass
 
 

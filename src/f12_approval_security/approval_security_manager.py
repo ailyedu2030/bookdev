@@ -3,12 +3,11 @@ F12: 审批结果安全 - 审批安全管理器
 P0漏洞: W-002 人工介入欺骗-审批伪装
 """
 
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
 import hashlib
-import hmac
 import os
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
 
 
 class SecurityException(Exception):
@@ -87,12 +86,12 @@ class ApprovalSecurityManager:
     def __init__(self, hsm_client=None, require_multi_approval: bool = False):
         self.hsm_client = hsm_client
         self.require_multi_approval = require_multi_approval
-        self._records: Dict[str, ApprovalRecord] = {}
+        self._records: dict[str, ApprovalRecord] = {}
         self._used_signatures: set = set()
-        self._audit_trail: Dict[str, List[Dict]] = {}
-        self._approval_requirements: Dict[str, int] = {}  # content_id -> required_approval_count
+        self._audit_trail: dict[str, list[dict]] = {}
+        self._approval_requirements: dict[str, int] = {}  # content_id -> required_approval_count
 
-    def calculate_content_hash(self, content: Dict[str, Any]) -> str:
+    def calculate_content_hash(self, content: dict[str, Any]) -> str:
         """计算内容哈希"""
         import json
         content_str = json.dumps(content, sort_keys=True, default=str)
@@ -105,7 +104,7 @@ class ApprovalSecurityManager:
         reviewer_id: str,
         result: str,
         comments: str = "",
-        signature: Optional[str] = None,
+        signature: str | None = None,
         is_high_risk: bool = False,
         reviewer_ip: str = None
     ) -> ApprovalRecord:
@@ -142,13 +141,13 @@ class ApprovalSecurityManager:
             # 检查是否已有足够的审批
             current_count = self._get_approval_count(content_id)
             required_count = self._get_required_approval_count(is_high_risk)
-            
+
             if current_count >= required_count:
                 raise SecurityException(
                     "MULTI_APPROVAL_COMPLETE",
                     f"Content {content_id} already has {current_count} approvals, maximum is {required_count}"
                 )
-            
+
             self._approval_requirements[content_id] = required_count
 
         self._records[content_id] = record
@@ -190,10 +189,10 @@ class ApprovalSecurityManager:
         if record.is_high_risk and self.require_multi_approval:
             required_count = self._approval_requirements.get(record.content_id, 3)
             current_count = self._get_approval_count(record.content_id)
-            
+
             if current_count < required_count:
                 return VerificationResult(
-                    is_valid=False, 
+                    is_valid=False,
                     reason=f"MULTI_APPROVAL_INCOMPLETE: need {required_count}, have {current_count}"
                 )
 
@@ -218,7 +217,7 @@ class ApprovalSecurityManager:
             raise ValueError(f"No record found for content_id: {content_id}")
         return self._records[content_id]
 
-    def get_audit_trail(self, content_id: str) -> List[Dict]:
+    def get_audit_trail(self, content_id: str) -> list[dict]:
         """获取审计追踪"""
         return self._audit_trail.get(content_id, [])
 

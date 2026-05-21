@@ -2,7 +2,6 @@
 F08: 法规引用核实系统 - 白名单管理器
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 
@@ -19,7 +18,7 @@ class LawInfo:
 class WhitelistManager:
     """法规白名单管理器"""
 
-    WHITELISTED_LAWS: Dict[str, LawInfo] = {
+    WHITELISTED_LAWS: dict[str, LawInfo] = {
         "人工智能法": LawInfo(
             name="人工智能法",
             issuing_body="全国人民代表大会",
@@ -58,31 +57,31 @@ class WhitelistManager:
     }
 
     def __init__(self):
-        self._custom_laws: Dict[str, LawInfo] = {}
+        self._custom_laws: dict[str, LawInfo] = {}
 
     def is_whitelisted(self, law_name: str) -> bool:
         """检查法规是否在白名单中"""
         return law_name in self.WHITELISTED_LAWS or law_name in self._custom_laws
 
-    def get_law_info(self, law_name: str) -> Optional[LawInfo]:
+    def get_law_info(self, law_name: str) -> LawInfo | None:
         """获取法规信息"""
         if law_name in self.WHITELISTED_LAWS:
             return self.WHITELISTED_LAWS[law_name]
         return self._custom_laws.get(law_name)
 
-    def get_whitelisted_laws(self) -> List[str]:
+    def get_whitelisted_laws(self) -> list[str]:
         """获取白名单法规列表"""
         return list(self.WHITELISTED_LAWS.keys()) + list(self._custom_laws.keys())
 
-    def add_law(self, name: str, total_articles: int, issuing_body: str, effective_date: Optional[str] = None) -> bool:
+    def add_law(self, name: str, total_articles: int, issuing_body: str, effective_date: str | None = None) -> bool:
         """添加法规到白名单
-        
+
         VM-015: effective_date必须有明确值，不能默认为当前时间
         如果调用者没有提供effective_date，应该要求提供或拒绝添加
         """
         if name in self.WHITELISTED_LAWS:
             return False
-        
+
         if effective_date is None:
             raise ValueError(
                 "effective_date is required when adding a custom law. "
@@ -90,7 +89,7 @@ class WhitelistManager:
                 "appear to have been effective since 'now', which may not "
                 "match the actual law effective date."
             )
-        
+
         self._custom_laws[name] = LawInfo(
             name=name,
             issuing_body=issuing_body,

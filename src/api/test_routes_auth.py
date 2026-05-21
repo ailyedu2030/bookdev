@@ -1,21 +1,18 @@
 """Tests for api/routes/auth.py"""
 
 import asyncio
-import pytest
+import os
+import sys
 from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi import HTTPException
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from api.deps import (
     DatabaseSession,
     User,
-    create_access_token,
-    create_refresh_token,
-    generate_uuid,
-    get_password_hash,
 )
 
 

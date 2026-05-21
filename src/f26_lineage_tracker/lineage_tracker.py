@@ -2,15 +2,14 @@
 F26: 血缘追踪系统 - 主追踪器
 追踪数据从来源到最终输出的完整传播路径
 """
+from typing import Any
+
 import networkx as nx
-from typing import Dict, List, Optional, Any, Set
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 
 try:
-    from .lineage_node import LineageNode, DataSource, NodeType, ImpactReport
+    from .lineage_node import DataSource, ImpactReport, LineageNode, NodeType
 except ImportError:
-    from lineage_node import LineageNode, DataSource, NodeType, ImpactReport
+    from lineage_node import DataSource, LineageNode, NodeType
 
 
 class DataLineageTracker:
@@ -18,16 +17,16 @@ class DataLineageTracker:
 
     def __init__(self):
         self.lineage_graph = nx.DiGraph()
-        self.verification_cache: Dict[str, bool] = {}
-        self._node_index: Dict[str, LineageNode] = {}
-        self._last_created_node_id: Optional[str] = None
+        self.verification_cache: dict[str, bool] = {}
+        self._node_index: dict[str, LineageNode] = {}
+        self._last_created_node_id: str | None = None
 
     def track_provenance(
         self,
         data_id: str,
         source: DataSource,
         transformation: str,
-        metadata: Dict[str, Any]
+        metadata: dict[str, Any]
     ) -> None:
         """记录数据血缘"""
         node_id = f"node_{data_id}"
@@ -39,7 +38,7 @@ class DataLineageTracker:
             return
 
         source_node_id = f"node_{source.source_id}"
-        parent_node_id: Optional[str] = None
+        parent_node_id: str | None = None
         depth = 0
 
         if source_node_id in self._node_index:
@@ -97,7 +96,7 @@ class DataLineageTracker:
         node_id = f"node_{data_id}"
         return node_id in self._node_index
 
-    def get_node(self, data_id: str) -> Optional[LineageNode]:
+    def get_node(self, data_id: str) -> LineageNode | None:
         """获取节点"""
         node_id = f"node_{data_id}"
         return self._node_index.get(node_id)
@@ -106,7 +105,7 @@ class DataLineageTracker:
         """获取节点数量"""
         return len(self._node_index)
 
-    def get_lineage_chain(self, data_id: str) -> List[LineageNode]:
+    def get_lineage_chain(self, data_id: str) -> list[LineageNode]:
         """获取数据血缘链"""
         node_id = f"node_{data_id}"
 
@@ -135,11 +134,11 @@ class DataLineageTracker:
         except Exception:
             return False
 
-    def get_all_nodes(self) -> List[LineageNode]:
+    def get_all_nodes(self) -> list[LineageNode]:
         """获取所有节点"""
         return list(self._node_index.values())
 
-    def get_children(self, data_id: str) -> List[LineageNode]:
+    def get_children(self, data_id: str) -> list[LineageNode]:
         """获取子节点"""
         node_id = f"node_{data_id}"
         if node_id not in self._node_index:
@@ -148,7 +147,7 @@ class DataLineageTracker:
         node = self._node_index[node_id]
         return [self._node_index[child_id] for child_id in node.children if child_id in self._node_index]
 
-    def get_parents(self, data_id: str) -> List[LineageNode]:
+    def get_parents(self, data_id: str) -> list[LineageNode]:
         """获取父节点"""
         node_id = f"node_{data_id}"
         if node_id not in self._node_index:

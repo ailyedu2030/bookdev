@@ -13,11 +13,7 @@ Tests for knowledge graph endpoints:
 - GET /api/knowledge-graph/stats - Graph statistics
 """
 
-import pytest
-from datetime import datetime
 
-from api.deps import generate_uuid
-from tests.api.conftest import get_auth_header, get_csrf_headers
 
 
 _in_memory_nodes = {}

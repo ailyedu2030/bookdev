@@ -2,7 +2,6 @@
 F23: 内容安全过滤 - 脏话检测器
 """
 import re
-from typing import List, Tuple, Optional
 
 
 class ProfanityDetector:
@@ -12,7 +11,6 @@ class ProfanityDetector:
         "该死": 0.6,
         "糟糕": 0.4,
         "混蛋": 0.7,
-        "该死": 0.6,
         "废物": 0.5,
         "智障": 0.6,
         "白痴": 0.6,
@@ -20,8 +18,6 @@ class ProfanityDetector:
         "丑陋": 0.3,
         "恶心": 0.4,
         "讨厌": 0.2,
-        "该死": 0.6,
-        "混蛋": 0.7,
         "王八蛋": 0.8,
         "滚蛋": 0.5,
         "杂种": 0.9,
@@ -60,7 +56,7 @@ class ProfanityDetector:
         words = "|".join(re.escape(w) for w in self.ENGLISH_PROFANITY.keys())
         return re.compile(words, re.IGNORECASE)
 
-    def detect(self, content: str) -> List[Tuple[str, float, int]]:
+    def detect(self, content: str) -> list[tuple[str, float, int]]:
         """检测脏话
 
         Returns:

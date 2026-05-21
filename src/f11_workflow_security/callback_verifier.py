@@ -2,11 +2,9 @@
 F11: 回调验证器
 """
 
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional
 import hashlib
 import hmac
+from dataclasses import dataclass
 
 
 @dataclass

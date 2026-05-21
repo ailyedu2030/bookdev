@@ -3,9 +3,9 @@ Additional coverage tests for api/routes modules.
 Covers error paths, edge cases, and ImportError fallback paths.
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from datetime import datetime
 
 
 class TestMonitorRoutesEdgeCases:

@@ -147,7 +147,7 @@ class TestProjectRepository:
         owner_id = uuid.uuid4()
 
         with patch.object(repo, "create", return_value=MockProject(id="123")) as mock_create:
-            result = await repo.create_project(
+            await repo.create_project(
                 name="Test Project",
                 owner_id=owner_id,
                 description="Test description"
@@ -255,7 +255,7 @@ class TestProjectMemberRepository:
         user_id = uuid.uuid4()
 
         with patch.object(repo, "create", return_value=MockProjectMember(id="123")) as mock_create:
-            result = await repo.add_member(project_id, user_id, "editor")
+            await repo.add_member(project_id, user_id, "editor")
 
             mock_create.assert_called_once()
             call_kwargs = mock_create.call_args[1]
@@ -290,7 +290,7 @@ class TestProjectMemberRepository:
 
         with patch.object(repo, "get_by_id", return_value=mock_project) as mock_get:
             with patch.object(repo, "update", return_value=mock_project) as mock_update:
-                result = await repo.increment_chapter_count(project_id)
+                await repo.increment_chapter_count(project_id)
 
                 mock_get.assert_called_once_with(project_id)
                 mock_update.assert_called_once_with(project_id, total_chapters=4)
@@ -321,7 +321,7 @@ class TestProjectMemberRepository:
 
         with patch.object(repo, "get_by_id", return_value=mock_project) as mock_get:
             with patch.object(repo, "update", return_value=mock_project) as mock_update:
-                result = await repo.decrement_chapter_count(project_id)
+                await repo.decrement_chapter_count(project_id)
 
                 mock_get.assert_called_once_with(project_id)
                 mock_update.assert_called_once_with(project_id, total_chapters=2)

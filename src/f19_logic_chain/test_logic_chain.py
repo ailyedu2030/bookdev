@@ -10,8 +10,6 @@ F19: 逻辑链文档服务 - TDD RED阶段测试
 - 生成逻辑链文档
 """
 
-import pytest
-from typing import Optional
 
 
 class TestLogicChainService:
@@ -24,7 +22,7 @@ class TestLogicChainService:
         service = LogicChainService()
         result = service.add_dependency("ch-001", "ch-002")
 
-        assert result.success == True
+        assert result.success is True
         assert result.dependency is not None
 
     def test_detect_missing_prerequisite(self):
@@ -106,7 +104,7 @@ class TestLogicChainService:
 
         is_valid = service.validate_dependency_graph()
 
-        assert is_valid == True
+        assert is_valid is True
 
     def test_detect_circular_dependency(self):
         """F19-T008: 检测循环依赖"""
@@ -119,7 +117,7 @@ class TestLogicChainService:
 
         is_valid = service.validate_dependency_graph()
 
-        assert is_valid == False
+        assert is_valid is False
 
 
 class TestDependencyGraph:
@@ -290,7 +288,7 @@ class TestDependencyGraph:
         graph.add_edge("ch-002", "ch-003")
         graph.add_edge("ch-003", "ch-001")
 
-        assert graph.has_cycle() == True
+        assert graph.has_cycle() is True
 
     def test_has_no_cycle_directly(self):
         """F19-T013j: 直接测试无循环"""
@@ -300,7 +298,7 @@ class TestDependencyGraph:
         graph.add_edge("ch-001", "ch-002")
         graph.add_edge("ch-002", "ch-003")
 
-        assert graph.has_cycle() == False
+        assert graph.has_cycle() is False
 
     def test_has_cycle_self_loop(self):
         """F19-T013k: 自循环检测"""
@@ -309,7 +307,7 @@ class TestDependencyGraph:
         graph = DependencyGraph()
         graph.add_edge("ch-001", "ch-001")
 
-        assert graph.has_cycle() == True
+        assert graph.has_cycle() is True
 
     def test_get_all_edges(self):
         """F19-T013l: 获取所有边"""
@@ -332,7 +330,7 @@ class TestDependencyGraph:
         graph.add_edge("ch-001", "ch-002")
         graph.add_edge("ch-001", "ch-002")
 
-        assert graph.has_edge("ch-001", "ch-002") == True
+        assert graph.has_edge("ch-001", "ch-002") is True
         assert len(graph.get_dependencies("ch-001")) == 1
 
 
@@ -351,7 +349,7 @@ class TestCoherenceAnalyzer:
         analyzer = CoherenceAnalyzer(graph)
         analysis = analyzer.analyze_prerequisite_chain("ch-001")
 
-        assert analysis["complete"] == True
+        assert analysis["complete"] is True
         assert len(analysis["chain"]) == 3
 
     def test_analyze_prerequisite_chain_nonexistent(self):
@@ -365,7 +363,7 @@ class TestCoherenceAnalyzer:
         analyzer = CoherenceAnalyzer(graph)
         analysis = analyzer.analyze_prerequisite_chain("nonexistent")
 
-        assert analysis["complete"] == False
+        assert analysis["complete"] is False
         assert analysis["chain"] == []
         assert analysis["missing"] == []
 
@@ -380,7 +378,7 @@ class TestCoherenceAnalyzer:
         analyzer = CoherenceAnalyzer(graph)
         analysis = analyzer.analyze_prerequisite_chain("ch-004")
 
-        assert analysis["complete"] == False
+        assert analysis["complete"] is False
         assert analysis["chain"] == ["ch-004"]
 
     def test_detect_logical_gaps(self):
@@ -413,7 +411,7 @@ class TestCoherenceAnalyzer:
         analyzer = CoherenceAnalyzer(graph)
         progression = analyzer.analyze_concept_progression()
 
-        assert progression["is_logical"] == True
+        assert progression["is_logical"] is True
         assert "sorted_nodes" in progression
         assert progression["depth"] == 3
 
@@ -430,7 +428,7 @@ class TestCoherenceAnalyzer:
         analyzer = CoherenceAnalyzer(graph)
         progression = analyzer.analyze_concept_progression()
 
-        assert progression["is_logical"] == False
+        assert progression["is_logical"] is False
         assert progression["reason"] == "检测到循环依赖"
 
     def test_find_missing_concept_prerequisites(self):
@@ -546,7 +544,7 @@ class TestCoherenceAnalyzer:
         analyzer = CoherenceAnalyzer(graph)
         report = analyzer.generate_coherence_report()
 
-        assert report["is_coherent"] == False
+        assert report["is_coherent"] is False
         circular_issues = [i for i in report["issues"] if i["type"] == "circular_dependency"]
         assert len(circular_issues) == 1
 
@@ -584,7 +582,7 @@ class TestLogicChainIntegration:
         service.add_dependency("ch-002", "ch-003")
 
         # 2. 验证图
-        assert service.validate_dependency_graph() == True
+        assert service.validate_dependency_graph() is True
 
         # 3. 获取顺序
         ordered = service.get_topological_order()

@@ -1,6 +1,5 @@
 """Tests for db/__init__.py async database functions."""
 
-import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -136,9 +135,8 @@ class TestDatabaseConnectionFunctions:
     @pytest.mark.asyncio
     async def test_close_db_disposes_engine(self, mock_engine):
         """Test close_db disposes engine and clears globals."""
-        from db import close_db
-
         import db
+        from db import close_db
         db._engine = mock_engine
         db._async_session_maker = MagicMock()
 
@@ -151,9 +149,8 @@ class TestDatabaseConnectionFunctions:
     @pytest.mark.asyncio
     async def test_close_db_when_not_initialized(self):
         """Test close_db handles uninitialized state gracefully."""
-        from db import close_db
-
         import db
+        from db import close_db
         db._engine = None
         db._async_session_maker = None
 
@@ -165,21 +162,21 @@ class TestDatabaseEngine:
 
     def test_get_engine_lazy_initialization(self):
         """Test engine is created lazily on first access."""
-        from db import get_engine
         import db
+        from db import get_engine
 
         db._engine = None
 
         with patch("db.create_async_engine") as mock_create:
             mock_create.return_value = MagicMock()
-            engine = get_engine()
+            get_engine()
 
             mock_create.assert_called_once()
 
     def test_get_engine_returns_cached_instance(self):
         """Test engine is cached after first creation."""
-        from db import get_engine
         import db
+        from db import get_engine
 
         mock_engine = MagicMock()
         db._engine = mock_engine
@@ -243,21 +240,24 @@ class TestExports:
 
     def test_base_is_declarative_base(self):
         """Test Base is a proper SQLAlchemy DeclarativeBase."""
-        from db import Base
         from sqlalchemy.orm import DeclarativeBase
+
+        from db import Base
 
         assert issubclass(Base, DeclarativeBase)
 
     def test_get_session_is_async_generator(self):
         """Test get_session returns an async generator."""
-        from db import get_session
         import inspect
+
+        from db import get_session
 
         assert inspect.isasyncgenfunction(get_session)
 
     def test_get_db_session_is_async_generator(self):
         """Test get_db_session returns an async generator."""
-        from db import get_db_session
         import inspect
 
-        assert inspect.isgeneratorfunction(get_db_session) or hasattr(get_db_session, "__call__")
+        from db import get_db_session
+
+        assert inspect.isgeneratorfunction(get_db_session) or callable(get_db_session)

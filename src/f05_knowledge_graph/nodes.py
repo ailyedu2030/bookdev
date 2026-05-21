@@ -2,10 +2,9 @@
 F05: 知识图谱节点定义
 """
 
-from dataclasses import dataclass, field
-from typing import Optional
-from enum import Enum
 import hashlib
+from dataclasses import dataclass, field
+from enum import Enum
 
 
 class NodeStatus(Enum):
@@ -116,8 +115,8 @@ class ConceptNode:
     definition: str
     domain: str
     related_terms: list[str] = field(default_factory=list)
-    source_chapter_id: Optional[str] = None
-    definition_hash: Optional[str] = None
+    source_chapter_id: str | None = None
+    definition_hash: str | None = None
 
     def __post_init__(self):
         self.type = "Concept"
@@ -145,7 +144,7 @@ class TermNode:
     definition: str
     domain: str
     synonyms: list[str] = field(default_factory=list)
-    first_defined_at: Optional[str] = None
+    first_defined_at: str | None = None
 
     def __post_init__(self):
         self.type = "Term"

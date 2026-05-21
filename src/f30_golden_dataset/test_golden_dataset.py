@@ -12,12 +12,10 @@ F30: Golden Dataset系统 - TDD RED阶段测试
 - 单元测试覆盖率 ≥88%
 """
 
-import pytest
 import json
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
 
+import pytest
 
 # 样本文件路径
 SAMPLES_DIR = os.path.join(os.path.dirname(__file__), "samples")
@@ -44,7 +42,7 @@ class TestGoldenDatasetSamples:
         """F30-T002: 高质量样本结构验证"""
         sample_path = os.path.join(SAMPLES_DIR, "gd001_high_quality.json")
 
-        with open(sample_path, "r", encoding="utf-8") as f:
+        with open(sample_path, encoding="utf-8") as f:
             sample = json.load(f)
 
         # 必需字段
@@ -63,7 +61,7 @@ class TestGoldenDatasetSamples:
         """F30-T003: 中等质量样本结构验证"""
         sample_path = os.path.join(SAMPLES_DIR, "gd002_medium_quality.json")
 
-        with open(sample_path, "r", encoding="utf-8") as f:
+        with open(sample_path, encoding="utf-8") as f:
             sample = json.load(f)
 
         assert sample["quality_level"] == "medium"
@@ -73,7 +71,7 @@ class TestGoldenDatasetSamples:
         """F30-T004: 低质量样本结构验证"""
         sample_path = os.path.join(SAMPLES_DIR, "gd003_low_quality.json")
 
-        with open(sample_path, "r", encoding="utf-8") as f:
+        with open(sample_path, encoding="utf-8") as f:
             sample = json.load(f)
 
         assert sample["quality_level"] == "low"
@@ -83,7 +81,7 @@ class TestGoldenDatasetSamples:
         """F30-T005: 幻觉样本必须标记幻觉位置"""
         sample_path = os.path.join(SAMPLES_DIR, "gd004_hallucination.json")
 
-        with open(sample_path, "r", encoding="utf-8") as f:
+        with open(sample_path, encoding="utf-8") as f:
             sample = json.load(f)
 
         assert "hallucination_markers" in sample
@@ -100,7 +98,7 @@ class TestGoldenDatasetSamples:
         """F30-T006: 幻觉样本包含数值幻觉"""
         sample_path = os.path.join(SAMPLES_DIR, "gd004_hallucination.json")
 
-        with open(sample_path, "r", encoding="utf-8") as f:
+        with open(sample_path, encoding="utf-8") as f:
             sample = json.load(f)
 
         markers = sample["hallucination_markers"]
@@ -115,7 +113,7 @@ class TestGoldenDatasetSamples:
         """F30-T007: 幻觉样本包含引用幻觉"""
         sample_path = os.path.join(SAMPLES_DIR, "gd004_hallucination.json")
 
-        with open(sample_path, "r", encoding="utf-8") as f:
+        with open(sample_path, encoding="utf-8") as f:
             sample = json.load(f)
 
         markers = sample["hallucination_markers"]
@@ -127,7 +125,7 @@ class TestGoldenDatasetSamples:
         """F30-T008: 法规错误样本结构验证"""
         sample_path = os.path.join(SAMPLES_DIR, "gd005_regulation_error.json")
 
-        with open(sample_path, "r", encoding="utf-8") as f:
+        with open(sample_path, encoding="utf-8") as f:
             sample = json.load(f)
 
         assert "regulation_errors" in sample
@@ -144,7 +142,7 @@ class TestGoldenDatasetSamples:
         """F30-T009: 法规错误样本包含不存在条款"""
         sample_path = os.path.join(SAMPLES_DIR, "gd005_regulation_error.json")
 
-        with open(sample_path, "r", encoding="utf-8") as f:
+        with open(sample_path, encoding="utf-8") as f:
             sample = json.load(f)
 
         errors = sample["regulation_errors"]
@@ -164,7 +162,7 @@ class TestGoldenDatasetSamples:
 
         for sample_file in sample_files:
             sample_path = os.path.join(SAMPLES_DIR, sample_file)
-            with open(sample_path, "r", encoding="utf-8") as f:
+            with open(sample_path, encoding="utf-8") as f:
                 sample = json.load(f)
 
             assert "metadata" in sample
@@ -226,7 +224,7 @@ class TestDatasetBuilder:
 
         assert len(calibration_set) > 0
         # 校准集应该包含不同质量等级的样本
-        quality_levels = set(s["quality_level"] for s in calibration_set)
+        quality_levels = {s["quality_level"] for s in calibration_set}
         assert len(quality_levels) >= 2
 
     def test_add_sample(self):
@@ -342,7 +340,7 @@ class TestSampleManager:
         manager = SampleManager(samples_dir=SAMPLES_DIR)
 
         original_sample = manager.get_sample_by_id("GD-001")
-        original_score = original_sample["expected_score"]
+        original_sample["expected_score"]
 
         updated_sample = manager.update_sample("GD-001", {"expected_score": 9.8})
 
@@ -388,7 +386,7 @@ class TestSampleManager:
 
     def test_update_sample_partial_fields(self):
         """F30-T039: 部分更新样本字段 (覆盖lines 148, 150)"""
-        from f30_golden_dataset.sample_manager import SampleManager, GoldenSample
+        from f30_golden_dataset.sample_manager import GoldenSample, SampleManager
 
         manager = SampleManager()
         manager._samples["test-001"] = GoldenSample(
@@ -417,7 +415,7 @@ class TestSampleManager:
         manager = SampleManager()
         result = manager.delete_sample("nonexistent")
 
-        assert result == False
+        assert result is False
 
 
 class TestGoldenDatasetEvaluator:
@@ -566,12 +564,12 @@ class TestGoldenDatasetIntegration:
     def test_full_calibration_workflow(self):
         """F30-T050: 完整校准工作流"""
         from f30_golden_dataset.dataset_builder import DatasetBuilder
-        from f30_golden_dataset.sample_manager import SampleManager
         from f30_golden_dataset.evaluator import GoldenDatasetEvaluator
+        from f30_golden_dataset.sample_manager import SampleManager
 
         # 加载数据集
         builder = DatasetBuilder(samples_dir=SAMPLES_DIR)
-        dataset = builder.load_all_samples()
+        builder.load_all_samples()
 
         # 获取样本管理器
         manager = SampleManager(samples_dir=SAMPLES_DIR)
@@ -598,7 +596,7 @@ class TestGoldenDatasetIntegration:
         builder = DatasetBuilder(samples_dir=SAMPLES_DIR)
         dataset = builder.load_all_samples()
 
-        quality_levels = set(sample["quality_level"] for sample in dataset.values())
+        quality_levels = {sample["quality_level"] for sample in dataset.values()}
 
         assert "high" in quality_levels
         assert "medium" in quality_levels

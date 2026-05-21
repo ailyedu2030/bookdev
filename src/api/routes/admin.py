@@ -10,33 +10,30 @@ Handles user and system administration:
 """
 
 from datetime import datetime
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
 
-from api.schemas.auth import UserResponse, UserCreate, UserUpdate, UserRoleUpdate
-from api.schemas.common import SuccessResponse, PaginatedResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
 from api.deps import (
-    get_db,
-    get_current_active_user,
+    ROLE_HIERARCHY,
     DatabaseSession,
     User,
-    require_role,
-    require_permission,
-    generate_uuid,
+    get_db,
     get_password_hash,
-    ROLE_HIERARCHY,
+    require_role,
 )
 from api.middleware.csrf import csrf_protect
+from api.schemas.auth import UserCreate, UserResponse, UserRoleUpdate, UserUpdate
+from api.schemas.common import SuccessResponse
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/users", response_model=list[UserResponse])
 async def list_users(
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, ge=1, le=100),
-    role_filter: Optional[str] = Query(default=None),
-    search: Optional[str] = Query(default=None),
+    role_filter: str | None = Query(default=None),
+    search: str | None = Query(default=None),
     user: User = Depends(require_role("system_admin", "content_admin")),
     db: DatabaseSession = Depends(get_db),
 ):
@@ -60,7 +57,7 @@ async def list_users(
             if search_lower in u.username.lower() or search_lower in u.email.lower()
         ]
 
-    total = len(all_users)
+    len(all_users)
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
 
@@ -354,14 +351,14 @@ async def update_user_role(
     )
 
 
-@router.get("/roles/list", response_model=List[dict])
+@router.get("/roles/list", response_model=list[dict])
 async def list_roles(
     user: User = Depends(require_role("system_admin", "content_admin")),
 ):
     """
     List all available roles with their permissions.
     """
-    from api.deps import ROLE_PERMISSIONS, ROLE_HIERARCHY
+    from api.deps import ROLE_HIERARCHY, ROLE_PERMISSIONS
 
     roles = []
     for role_name, level in sorted(ROLE_HIERARCHY.items(), key=lambda x: x[1], reverse=True):

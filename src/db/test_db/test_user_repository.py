@@ -4,7 +4,6 @@ Tests all public methods of UserRepository using mocks.
 """
 
 import uuid
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -92,7 +91,6 @@ class TestUserRepository:
     async def test_create_user(self, mock_session):
         """Test create_user creates and returns new user."""
         from db.repositories.user_repository import UserRepository
-        from db.models import User
 
         mock_user = MagicMock()
         mock_user.username = "newuser"
@@ -100,7 +98,7 @@ class TestUserRepository:
 
         repo = UserRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_user) as mock_create:
-            result = await repo.create_user(
+            await repo.create_user(
                 username="newuser",
                 email="new@example.com",
                 password_hash="hashed123"
@@ -124,7 +122,7 @@ class TestUserRepository:
 
         repo = UserRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_user) as mock_update:
-            result = await repo.update_password(user_id, "newhashedpass")
+            await repo.update_password(user_id, "newhashedpass")
 
         mock_update.assert_called_once_with(user_id, password_hash="newhashedpass")
 
@@ -138,7 +136,7 @@ class TestUserRepository:
 
         repo = UserRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_user) as mock_update:
-            result = await repo.update_email(user_id, "new@example.com")
+            await repo.update_email(user_id, "new@example.com")
 
         mock_update.assert_called_once_with(user_id, email="new@example.com")
 
@@ -154,7 +152,7 @@ class TestUserRepository:
         with patch("db.repositories.user_repository.UserRole") as MockUserRole:
             mock_user_role = MagicMock()
             MockUserRole.return_value = mock_user_role
-            result = await repo.assign_role(user_id, role_id)
+            await repo.assign_role(user_id, role_id)
 
         mock_session.add.assert_called_once()
         mock_session.flush.assert_called_once()
@@ -365,7 +363,7 @@ class TestRoleRepository:
         with patch("db.repositories.user_repository.RolePermission") as MockRolePermission:
             mock_role_perm = MagicMock()
             MockRolePermission.return_value = mock_role_perm
-            result = await repo.assign_permission(role_id, permission_id)
+            await repo.assign_permission(role_id, permission_id)
 
         mock_session.add.assert_called_once()
         mock_session.flush.assert_called_once()

@@ -5,10 +5,7 @@ Tests all endpoints in src/api/routes/security.py.
 Focuses on mock mode (ImportError paths) since real modules have different APIs.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-
-from tests.api.conftest import get_auth_header, get_csrf_headers
+from unittest.mock import patch
 
 
 class TestContentScanMockMode:

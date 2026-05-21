@@ -4,7 +4,7 @@ F20: LLM-as-Judge评分系统 - 评分标准验证器
 验证评分标准和分数的有效性
 """
 
-from typing import Dict, Any, List, Tuple
+from typing import Any
 
 from f20_llm_judge.scoring_engine import JUDGE_DIMENSIONS
 
@@ -12,7 +12,7 @@ from f20_llm_judge.scoring_engine import JUDGE_DIMENSIONS
 class RubricValidator:
     """评分标准验证器"""
 
-    def __init__(self, dimensions: Dict[str, Dict[str, Any]] = None):
+    def __init__(self, dimensions: dict[str, dict[str, Any]] = None):
         """
         初始化验证器
 
@@ -21,7 +21,7 @@ class RubricValidator:
         """
         self._dimensions = dimensions or JUDGE_DIMENSIONS
 
-    def validate_rubric(self, rubric: Dict[str, Any]) -> bool:
+    def validate_rubric(self, rubric: dict[str, Any]) -> bool:
         """
         验证评分标准
 
@@ -45,14 +45,14 @@ class RubricValidator:
 
         return True
 
-    def _has_required_dimensions(self, rubric: Dict[str, Any]) -> bool:
+    def _has_required_dimensions(self, rubric: dict[str, Any]) -> bool:
         """检查是否包含所有必需维度"""
         for dim_key in self._dimensions.keys():
             if dim_key not in rubric:
                 return False
         return True
 
-    def _weights_sum_to_one(self, rubric: Dict[str, Any]) -> bool:
+    def _weights_sum_to_one(self, rubric: dict[str, Any]) -> bool:
         """检查权重和是否为1"""
         total_weight = sum(
             rubric[dim_key].get("weight", 0)
@@ -60,7 +60,7 @@ class RubricValidator:
         )
         return abs(total_weight - 1.0) < 0.001
 
-    def _weights_in_valid_range(self, rubric: Dict[str, Any]) -> bool:
+    def _weights_in_valid_range(self, rubric: dict[str, Any]) -> bool:
         """检查权重是否在有效范围内"""
         for dim_key in self._dimensions.keys():
             if dim_key in rubric:
@@ -83,8 +83,8 @@ class RubricValidator:
 
     def validate_all_dimension_scores(
         self,
-        scores: Dict[str, float]
-    ) -> Tuple[bool, List[str]]:
+        scores: dict[str, float]
+    ) -> tuple[bool, list[str]]:
         """
         验证所有维度分数
 
@@ -109,7 +109,7 @@ class RubricValidator:
 
         return len(errors) == 0, errors
 
-    def get_dimension_descriptions(self) -> Dict[str, str]:
+    def get_dimension_descriptions(self) -> dict[str, str]:
         """获取所有维度的描述"""
         return {
             dim_key: dim_config["description"]

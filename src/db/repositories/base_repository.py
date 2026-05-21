@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Any, Generic, TypeVar, Optional, Type, Sequence
+from collections.abc import Sequence
+from typing import Any, Generic, TypeVar
 
-from sqlalchemy import select, update, delete, func, Select, exists
+from sqlalchemy import Select, delete, exists, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from db.models import Base
 
@@ -24,7 +24,7 @@ ModelType = TypeVar("ModelType", bound=Base)
 class BaseRepository(Generic[ModelType]):
     """通用 CRUD 仓储基类"""
 
-    def __init__(self, model: Type[ModelType], session: AsyncSession):
+    def __init__(self, model: type[ModelType], session: AsyncSession):
         self._model = model
         self._session = session
 
@@ -40,7 +40,7 @@ class BaseRepository(Generic[ModelType]):
             logger.error(f"Failed to create {self._model.__name__}: {e}")
             raise
 
-    async def get_by_id(self, id: uuid.UUID) -> Optional[ModelType]:
+    async def get_by_id(self, id: uuid.UUID) -> ModelType | None:
         """根据 ID 获取单条记录"""
         try:
             stmt = select(self._model).where(self._model.id == id)
@@ -50,7 +50,7 @@ class BaseRepository(Generic[ModelType]):
             logger.error(f"Failed to get {self._model.__name__} by id {id}: {e}")
             raise
 
-    async def get_one(self, **filters) -> Optional[ModelType]:
+    async def get_one(self, **filters) -> ModelType | None:
         """根据条件获取单条记录"""
         try:
             stmt = select(self._model)
@@ -66,11 +66,11 @@ class BaseRepository(Generic[ModelType]):
     async def find_all(
         self,
         *,
-        filters: Optional[dict[str, Any]] = None,
-        order_by: Optional[str] = None,
+        filters: dict[str, Any] | None = None,
+        order_by: str | None = None,
         order_desc: bool = False,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        limit: int | None = None,
+        offset: int | None = None,
         offset_with_row_number: bool = False,
     ) -> Sequence[ModelType]:
         """获取所有匹配的记录"""
@@ -99,7 +99,7 @@ class BaseRepository(Generic[ModelType]):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def count(self, *, filters: Optional[dict[str, Any]] = None) -> int:
+    async def count(self, *, filters: dict[str, Any] | None = None) -> int:
         """统计匹配记录的总数"""
         stmt = select(func.count()).select_from(self._model)
 
@@ -114,7 +114,7 @@ class BaseRepository(Generic[ModelType]):
         result = await self._session.execute(stmt)
         return result.scalar_one()
 
-    async def update(self, id: uuid.UUID, **kwargs) -> Optional[ModelType]:
+    async def update(self, id: uuid.UUID, **kwargs) -> ModelType | None:
         """根据 ID 更新记录"""
         try:
             instance = await self.get_by_id(id)

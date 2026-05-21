@@ -4,16 +4,14 @@ Alembic 数据库迁移环境配置
 为异步 SQLAlchemy 2.0 + asyncpg 配置 Alembic 迁移环境。
 """
 
+import sys
 from logging.config import fileConfig
+from pathlib import Path
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
-from alembic import context
-
-import sys
-from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 

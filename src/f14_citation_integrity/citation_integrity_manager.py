@@ -5,11 +5,10 @@ F14: 引用完整性管理器
 import hashlib
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Any
-from datetime import datetime, timezone
 from enum import Enum
+from typing import Any
 
-from f14_citation_integrity.citation_registry import CitationRegistry, Citation
+from f14_citation_integrity.citation_registry import Citation, CitationRegistry
 
 
 class IntegrityStatus(Enum):
@@ -26,22 +25,22 @@ class CitationIntegrityResult:
     doi: str
     fact_hash: str
     content_hash: str
-    mismatch_reason: Optional[str] = None
+    mismatch_reason: str | None = None
     status: IntegrityStatus = IntegrityStatus.VALID
 
 
 @dataclass
 class CitationChainResult:
     is_valid: bool
-    chain: List[str]
+    chain: list[str]
     is_biased: bool = False
-    issues: List[str] = field(default_factory=list)
+    issues: list[str] = field(default_factory=list)
 
 
 @dataclass
 class FactCollision:
     fact_hash: str
-    dois: List[str]
+    dois: list[str]
     count: int
 
 
@@ -50,9 +49,9 @@ class CitationIntegrityManager:
 
     DOI_PATTERN = re.compile(r'^10\.\d{4,}/[^\s]+$')
 
-    def __init__(self, registry: Optional[CitationRegistry] = None):
+    def __init__(self, registry: CitationRegistry | None = None):
         self._registry = registry or CitationRegistry()
-        self._content_cache: Dict[str, str] = {}
+        self._content_cache: dict[str, str] = {}
 
     def verify_citation_integrity(
         self,
@@ -111,7 +110,7 @@ class CitationIntegrityManager:
             position={}
         )
 
-    def get_unverified_citations(self) -> List[Citation]:
+    def get_unverified_citations(self) -> list[Citation]:
         """获取所有未验证的引用"""
         return self._registry.get_unverified_citations()
 
@@ -123,9 +122,9 @@ class CitationIntegrityManager:
                 return self._registry.mark_citation_verified(citation.citation_id)
         return False
 
-    def validate_citation_chain(self, dois: List[str]) -> CitationChainResult:
+    def validate_citation_chain(self, dois: list[str]) -> CitationChainResult:
         """验证引用链"""
-        issues: List[str] = []
+        issues: list[str] = []
 
         for doi in dois:
             if not self._is_valid_doi_format(doi):
@@ -148,9 +147,9 @@ class CitationIntegrityManager:
             issues=issues
         )
 
-    def detect_fact_collision(self) -> List[FactCollision]:
+    def detect_fact_collision(self) -> list[FactCollision]:
         """检测事实冲突 - 同一哈希对应多个DOI"""
-        fact_to_dois: Dict[str, Set[str]] = {}
+        fact_to_dois: dict[str, set[str]] = {}
 
         for doi in self._registry._doi_index.keys():
             citations = self._registry.list_citations_by_doi(doi)
@@ -159,7 +158,7 @@ class CitationIntegrityManager:
                     fact_to_dois[citation.fact_hash] = set()
                 fact_to_dois[citation.fact_hash].add(doi)
 
-        collisions: List[FactCollision] = []
+        collisions: list[FactCollision] = []
         for fact_hash, dois in fact_to_dois.items():
             if len(dois) > 1:
                 collisions.append(FactCollision(
@@ -170,7 +169,7 @@ class CitationIntegrityManager:
 
         return collisions
 
-    def get_citation_statistics(self) -> Dict[str, Any]:
+    def get_citation_statistics(self) -> dict[str, Any]:
         """获取引用统计信息"""
         total = self._registry.count_citations()
         verified = self._registry.count_verified_citations()

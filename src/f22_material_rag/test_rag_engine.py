@@ -14,10 +14,10 @@ F22: 素材RAG召回 - TDD RED阶段测试
 - F22-T005: 增量添加
 """
 
-import pytest
 from dataclasses import dataclass, field
-from typing import Optional
+
 import numpy as np
+import pytest
 
 
 @dataclass
@@ -27,7 +27,7 @@ class RetrievedMaterial:
     content: str
     score: float
     token_count: int
-    source_chapter_id: Optional[str] = None
+    source_chapter_id: str | None = None
     metadata: dict = field(default_factory=dict)
 
 
@@ -434,7 +434,7 @@ class TestMaterialDeduplication:
                     r1.content, r2.content
                 )
                 if similarity > 0.9:
-                    assert False, "Similar materials should be deduplicated"
+                    raise AssertionError("Similar materials should be deduplicated")
 
 
 class TestMaterialIndexing:
@@ -805,9 +805,10 @@ class TestRAGEngineKGUncovered:
 
     def test_kg_enhance_results_with_defines_edge(self):
         """lines 228-232: DEFINES类型的edge提供boost"""
-        from f22_material_rag.rag_engine import MaterialRAGEngine
         from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
         from f05_knowledge_graph.nodes import NodeStatus
+
+        from f22_material_rag.rag_engine import MaterialRAGEngine
 
         kg = KnowledgeGraph()
         kg.create_chapter("ch-001", "测试章节", 1, status=NodeStatus.APPROVED)

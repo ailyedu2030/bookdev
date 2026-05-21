@@ -5,9 +5,10 @@ Implements in-memory sliding window rate limiting.
 """
 
 import time
-from typing import Dict, List, Optional, Callable
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from fastapi import Request, Response, HTTPException, status
+
+from fastapi import HTTPException, Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
@@ -30,7 +31,7 @@ class RateLimitSettings:
 @dataclass
 class SlidingWindowEntry:
     """Sliding window entry for rate limiting"""
-    timestamps: List[float] = field(default_factory=list)
+    timestamps: list[float] = field(default_factory=list)
 
 
 class InMemoryRateLimiter:
@@ -42,7 +43,7 @@ class InMemoryRateLimiter:
     """
 
     def __init__(self):
-        self._storage: Dict[str, SlidingWindowEntry] = {}
+        self._storage: dict[str, SlidingWindowEntry] = {}
         self._cleanup_interval = 3600
         self._last_cleanup = time.time()
 
@@ -103,7 +104,7 @@ class InMemoryRateLimiter:
 rate_limiter = InMemoryRateLimiter()
 
 
-DEFAULT_RATE_LIMITS: Dict[str, RateLimitConfig] = {
+DEFAULT_RATE_LIMITS: dict[str, RateLimitConfig] = {
     "anonymous": RateLimitConfig(requests=30, window_seconds=60, key_prefix="anon"),
     "authenticated": RateLimitConfig(requests=300, window_seconds=60, key_prefix="auth"),
     "strict": RateLimitConfig(requests=10, window_seconds=60, key_prefix="strict"),
@@ -191,7 +192,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self,
         app,
         config: RateLimitConfig = None,
-        exempt_paths: List[str] = None,
+        exempt_paths: list[str] = None,
     ):
         super().__init__(app)
         self.config = config or DEFAULT_RATE_LIMITS["anonymous"]

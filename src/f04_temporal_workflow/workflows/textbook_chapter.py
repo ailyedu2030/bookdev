@@ -14,20 +14,20 @@ import asyncio
 import hashlib
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+from ..activities.content_generation import generate_chapter_content, generate_chapter_outline
+from ..activities.quality_check import score_chapter_quality
+from ..activities.security_scan import scan_chapter
 from .mock_client import (
     ActivityOptions,
     MockTemporalClient,
     RetryPolicy,
     SignalType,
-    TemporalWorkflow,
     TemporalQuery,
+    TemporalWorkflow,
     get_mock_client,
 )
-from ..activities.content_generation import generate_chapter_content, generate_chapter_outline
-from ..activities.quality_check import score_chapter_quality
-from ..activities.security_scan import scan_chapter
 
 logger = logging.getLogger(__name__)
 
@@ -46,18 +46,18 @@ class TextbookChapterWorkflow:
     """
 
     def __init__(self):
-        self._temporal_client: Optional[MockTemporalClient] = None
+        self._temporal_client: MockTemporalClient | None = None
         self._context = None
         # TEMP-019: 状态持久化
-        self._state: Dict[str, Any] = {}
+        self._state: dict[str, Any] = {}
         # TEMP-016: 心跳计数
         self._heartbeat_count = 0
 
     async def execute(
         self,
-        chapter_config: Dict[str, Any],
+        chapter_config: dict[str, Any],
         book_subject: str = "低空经济",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         执行章节编写工作流
 
@@ -103,10 +103,10 @@ class TextbookChapterWorkflow:
             logger.info(f"[ChapterWorkflow:{chapter_id}] Restored state from persistence")
 
         rewrite_count = self._state.get("rewrite_count", 0)
-        content_result: Optional[Dict[str, Any]] = None
-        outline_result: Optional[Dict[str, Any]] = None
-        quality_result: Optional[Dict[str, Any]] = None
-        security_result: Optional[Dict[str, Any]] = None
+        content_result: dict[str, Any] | None = None
+        outline_result: dict[str, Any] | None = None
+        quality_result: dict[str, Any] | None = None
+        security_result: dict[str, Any] | None = None
 
         # TEMP-016: 开始心跳
         asyncio.create_task(self._send_heartbeat_loop(workflow_id, chapter_id))
@@ -307,7 +307,7 @@ class TextbookChapterWorkflow:
 
     # TEMP-022: 查询处理器
     @TemporalQuery.defn(name="get_chapter_status")
-    async def get_chapter_status(self) -> Dict[str, Any]:
+    async def get_chapter_status(self) -> dict[str, Any]:
         """查询章节工作流状态"""
         return {
             "chapter_id": self._state.get("chapter_id", "unknown"),
@@ -319,7 +319,7 @@ class TextbookChapterWorkflow:
         }
 
     @TemporalQuery.defn(name="get_progress")
-    async def get_progress(self) -> Dict[str, Any]:
+    async def get_progress(self) -> dict[str, Any]:
         """查询工作流进度"""
         progress = {
             "outline_generated": "outline" in self._state,

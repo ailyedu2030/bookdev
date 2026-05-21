@@ -4,11 +4,8 @@ Additional Workflows API Tests for Higher Coverage
 Tests additional endpoints and edge cases for workflow routes.
 """
 
-import pytest
-from unittest.mock import patch
 
 from api.deps import generate_uuid
-from tests.api.conftest import get_auth_header, get_csrf_headers
 
 
 class TestWorkflowsAdditional:
@@ -169,6 +166,7 @@ class TestWorkflowSignals:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "sig-success-123"
@@ -209,6 +207,7 @@ class TestWorkflowSignals:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "sig-pending-456"
@@ -244,6 +243,7 @@ class TestWorkflowSignals:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "sig-completed-789"
@@ -279,6 +279,7 @@ class TestWorkflowSignals:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "sig-payload-101"
@@ -322,6 +323,7 @@ class TestWorkflowCancel:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "cancel-me-123"
@@ -358,6 +360,7 @@ class TestWorkflowCancel:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "cancel-pending-456"
@@ -391,6 +394,7 @@ class TestWorkflowCancel:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "cancel-completed-789"
@@ -424,6 +428,7 @@ class TestWorkflowCancel:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "cancel-failed-101"
@@ -460,6 +465,7 @@ class TestWorkflowTerminate:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "terminate-me-123"
@@ -496,6 +502,7 @@ class TestWorkflowTerminate:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "terminate-pending-456"
@@ -529,6 +536,7 @@ class TestWorkflowTerminate:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "terminate-cancelled-789"
@@ -566,6 +574,7 @@ class TestWorkflowHistory:
         token = editor_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "history-workflow-123"
@@ -611,6 +620,7 @@ class TestWorkflowHistory:
         token = editor_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "history-empty-456"
@@ -642,6 +652,7 @@ class TestWorkflowHistory:
         token = editor_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "history-missing-key-789"
@@ -677,7 +688,7 @@ class TestStartWorkflow:
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
 
-        from tests.api.conftest import create_test_project, create_test_chapter
+        from tests.api.conftest import create_test_chapter, create_test_project
         project = create_test_project(test_db, owner_id=user.id)
         chapter = create_test_chapter(test_db, project_id=project["id"])
 
@@ -785,6 +796,7 @@ class TestWorkflowSignalsFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "sig-success-123"
@@ -825,6 +837,7 @@ class TestWorkflowSignalsFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "sig-pending-456"
@@ -860,6 +873,7 @@ class TestWorkflowSignalsFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "sig-completed-789"
@@ -895,6 +909,7 @@ class TestWorkflowSignalsFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "sig-payload-101"
@@ -938,6 +953,7 @@ class TestWorkflowCancelFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "cancel-me-123"
@@ -974,6 +990,7 @@ class TestWorkflowCancelFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "cancel-pending-456"
@@ -1007,6 +1024,7 @@ class TestWorkflowCancelFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "cancel-completed-789"
@@ -1040,6 +1058,7 @@ class TestWorkflowCancelFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "cancel-failed-101"
@@ -1076,6 +1095,7 @@ class TestWorkflowTerminateFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "terminate-me-123"
@@ -1112,6 +1132,7 @@ class TestWorkflowTerminateFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "terminate-pending-456"
@@ -1145,6 +1166,7 @@ class TestWorkflowTerminateFixed:
         token = content_admin_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "terminate-cancelled-789"
@@ -1182,6 +1204,7 @@ class TestWorkflowHistoryFixed:
         token = editor_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "history-workflow-123"
@@ -1227,6 +1250,7 @@ class TestWorkflowHistoryFixed:
         token = editor_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "history-empty-456"
@@ -1258,6 +1282,7 @@ class TestWorkflowHistoryFixed:
         token = editor_authenticated["access_token"]
 
         from datetime import datetime
+
         from api.routes.workflows import _workflows_store
 
         workflow_id = "history-missing-key-789"
@@ -1293,7 +1318,7 @@ class TestStartWorkflowFixed:
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
 
-        from tests.api.conftest import create_test_project, create_test_chapter
+        from tests.api.conftest import create_test_chapter, create_test_project
         project = create_test_project(test_db, owner_id=user.id)
         chapter = create_test_chapter(test_db, project_id=project["id"])
 
@@ -1319,7 +1344,7 @@ class TestStartWorkflowFixed:
         token = content_admin_authenticated["access_token"]
         user = content_admin_authenticated["user"]
 
-        from tests.api.conftest import create_test_project, create_test_chapter
+        from tests.api.conftest import create_test_chapter, create_test_project
         project = create_test_project(test_db, owner_id=user.id)
         chapter = create_test_chapter(test_db, project_id=project["id"])
 

@@ -7,9 +7,7 @@ Tests to increase coverage for:
 - api/routes/security.py (target: 28% -> 95%+)
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 
 class TestAdminRoutesEdgeCases:
@@ -199,7 +197,7 @@ class TestAdminRoutesEdgeCases:
             "role": "viewer",
         })
 
-        response = test_client.post(
+        test_client.post(
             "/api/admin/users",
             json={
                 "username": "existinguser",
@@ -217,7 +215,7 @@ class TestAdminRoutesEdgeCases:
     ):
         """Test admin stats with actual projects and chapters"""
         token = test_admin_authenticated["access_token"]
-        admin = test_admin_authenticated["user"]
+        test_admin_authenticated["user"]
 
         test_db._projects["proj-1"] = {"id": "proj-1", "status": "draft"}
         test_db._projects["proj-2"] = {"id": "proj-2", "status": "published"}
@@ -494,7 +492,7 @@ class TestMonitorRoutesEdgeCases:
             )
 
             assert response.status_code == 200
-            data = response.json()
+            response.json()
             mock_dashboard.get_alerts.assert_called_once_with(severity="error", resolved=False)
 
     def test_workflow_stats_with_mock_client(
@@ -551,7 +549,7 @@ class TestMonitorRoutesEdgeCases:
     ):
         """Test append log when ImmutableLog is available"""
         token = test_admin_authenticated["access_token"]
-        user = test_admin_authenticated["user"]
+        test_admin_authenticated["user"]
 
         mock_log_instance = MagicMock()
 

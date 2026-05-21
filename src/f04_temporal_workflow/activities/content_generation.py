@@ -10,7 +10,7 @@
 
 import hashlib
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..workflows.mock_client import TemporalActivity
 
@@ -27,8 +27,8 @@ async def generate_chapter_content(
     chapter_id: str,
     title: str,
     subject: str,
-    requirements: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    requirements: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """生成单个章节的完整内容 (幂等)"""
     logger.info(f"[ContentGen] Generating chapter '{chapter_id}': {title}")
 
@@ -61,8 +61,8 @@ async def generate_chapter_content(
 async def generate_chapter_outline(
     chapter_id: str,
     title: str,
-    learning_objectives: List[str],
-) -> Dict[str, Any]:
+    learning_objectives: list[str],
+) -> dict[str, Any]:
     """生成章节提纲 (幂等)"""
     logger.info(f"[ContentGen] Generating outline for chapter '{chapter_id}'")
 
@@ -74,8 +74,8 @@ async def generate_chapter_outline(
             "subsections": [
                 f"Introduction to {obj[:40]}",
                 f"Core Concepts of {obj[:40]}",
-                f"Practical Applications",
-                f"Summary and Review",
+                "Practical Applications",
+                "Summary and Review",
             ],
         })
 
@@ -93,9 +93,9 @@ async def generate_chapter_outline(
     idempotent=True,
 )
 async def batch_generate_chapters(
-    chapters: List[Dict[str, Any]],
+    chapters: list[dict[str, Any]],
     textbook_subject: str,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     批量生成章节内容 (幂等)
     TEMP-014: 现在使用基于内容哈希的幂等性key
@@ -112,7 +112,7 @@ async def batch_generate_chapters(
         # TEMP-013: 使用内容哈希作为幂等键的基础
         ch_id = ch.get("id", "unknown")
         ch_title = ch.get("title", "Untitled")
-        content_hash = hashlib.sha256(f"{ch_id}:{ch_title}".encode()).hexdigest()[:16]
+        hashlib.sha256(f"{ch_id}:{ch_title}".encode()).hexdigest()[:16]
 
         result = await generate_chapter_content(
             chapter_id=ch_id,
@@ -134,7 +134,7 @@ def _build_chapter_content(
     chapter_id: str,
     title: str,
     subject: str,
-    requirements: Dict[str, Any],
+    requirements: dict[str, Any],
 ) -> str:
     """构建章节内容 (模拟 AI 生成)"""
 
@@ -143,7 +143,7 @@ def _build_chapter_content(
 
     content_parts = [
         f"# {title}\n",
-        f"## 学习目标\n",
+        "## 学习目标\n",
         f"本章将介绍{subject}领域的核心概念和应用。通过本章学习，读者将能够：\n",
     ]
 
@@ -159,7 +159,7 @@ def _build_chapter_content(
             )
 
         content_parts.append(f"\n**本节目标**：掌握{subject}第{i}部分的核心概念\n")
-        content_parts.append(f"\n**[思考题]**：如何将本节知识应用于实际场景？\n")
+        content_parts.append("\n**[思考题]**：如何将本节知识应用于实际场景？\n")
 
     content_parts.append("\n## 本章小结\n\n")
     content_parts.append(f"本章系统介绍了{title}的基础知识。下章将继续深入探讨相关主题。\n")
@@ -174,13 +174,13 @@ class ContentGeneration:
     """内容生成活动集合"""
 
     @staticmethod
-    async def generate(chapter_id: str, title: str, subject: str, **kwargs) -> Dict[str, Any]:
+    async def generate(chapter_id: str, title: str, subject: str, **kwargs) -> dict[str, Any]:
         return await generate_chapter_content(chapter_id, title, subject, kwargs)
 
     @staticmethod
-    async def generate_outline(chapter_id: str, title: str, objectives: List[str]) -> Dict[str, Any]:
+    async def generate_outline(chapter_id: str, title: str, objectives: list[str]) -> dict[str, Any]:
         return await generate_chapter_outline(chapter_id, title, objectives)
 
     @staticmethod
-    async def batch_generate(chapters: List[Dict[str, Any]], subject: str) -> List[Dict[str, Any]]:
+    async def batch_generate(chapters: list[dict[str, Any]], subject: str) -> list[dict[str, Any]]:
         return await batch_generate_chapters(chapters, subject)

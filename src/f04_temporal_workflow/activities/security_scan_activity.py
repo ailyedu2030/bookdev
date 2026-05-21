@@ -2,9 +2,8 @@
 Security Scan Activity - 安全扫描
 """
 
-from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
 import re
+from dataclasses import dataclass
 
 from temporalio import activity
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -15,7 +14,7 @@ class SecurityScanInput:
     """安全扫描输入"""
     chapter_id: str
     content: str
-    scan_types: List[str]
+    scan_types: list[str]
 
 
 @dataclass
@@ -25,8 +24,8 @@ class SecurityIssue:
     severity: str
     category: str
     description: str
-    location: Optional[str] = None
-    remediation: Optional[str] = None
+    location: str | None = None
+    remediation: str | None = None
 
 
 @dataclass
@@ -35,8 +34,8 @@ class SecurityScanOutput:
     chapter_id: str
     passed: bool
     risk_score: float
-    issues: List[SecurityIssue]
-    scan_types_performed: Dict[str, bool]
+    issues: list[SecurityIssue]
+    scan_types_performed: dict[str, bool]
 
 
 class SecurityScanActivity:
@@ -113,7 +112,7 @@ class SecurityScanActivity:
         )
 
     @staticmethod
-    async def _scan_xss(content: str) -> List[SecurityIssue]:
+    async def _scan_xss(content: str) -> list[SecurityIssue]:
         """扫描XSS"""
         issues = []
         for pattern, category, description in SecurityScanActivity.DANGEROUS_PATTERNS[:3]:
@@ -131,7 +130,7 @@ class SecurityScanActivity:
         return issues
 
     @staticmethod
-    async def _scan_injection(content: str) -> List[SecurityIssue]:
+    async def _scan_injection(content: str) -> list[SecurityIssue]:
         """扫描注入"""
         issues = []
         for pattern, category, description in SecurityScanActivity.DANGEROUS_PATTERNS[2:]:
@@ -149,7 +148,7 @@ class SecurityScanActivity:
         return issues
 
     @staticmethod
-    async def _scan_credentials(content: str) -> List[SecurityIssue]:
+    async def _scan_credentials(content: str) -> list[SecurityIssue]:
         """扫描敏感凭证"""
         issues = []
         for pattern, category, description in SecurityScanActivity.SENSITIVE_PATTERNS:
@@ -167,7 +166,7 @@ class SecurityScanActivity:
         return issues
 
     @staticmethod
-    async def _scan_pii(content: str) -> List[SecurityIssue]:
+    async def _scan_pii(content: str) -> list[SecurityIssue]:
         """扫描个人身份信息"""
         issues = []
         pii_patterns = [
@@ -176,7 +175,7 @@ class SecurityScanActivity:
             (r"\b\d{3}[-\s]?\d{3}[-\s]?\d{4}\b", "Phone", "电话号码"),
         ]
 
-        for pattern, category, description in pii_patterns:
+        for pattern, _category, description in pii_patterns:
             matches = re.finditer(pattern, content)
             if matches:
                 issues.append(SecurityIssue(

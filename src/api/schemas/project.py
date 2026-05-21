@@ -2,8 +2,6 @@
 Project Schemas
 """
 
-from datetime import datetime, timezone
-from typing import Optional, List, Literal
 from pydantic import BaseModel, Field
 
 
@@ -51,28 +49,28 @@ DESCRIPTION_MAX_LENGTH = 2000
 class ProjectCreate(BaseModel):
     """Project creation schema"""
     name: str = Field(..., min_length=NAME_MIN_LENGTH, max_length=NAME_MAX_LENGTH)
-    description: Optional[str] = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
-    total_chapters: Optional[int] = Field(default=DEFAULT_TOTAL_CHAPTERS, ge=0)
+    description: str | None = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
+    total_chapters: int | None = Field(default=DEFAULT_TOTAL_CHAPTERS, ge=0)
 
 
 class ProjectUpdate(BaseModel):
     """Project update schema"""
-    name: Optional[str] = Field(default=None, min_length=NAME_MIN_LENGTH, max_length=NAME_MAX_LENGTH)
-    description: Optional[str] = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
-    status: Optional[str] = Field(default=None, pattern=ProjectStatus.pattern())
+    name: str | None = Field(default=None, min_length=NAME_MIN_LENGTH, max_length=NAME_MAX_LENGTH)
+    description: str | None = Field(default=None, max_length=DESCRIPTION_MAX_LENGTH)
+    status: str | None = Field(default=None, pattern=ProjectStatus.pattern())
 
 
 class ProjectResponse(BaseModel):
     """Project response schema"""
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     status: str
-    owner_id: Optional[str] = None
+    owner_id: str | None = None
     total_chapters: int = DEFAULT_TOTAL_CHAPTERS
     current_progress: int = DEFAULT_PROGRESS
     created_at: str
-    updated_at: Optional[str] = None
+    updated_at: str | None = None
 
 
 class ProjectMemberAdd(BaseModel):
@@ -87,13 +85,13 @@ class ProjectMemberResponse(BaseModel):
     user_id: str
     role: str
     assigned_at: str
-    user: Optional[dict] = None
+    user: dict | None = None
 
 
 class ProjectListResponse(BaseModel):
     """Project list response with pagination"""
     success: bool = True
-    data: List[ProjectResponse]
+    data: list[ProjectResponse]
     meta: dict = Field(
         default_factory=lambda: {
             "total": 0,

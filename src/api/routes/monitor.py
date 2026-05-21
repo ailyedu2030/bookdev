@@ -7,15 +7,13 @@ Handles system monitoring operations:
 - GET /api/monitor/logs - Audit logs
 """
 
-import os
-import sys
 import time
-from datetime import datetime, timedelta
-from typing import Optional, List
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Query
 
-from api.schemas.common import HealthResponse, MetricsResponse, LogEntry, SuccessResponse
-from api.deps import get_current_active_user, User, require_permission
+from api.deps import User, require_permission
+from api.schemas.common import HealthResponse, LogEntry, MetricsResponse, SuccessResponse
 
 router = APIRouter(prefix="/api/monitor", tags=["Monitoring"])
 
@@ -107,7 +105,7 @@ async def get_metrics(
         budget = ContextBudgetManager()
         usage = budget.get_total_usage()
         metrics["context_budget"] = {
-            "total_tokens": usage if isinstance(usage, (int, float)) else 0,
+            "total_tokens": usage if isinstance(usage, int | float) else 0,
             "limit": budget.max_tokens if hasattr(budget, 'max_tokens') else 200000,
         }
     except ImportError:
@@ -120,15 +118,15 @@ async def get_metrics(
     )
 
 
-@router.get("/logs", response_model=List[LogEntry])
+@router.get("/logs", response_model=list[LogEntry])
 async def get_logs(
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=50, ge=1, le=200),
-    event_type: Optional[str] = Query(default=None),
-    user_id: Optional[str] = Query(default=None),
-    resource_type: Optional[str] = Query(default=None),
-    start_date: Optional[str] = Query(default=None),
-    end_date: Optional[str] = Query(default=None),
+    event_type: str | None = Query(default=None),
+    user_id: str | None = Query(default=None),
+    resource_type: str | None = Query(default=None),
+    start_date: str | None = Query(default=None),
+    end_date: str | None = Query(default=None),
     user: User = Depends(require_permission("monitor:logs")),
 ):
     """
@@ -173,7 +171,7 @@ async def get_logs(
     except ImportError:
         pass
 
-    total = len(logs)
+    len(logs)
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
 
@@ -182,8 +180,8 @@ async def get_logs(
 
 @router.get("/alerts", response_model=dict)
 async def get_alerts(
-    severity: Optional[str] = Query(default=None),
-    resolved: Optional[bool] = Query(default=None),
+    severity: str | None = Query(default=None),
+    resolved: bool | None = Query(default=None),
     user: User = Depends(require_permission("monitor:alerts")),
 ):
     """
@@ -195,7 +193,7 @@ async def get_alerts(
     alerts = []
 
     try:
-        from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard, Alert
+        from f28_monitoring_dashboard.monitoring_dashboard import Alert, MonitoringDashboard
         dashboard = MonitoringDashboard()
 
         if hasattr(dashboard, 'get_alerts'):

@@ -8,18 +8,14 @@ F27: GraphRAG问答系统 - TDD RED阶段测试
 - 单元测试覆盖率 ≥80%
 """
 
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
 
 from f27_graph_rag.graph_rag_query import (
-    GraphNode,
     GraphEdge,
+    GraphNode,
+    GraphRAGAnswer,
     KnowledgeGraph,
     RAGDocument,
     RAGEngine,
-    GraphRAGAnswer,
 )
 
 
@@ -260,7 +256,7 @@ class TestKnowledgeGraph:
 
     def test_search_with_partial_word_match(self):
         """F27-T020: search部分单词匹配评分 (覆盖line 102)"""
-        from f27_graph_rag.graph_rag_query import RAGEngine, RAGDocument
+        from f27_graph_rag.graph_rag_query import RAGDocument, RAGEngine
 
         engine = RAGEngine()
         engine.add_document(RAGDocument(id="doc1", content="Python programming language"))

@@ -2,11 +2,8 @@
 F16: 统计抽样验证引擎 - 单元测试
 TDD RED阶段：测试必须失败，因为实现不存在
 """
+
 import pytest
-import math
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Set, Any
-from enum import Enum
 
 
 class TestSampleSizeCalculation:
@@ -73,7 +70,7 @@ class TestStratifiedSampling:
 
     def test_stratified_sampling_basic(self):
         """F16-T006: 基本分层抽样"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
 
@@ -98,7 +95,7 @@ class TestStratifiedSampling:
 
     def test_stratified_sampling_minimum_per_stratum(self):
         """F16-T007: 每层最小样本量保证"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
 
@@ -123,7 +120,7 @@ class TestStratifiedSampling:
 
     def test_stratified_sampling_proportional_allocation(self):
         """F16-T008: 按比例分配"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
 
@@ -222,7 +219,7 @@ class TestSampleValidator:
 
     def test_validate_sample_representativeness(self):
         """F16-T013: 验证样本代表性"""
-        from f16_statistical_sampling.sample_validator import SampleValidator, ValidationResult
+        from f16_statistical_sampling.sample_validator import SampleValidator
 
         validator = SampleValidator()
 
@@ -231,7 +228,7 @@ class TestSampleValidator:
 
         result = validator.validate_representativeness(population, sample)
 
-        assert result.is_valid == True
+        assert result.is_valid is True
         assert result.score >= 0
 
     def test_validate_sample_too_small(self):
@@ -245,7 +242,7 @@ class TestSampleValidator:
 
         result = validator.validate_minimum_size(population, sample)
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert "size" in result.message.lower() or "too small" in result.message.lower()
 
     def test_validate_stratification_balance(self):
@@ -265,7 +262,7 @@ class TestSampleValidator:
 
         result = validator.validate_stratification_balance(population_strata, sample_strata)
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_detect_sampling_bias(self):
         """F16-T016: 检测抽样偏差"""
@@ -278,7 +275,7 @@ class TestSampleValidator:
 
         result = validator.detect_bias(population, biased_sample)
 
-        assert result.is_biased == True
+        assert result.is_biased is True
         assert result.bias_score > 0
 
 
@@ -351,12 +348,12 @@ class TestSecurityTests:
 
         result = validator.detect_bias(population, manipulated_sample)
 
-        assert result.is_biased == True
+        assert result.is_biased is True
         assert result.bias_score > 0.5
 
     def test_sampling_without_stratification_danger_warning(self):
         """F16-S005: 未分层抽样危险警告"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
 
@@ -376,9 +373,9 @@ class TestSecurityTests:
 
         sample = engine.stratified_sampling(chapters, strata)
 
-        has_all_types = len(set(c.chapter_type for c in sample)) >= 2
+        has_all_types = len({c.chapter_type for c in sample}) >= 2
 
-        assert has_all_types == True
+        assert has_all_types is True
 
 
 class TestCoverageGapSamplingEngine:
@@ -394,7 +391,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_stratified_sampling_auto_generate_strata(self):
         """F16-CG002: 分层抽样-自动生成分层比例(无strata/空strata)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -410,7 +407,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_stratified_sampling_none_strata(self):
         """F16-CG003: 分层抽样-None strata自动生成"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -422,7 +419,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_systematic_sampling_basic(self):
         """F16-CG004: 系统抽样-基本功能"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine(confidence_level=0.95, margin_of_error=0.05)
         chapters = [
@@ -443,7 +440,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_systematic_sampling_explicit_size(self):
         """F16-CG006: 系统抽样-指定样本量"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -455,7 +452,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_systematic_sampling_small_population(self):
         """F16-CG007: 系统抽样-总体小于样本量"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -467,7 +464,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_systematic_sampling_zero_interval(self):
         """F16-CG008: 系统抽样-间隔为0(小总体大样本)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -479,7 +476,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_cluster_sampling_basic(self):
         """F16-CG009: 整群抽样-基本功能"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -500,7 +497,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_cluster_sampling_invalid_size(self):
         """F16-CG011: 整群抽样-无效集群大小"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [Chapter(id="ch1", title="章节1", chapter_type=ChapterType.THEORY, word_count=1000)]
@@ -509,7 +506,7 @@ class TestCoverageGapSamplingEngine:
 
     def test_cluster_sampling_small_population(self):
         """F16-CG012: 整群抽样-小型总体"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -873,12 +870,12 @@ class TestIntegrationTests:
 
     def test_full_sampling_workflow(self):
         """F16-I001: 完整抽样工作流"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
         from f16_statistical_sampling.confidence_calculator import ConfidenceCalculator
         from f16_statistical_sampling.sample_validator import SampleValidator
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine(confidence_level=0.95, margin_of_error=0.05)
-        calculator = ConfidenceCalculator()
+        ConfidenceCalculator()
         validator = SampleValidator()
 
         chapters = [
@@ -888,7 +885,7 @@ class TestIntegrationTests:
 
         strata = {ChapterType.THEORY: 0.5, ChapterType.PRACTICE: 0.5}
 
-        sample_size = engine.calculate_sample_size(population_size=len(chapters))
+        engine.calculate_sample_size(population_size=len(chapters))
 
         sample = engine.stratified_sampling(chapters, strata)
 
@@ -904,7 +901,7 @@ class TestIntegrationTests:
 
     def test_sampling_with_population_parameters(self):
         """F16-I002: 带总体参数的抽样"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
 
@@ -969,7 +966,7 @@ class TestF16CoverageGapsRemaining:
 
     def test_systematic_sampling_zero_sample_size(self):
         """F16-T050: systematic_sampling的sample_size为0时返回空列表 (line 131)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -983,7 +980,7 @@ class TestF16CoverageGapsRemaining:
 
     def test_systematic_sampling_zero_interval(self):
         """F16-T051: systematic_sampling的interval为0时返回chapters[:sample_size] (line 136)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import Chapter, ChapterType, StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = [
@@ -997,7 +994,7 @@ class TestF16CoverageGapsRemaining:
 
     def test_cluster_sampling_no_clusters(self):
         """F16-T052: cluster_sampling无有效集群时返回空列表 (line 162)"""
-        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine, Chapter, ChapterType
+        from f16_statistical_sampling.sampling_engine import StatisticalSamplingEngine
 
         engine = StatisticalSamplingEngine()
         chapters = []

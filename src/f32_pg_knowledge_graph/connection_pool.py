@@ -6,11 +6,10 @@ F32: PostgreSQL 连接池管理
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
-import logging
 from contextlib import contextmanager
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -75,8 +74,8 @@ class ConnectionPool:
     def get_connection(self):
         """
         从池中获取一个连接
-        
-        KG-014: Fixed thread-safety issue - entire connection acquisition 
+
+        KG-014: Fixed thread-safety issue - entire connection acquisition
         is now within the lock to prevent race conditions.
         """
         import psycopg2
@@ -189,7 +188,7 @@ class ConnectionPool:
     def _replace_connection_unlocked(self, index: int, pooled: _PooledConnection) -> None:
         """
         替换失效连接（内部方法，假设调用者已经持有锁）
-        
+
         KG-014: This method must be called while holding the lock.
         """
         import psycopg2

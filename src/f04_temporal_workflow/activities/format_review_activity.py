@@ -2,9 +2,9 @@
 Format Review Activity - 格式审查
 """
 
-from dataclasses import dataclass
-from typing import List, Optional, Dict, Any, Tuple
 import re
+from dataclasses import dataclass
+from typing import Any
 
 from temporalio import activity
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -26,9 +26,9 @@ class FormatIssue:
     severity: str
     category: str
     description: str
-    location: Optional[str] = None
-    expected: Optional[str] = None
-    actual: Optional[str] = None
+    location: str | None = None
+    expected: str | None = None
+    actual: str | None = None
 
 
 @dataclass
@@ -37,8 +37,8 @@ class FormatCheckOutput:
     chapter_id: str
     passed: bool
     format_score: float
-    issues: List[FormatIssue]
-    statistics: Dict[str, Any]
+    issues: list[FormatIssue]
+    statistics: dict[str, Any]
 
 
 class FormatReviewActivity:
@@ -95,7 +95,7 @@ class FormatReviewActivity:
         )
 
     @staticmethod
-    async def _check_headings(content: str) -> Dict[str, Any]:
+    async def _check_headings(content: str) -> dict[str, Any]:
         """检查标题格式"""
         issues = []
         headings = FormatReviewActivity.MARKDOWN_HEADING_PATTERN.findall(content)
@@ -135,14 +135,14 @@ class FormatReviewActivity:
                     issue_id=f"fmt-h{i+1:03d}",
                     severity="error",
                     category="heading",
-                    description=f"标题级别超过6级",
+                    description="标题级别超过6级",
                     location=heading[:50]
                 ))
 
         return {"issues": issues}
 
     @staticmethod
-    async def _check_punctuation(content: str) -> Dict[str, Any]:
+    async def _check_punctuation(content: str) -> dict[str, Any]:
         """检查标点符号"""
         issues = []
 
@@ -164,7 +164,7 @@ class FormatReviewActivity:
         return {"issues": issues}
 
     @staticmethod
-    async def _check_structure(content: str) -> Dict[str, Any]:
+    async def _check_structure(content: str) -> dict[str, Any]:
         """检查文档结构"""
         issues = []
 
@@ -183,7 +183,7 @@ class FormatReviewActivity:
         return {"issues": issues}
 
     @staticmethod
-    def _calculate_statistics(content: str) -> Dict[str, Any]:
+    def _calculate_statistics(content: str) -> dict[str, Any]:
         """计算统计信息"""
         lines = content.split("\n")
 

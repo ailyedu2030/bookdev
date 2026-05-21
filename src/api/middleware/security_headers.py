@@ -11,7 +11,8 @@ Adds security headers to all responses:
 - X-XSS-Protection
 """
 
-from typing import Callable, List, Optional
+from collections.abc import Callable
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -85,7 +86,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         self,
         app,
         config: SecurityHeadersConfig = None,
-        exclude_paths: List[str] = None,
+        exclude_paths: list[str] = None,
     ):
         super().__init__(app)
         self.config = config or DEFAULT_SECURITY_CONFIG

@@ -3,8 +3,6 @@ Content Generation Activity - 生成教材章节内容
 """
 
 from dataclasses import dataclass
-from typing import Optional, List
-from datetime import timedelta
 
 from temporalio import activity
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -16,7 +14,7 @@ class ContentGenerationInput:
     chapter_id: str
     title: str
     outline: dict
-    style_guide: Optional[dict] = None
+    style_guide: dict | None = None
     target_word_count: int = 5000
     difficulty_level: str = "intermediate"
 
@@ -27,7 +25,7 @@ class ContentGenerationOutput:
     chapter_id: str
     content: str
     word_count: int
-    sections_completed: List[str]
+    sections_completed: list[str]
     generation_time_seconds: float
     quality_score: float
 
@@ -126,7 +124,7 @@ class ContentGenerationActivity:
     async def revise_chapter_content(
         chapter_id: str,
         original_content: str,
-        revision_notes: List[str]
+        revision_notes: list[str]
     ) -> str:
         """
         根据审核意见修订内容
@@ -177,6 +175,6 @@ class ContentGenerationActivity:
             return current_content
 
         additional_words = target_word_count - current_words
-        expansion = f"\n\n## 扩展内容\n\n" + "补充说明 " * (additional_words // 4)
+        expansion = "\n\n## 扩展内容\n\n" + "补充说明 " * (additional_words // 4)
 
         return current_content + expansion

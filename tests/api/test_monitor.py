@@ -8,11 +8,7 @@ Tests for monitoring endpoints:
 - GET /api/monitor/alerts - System alerts
 """
 
-import pytest
-from datetime import datetime
-from unittest.mock import patch, MagicMock
-
-from tests.api.conftest import get_auth_header, get_csrf_headers
+from unittest.mock import MagicMock, patch
 
 
 class TestHealthCheck:

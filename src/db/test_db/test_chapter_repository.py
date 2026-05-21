@@ -68,7 +68,7 @@ class TestChapterRepository:
         mock_chapter = MagicMock()
         repo = ChapterRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_chapter) as mock_create:
-            result = await repo.create_chapter(
+            await repo.create_chapter(
                 project_id=uuid.uuid4(),
                 title="Test Chapter",
                 order_num=1,
@@ -85,7 +85,7 @@ class TestChapterRepository:
         mock_chapter = MagicMock()
         repo = ChapterRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_chapter) as mock_update:
-            result = await repo.update_status(uuid.uuid4(), "published")
+            await repo.update_status(uuid.uuid4(), "published")
 
         mock_update.assert_called_once()
 
@@ -97,7 +97,7 @@ class TestChapterRepository:
         mock_chapter = MagicMock()
         repo = ChapterRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_chapter) as mock_update:
-            result = await repo.update_content_hash(uuid.uuid4(), "newhash123")
+            await repo.update_content_hash(uuid.uuid4(), "newhash123")
 
         mock_update.assert_called_once()
 
@@ -109,7 +109,7 @@ class TestChapterRepository:
         mock_chapter = MagicMock()
         repo = ChapterRepository(mock_session)
         with patch.object(repo, "update", return_value=mock_chapter) as mock_update:
-            result = await repo.update_word_count(uuid.uuid4(), 1000)
+            await repo.update_word_count(uuid.uuid4(), 1000)
 
         mock_update.assert_called_once()
 
@@ -292,7 +292,7 @@ class TestChapterContentRepository:
         mock_content = MagicMock()
         repo = ChapterContentRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_content) as mock_create:
-            result = await repo.create_content(
+            await repo.create_content(
                 chapter_id=uuid.uuid4(),
                 content="Test content",
                 version="1.0",
@@ -398,7 +398,7 @@ class TestSectionRepository:
         mock_section = MagicMock()
         repo = SectionRepository(mock_session)
         with patch.object(repo, "create", return_value=mock_section) as mock_create:
-            result = await repo.create_section(
+            await repo.create_section(
                 chapter_id=uuid.uuid4(),
                 title="Test Section",
                 order_num=1

@@ -5,30 +5,27 @@ Repository 模块单元测试
 """
 
 import uuid
-from datetime import datetime, timedelta
-from typing import Any, Sequence
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
+from db.repositories.audit_log_repository import AuditLogRepository
 from db.repositories.base_repository import BaseRepository
-from db.repositories.user_repository import (
-    UserRepository,
-    RoleRepository,
-    PermissionRepository,
-)
-from db.repositories.project_repository import (
-    ProjectRepository,
-    ProjectMemberRepository,
-)
 from db.repositories.chapter_repository import (
-    ChapterRepository,
     ChapterContentRepository,
+    ChapterRepository,
     SectionRepository,
 )
-from db.repositories.audit_log_repository import AuditLogRepository
-from db.repositories.term_repository import TermRepository, ConceptRepository
 from db.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+from db.repositories.project_repository import (
+    ProjectMemberRepository,
+    ProjectRepository,
+)
+from db.repositories.term_repository import ConceptRepository, TermRepository
+from db.repositories.user_repository import (
+    PermissionRepository,
+    RoleRepository,
+    UserRepository,
+)
 
 
 class MockAsyncSession:
@@ -154,7 +151,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value={"id": sample_uuid, "name": "test"})
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.get_by_id(sample_uuid)
             assert result is not None
 
@@ -163,7 +160,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.get_by_id(sample_uuid)
             assert result is None
 
@@ -172,7 +169,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value={"id": sample_uuid})
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.get_one(name="test")
             assert result is not None
 
@@ -182,7 +179,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.find_all()
             assert len(result) == 2
 
@@ -192,7 +189,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.find_all(filters={"status": "active"})
             assert len(result) == 1
 
@@ -202,7 +199,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.find_all(order_by="created_at", order_desc=True)
             assert len(result) == 1
 
@@ -212,7 +209,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.find_all(limit=10, offset=5)
             assert len(result) == 1
 
@@ -221,7 +218,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=5)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.count()
             assert result == 5
 
@@ -230,7 +227,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=3)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.count(filters={"status": "active"})
             assert result == 3
 
@@ -271,7 +268,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.exists(name="test")
             assert result is True
 
@@ -280,7 +277,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalar_value=0)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.exists(name="nonexistent")
             assert result is False
 
@@ -302,7 +299,7 @@ class TestBaseRepository:
         mock_result = MockExecuteResult(rowcount=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.update') as mock_update:
+        with patch('db.repositories.base_repository.update'):
             result = await base_repo.bulk_update(ids, name="updated")
             assert result == 1
 
@@ -317,7 +314,7 @@ class TestBaseRepository:
         mock_result = MockExecuteResult(rowcount=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.delete') as mock_delete:
+        with patch('db.repositories.base_repository.delete'):
             result = await base_repo.bulk_delete(ids)
             assert result == 1
 
@@ -332,7 +329,7 @@ class TestBaseRepository:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.get_by_ids([sample_uuid])
             assert len(result) == 1
 
@@ -407,8 +404,8 @@ class TestUserRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
-            with patch('db.repositories.user_repository.and_') as mock_and:
+        with patch('db.repositories.user_repository.select'):
+            with patch('db.repositories.user_repository.and_'):
                 result = await user_repo.remove_role(sample_uuid, sample_uuid)
                 assert result is False
 
@@ -417,7 +414,7 @@ class TestUserRepository:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
+        with patch('db.repositories.user_repository.select'):
             result = await user_repo.has_permission(sample_uuid, "projects", "read")
             assert result is True
 
@@ -427,7 +424,7 @@ class TestUserRepository:
         mock_result = MockSelectResult(scalars_value=mock_users)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
+        with patch('db.repositories.user_repository.select'):
             result = await user_repo.search_by_username("test")
             assert len(result) == 1
 
@@ -437,7 +434,7 @@ class TestUserRepository:
         mock_result = MockSelectResult(scalars_value=mock_users)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
+        with patch('db.repositories.user_repository.select'):
             result = await user_repo.search_by_email("test")
             assert len(result) == 1
 
@@ -465,8 +462,8 @@ class TestRoleRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
-            with patch('db.repositories.user_repository.and_') as mock_and:
+        with patch('db.repositories.user_repository.select'):
+            with patch('db.repositories.user_repository.and_'):
                 result = await role_repo.remove_permission(sample_uuid, sample_uuid)
                 assert result is False
 
@@ -505,7 +502,7 @@ class TestPermissionRepository:
         mock_result = MockSelectResult(scalars_value=mock_perms)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
+        with patch('db.repositories.user_repository.select'):
             result = await perm_repo.get_all_grouped_by_resource()
             assert "projects" in result
 
@@ -583,7 +580,7 @@ class TestProjectRepository:
         mock_result = MockSelectResult(scalars_value=mock_projects)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
+        with patch('db.repositories.project_repository.select'):
             result = await project_repo.search_by_name("test")
             assert len(result) == 1
 
@@ -623,8 +620,8 @@ class TestProjectMemberRepository:
         mock_result = MockSelectResult(scalar_value="editor")
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.and_') as mock_and:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.and_'):
                 result = await member_repo.get_member_role(sample_uuid, sample_uuid)
                 assert result == "editor"
 
@@ -643,8 +640,8 @@ class TestProjectMemberRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.and_') as mock_and:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.and_'):
                 result = await member_repo.remove_member(sample_uuid, sample_uuid)
                 assert result is False
 
@@ -712,7 +709,7 @@ class TestChapterRepository:
         mock_result = MockSelectResult(scalar_value=5)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select') as mock_select:
+        with patch('db.repositories.chapter_repository.select'):
             result = await chapter_repo.get_next_order_num(sample_uuid)
             assert result == 6
 
@@ -720,13 +717,13 @@ class TestChapterRepository:
     async def test_reorder_chapters(self, chapter_repo, mock_session, sample_uuid):
         chapter_orders = [{"id": sample_uuid, "order_num": 1}]
         mock_chapter = MagicMock()
-        
+
         # Mock the begin context manager
         mock_begin_ctx = MagicMock()
         mock_begin_ctx.__aenter__ = AsyncMock(return_value=None)
         mock_begin_ctx.__aexit__ = AsyncMock(return_value=None)
         mock_session.begin = MagicMock(return_value=mock_begin_ctx)
-        
+
         with patch.object(chapter_repo, 'update', return_value=mock_chapter):
             await chapter_repo.reorder_chapters(sample_uuid, chapter_orders)
 
@@ -755,7 +752,7 @@ class TestChapterContentRepository:
         mock_result = MockSelectResult(scalar_value=mock_content)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select') as mock_select:
+        with patch('db.repositories.chapter_repository.select'):
             result = await content_repo.get_latest(sample_uuid)
             assert result == mock_content
 
@@ -820,7 +817,7 @@ class TestSectionRepository:
         mock_result = MockSelectResult(scalar_value=3)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select') as mock_select:
+        with patch('db.repositories.chapter_repository.select'):
             result = await section_repo.get_next_order_num(sample_uuid)
             assert result == 4
 
@@ -863,7 +860,7 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
+        with patch('db.repositories.audit_log_repository.select'):
             result = await audit_repo.get_recent_logs(hours=24)
             assert len(result) == 1
 
@@ -873,8 +870,8 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.search_logs(
                     event_type="login",
                     user_id=sample_uuid
@@ -909,8 +906,8 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.get_failed_actions()
                 assert len(result) == 1
 
@@ -920,8 +917,8 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.get_by_ip_address("192.168.1.1")
                 assert len(result) == 1
 
@@ -930,7 +927,7 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalar_value="valid_signature")
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
+        with patch('db.repositories.audit_log_repository.select'):
             result = await audit_repo.verify_signature(sample_uuid, "valid_signature")
             assert result is True
 
@@ -939,7 +936,7 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalar_value="other_signature")
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
+        with patch('db.repositories.audit_log_repository.select'):
             result = await audit_repo.verify_signature(sample_uuid, "wrong_signature")
             assert result is False
 
@@ -948,7 +945,7 @@ class TestAuditLogRepository:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
+        with patch('db.repositories.audit_log_repository.select'):
             result = await audit_repo.verify_signature(sample_uuid, "any_signature")
             assert result is False
 
@@ -998,8 +995,8 @@ class TestTermRepository:
         mock_result = MockSelectResult(scalars_value=mock_terms)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.term_repository.select') as mock_select:
-            with patch('db.repositories.term_repository.or_') as mock_or:
+        with patch('db.repositories.term_repository.select'):
+            with patch('db.repositories.term_repository.or_'):
                 result = await term_repo.search_by_term("test")
                 assert len(result) == 1
 
@@ -1009,7 +1006,7 @@ class TestTermRepository:
         mock_result = MockSelectResult(scalars_value=mock_terms)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.term_repository.select') as mock_select:
+        with patch('db.repositories.term_repository.select'):
             result = await term_repo.search_by_definition("definition query")
             assert len(result) == 1
 
@@ -1125,8 +1122,8 @@ class TestConceptRepository:
         mock_result = MockSelectResult(scalars_value=mock_concepts)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.term_repository.select') as mock_select:
-            with patch('db.repositories.term_repository.or_') as mock_or:
+        with patch('db.repositories.term_repository.select'):
+            with patch('db.repositories.term_repository.or_'):
                 result = await concept_repo.search_by_name("test")
                 assert len(result) == 1
 
@@ -1136,7 +1133,7 @@ class TestConceptRepository:
         mock_result = MockSelectResult(scalars_value=mock_concepts)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.term_repository.select') as mock_select:
+        with patch('db.repositories.term_repository.select'):
             result = await concept_repo.search_by_definition("definition query")
             assert len(result) == 1
 
@@ -1229,7 +1226,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=10)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.count_nodes()
             assert result == 10
 
@@ -1238,7 +1235,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=5)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.count_nodes(node_type="person")
             assert result == 5
 
@@ -1247,7 +1244,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=20)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.count_edges()
             assert result == 20
 
@@ -1256,7 +1253,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.node_exists("node1")
             assert result is True
 
@@ -1265,7 +1262,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=0)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.node_exists("nonexistent")
             assert result is False
 
@@ -1274,8 +1271,8 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
-            with patch('db.repositories.knowledge_graph_repository.and_') as mock_and:
+        with patch('db.repositories.knowledge_graph_repository.select'):
+            with patch('db.repositories.knowledge_graph_repository.and_'):
                 result = await kg_repo.edge_exists("node1", "node2", "KNOWS")
                 assert result is True
 
@@ -1284,8 +1281,8 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=0)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
-            with patch('db.repositories.knowledge_graph_repository.and_') as mock_and:
+        with patch('db.repositories.knowledge_graph_repository.select'):
+            with patch('db.repositories.knowledge_graph_repository.and_'):
                 result = await kg_repo.edge_exists("node1", "node2", "KNOWS")
                 assert result is False
 
@@ -1311,7 +1308,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=mock_node)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.get_node("node1")
             assert result == mock_node
 
@@ -1320,7 +1317,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.get_node("nonexistent")
             assert result is None
 
@@ -1330,7 +1327,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_nodes)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.get_all_nodes()
             assert len(result) == 2
 
@@ -1340,7 +1337,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_nodes)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.get_all_nodes(node_type="person")
             assert len(result) == 1
 
@@ -1406,7 +1403,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=mock_edge)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.get_edge(1)
             assert result == mock_edge
 
@@ -1415,7 +1412,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalar_value=None)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.get_edge(999)
             assert result is None
 
@@ -1425,8 +1422,8 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_edges)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
-            with patch('db.repositories.knowledge_graph_repository.and_') as mock_and:
+        with patch('db.repositories.knowledge_graph_repository.select'):
+            with patch('db.repositories.knowledge_graph_repository.and_'):
                 result = await kg_repo.get_edges(source_id="node1", edge_type="KNOWS")
                 assert len(result) == 1
 
@@ -1472,9 +1469,9 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_nodes)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
-            with patch('db.repositories.knowledge_graph_repository.and_') as mock_and:
-                with patch('db.repositories.knowledge_graph_repository.text') as mock_text:
+        with patch('db.repositories.knowledge_graph_repository.select'):
+            with patch('db.repositories.knowledge_graph_repository.and_'):
+                with patch('db.repositories.knowledge_graph_repository.text'):
                     result = await kg_repo.query_nodes(node_type="person", name="John")
                     assert len(result) == 1
 
@@ -1484,7 +1481,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=mock_nodes)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.query_nodes()
             assert len(result) == 1
 
@@ -1498,7 +1495,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result.fetchall.return_value = mock_rows
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.text') as mock_text:
+        with patch('db.repositories.knowledge_graph_repository.text'):
             result = await kg_repo.get_neighbors("node1", depth=2)
             assert len(result) == 2
 
@@ -1509,7 +1506,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result.fetchone.return_value = mock_row
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.text') as mock_text:
+        with patch('db.repositories.knowledge_graph_repository.text'):
             result = await kg_repo.find_path("node1", "node3")
             assert result == ["node1", "node2", "node3"]
 
@@ -1519,7 +1516,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result.fetchone.return_value = None
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.text') as mock_text:
+        with patch('db.repositories.knowledge_graph_repository.text'):
             result = await kg_repo.find_path("node1", "node999")
             assert result is None
 
@@ -1538,7 +1535,7 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result.fetchall.return_value = mock_rows
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.text') as mock_text:
+        with patch('db.repositories.knowledge_graph_repository.text'):
             result = await kg_repo.bfs_traverse("node1")
             assert "node1" in result
 
@@ -1566,8 +1563,8 @@ class TestKnowledgeGraphRepositoryMethods:
         mock_result = MockSelectResult(scalars_value=[])
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
-            with patch('db.repositories.knowledge_graph_repository.and_') as mock_and:
+        with patch('db.repositories.knowledge_graph_repository.select'):
+            with patch('db.repositories.knowledge_graph_repository.and_'):
                 result = await kg_repo.get_edges(source_id="nonexistent")
                 assert len(result) == 0
 
@@ -1590,8 +1587,8 @@ class TestUserRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_user)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
-            with patch('db.repositories.user_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.user_repository.select'):
+            with patch('db.repositories.user_repository.selectinload'):
                 result = await user_repo.get_with_roles(sample_uuid)
                 assert result == mock_user
 
@@ -1624,8 +1621,8 @@ class TestRoleRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_role)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
-            with patch('db.repositories.user_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.user_repository.select'):
+            with patch('db.repositories.user_repository.selectinload'):
                 result = await role_repo.get_with_permissions(sample_uuid)
                 assert result == mock_role
 
@@ -1635,8 +1632,8 @@ class TestRoleRepositoryMore:
         mock_result = MockSelectResult(scalars_value=mock_roles)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
-            with patch('db.repositories.user_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.user_repository.select'):
+            with patch('db.repositories.user_repository.selectinload'):
                 result = await role_repo.get_all_with_user_count()
                 assert len(result) == 1
 
@@ -1668,8 +1665,8 @@ class TestProjectRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_project)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.joinedload') as mock_joinedload:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.joinedload'):
                 result = await project_repo.get_with_owner(sample_uuid)
                 assert result == mock_project
 
@@ -1679,8 +1676,8 @@ class TestProjectRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_project)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.selectinload'):
                 result = await project_repo.get_with_members(sample_uuid)
                 assert result == mock_project
 
@@ -1690,8 +1687,8 @@ class TestProjectRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_project)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.selectinload'):
                 result = await project_repo.get_with_chapters(sample_uuid)
                 assert result == mock_project
 
@@ -1701,9 +1698,9 @@ class TestProjectRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_project)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.joinedload') as mock_joinedload:
-                with patch('db.repositories.project_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.joinedload'):
+                with patch('db.repositories.project_repository.selectinload'):
                     result = await project_repo.get_full_project(sample_uuid)
                     assert result == mock_project
 
@@ -1725,8 +1722,8 @@ class TestChapterRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_chapter)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select') as mock_select:
-            with patch('db.repositories.chapter_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.chapter_repository.select'):
+            with patch('db.repositories.chapter_repository.selectinload'):
                 result = await chapter_repo.get_with_contents(sample_uuid)
                 assert result == mock_chapter
 
@@ -1736,8 +1733,8 @@ class TestChapterRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_chapter)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select') as mock_select:
-            with patch('db.repositories.chapter_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.chapter_repository.select'):
+            with patch('db.repositories.chapter_repository.selectinload'):
                 result = await chapter_repo.get_with_sections(sample_uuid)
                 assert result == mock_chapter
 
@@ -1747,8 +1744,8 @@ class TestChapterRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_chapter)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select') as mock_select:
-            with patch('db.repositories.chapter_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.chapter_repository.select'):
+            with patch('db.repositories.chapter_repository.selectinload'):
                 result = await chapter_repo.get_with_reviews(sample_uuid)
                 assert result == mock_chapter
 
@@ -1758,8 +1755,8 @@ class TestChapterRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_chapter)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select') as mock_select:
-            with patch('db.repositories.chapter_repository.selectinload') as mock_selectinload:
+        with patch('db.repositories.chapter_repository.select'):
+            with patch('db.repositories.chapter_repository.selectinload'):
                 result = await chapter_repo.get_full_chapter(sample_uuid)
                 assert result == mock_chapter
 
@@ -1784,8 +1781,8 @@ class TestAuditLogRepositoryMore:
         from datetime import datetime, timedelta
         since = datetime.utcnow() - timedelta(hours=1)
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.get_by_event_type("login", since=since)
                 assert len(result) == 1
 
@@ -1797,8 +1794,8 @@ class TestAuditLogRepositoryMore:
         from datetime import datetime, timedelta
         since = datetime.utcnow() - timedelta(hours=1)
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.count_by_event_type("login", since=since)
                 assert result == 10
 
@@ -1810,8 +1807,8 @@ class TestAuditLogRepositoryMore:
         from datetime import datetime, timedelta
         since = datetime.utcnow() - timedelta(hours=1)
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.count_by_user(sample_uuid, since=since)
                 assert result == 5
 
@@ -1824,8 +1821,8 @@ class TestAuditLogRepositoryMore:
         from datetime import datetime, timedelta
         since = datetime.utcnow() - timedelta(hours=24)
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.search_logs(
                     event_type="login",
                     user_id=sample_uuid,
@@ -1841,7 +1838,7 @@ class TestAuditLogRepositoryMore:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
+        with patch('db.repositories.audit_log_repository.select'):
             result = await audit_repo.search_logs(limit=10)
             assert len(result) == 1
 
@@ -1863,8 +1860,8 @@ class TestSectionRepositoryMore:
         mock_result = MockSelectResult(scalar_value=mock_section)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.chapter_repository.select') as mock_select:
-            with patch('db.repositories.chapter_repository.joinedload') as mock_joinedload:
+        with patch('db.repositories.chapter_repository.select'):
+            with patch('db.repositories.chapter_repository.joinedload'):
                 result = await section_repo.get_with_parent(sample_uuid)
                 assert result == mock_section
 
@@ -1887,7 +1884,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.find_all(offset_with_row_number=True)
             assert len(result) == 1
 
@@ -1896,7 +1893,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.exists(status=None)
             assert result is True
 
@@ -1905,7 +1902,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=2)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.count(filters={"status": None})
             assert result == 2
 
@@ -1915,7 +1912,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.find_all(filters={"status": None})
             assert len(result) == 1
 
@@ -1925,7 +1922,7 @@ class TestBaseRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_items)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.base_repository.select') as mock_select:
+        with patch('db.repositories.base_repository.select'):
             result = await base_repo.find_all(order_by="created_at", order_desc=False)
             assert len(result) == 1
 
@@ -1978,8 +1975,8 @@ class TestUserRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=mock_user_role)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
-            with patch('db.repositories.user_repository.and_') as mock_and:
+        with patch('db.repositories.user_repository.select'):
+            with patch('db.repositories.user_repository.and_'):
                 result = await user_repo.remove_role(sample_uuid, sample_uuid)
                 assert result is True
 
@@ -1988,7 +1985,7 @@ class TestUserRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=1)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
+        with patch('db.repositories.user_repository.select'):
             result = await user_repo.has_permission(sample_uuid, "projects", "read")
             assert result is True
 
@@ -1997,7 +1994,7 @@ class TestUserRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=0)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
+        with patch('db.repositories.user_repository.select'):
             result = await user_repo.has_permission(sample_uuid, "projects", "delete")
             assert result is False
 
@@ -2019,8 +2016,8 @@ class TestRoleRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=mock_role_perm)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.user_repository.select') as mock_select:
-            with patch('db.repositories.user_repository.and_') as mock_and:
+        with patch('db.repositories.user_repository.select'):
+            with patch('db.repositories.user_repository.and_'):
                 result = await role_repo.remove_permission(sample_uuid, sample_uuid)
                 assert result is True
 
@@ -2083,8 +2080,8 @@ class TestProjectRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_members)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.joinedload') as mock_joinedload:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.joinedload'):
                 result = await member_repo.get_members_of_project(sample_uuid)
                 assert len(result) == 1
 
@@ -2094,8 +2091,8 @@ class TestProjectRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_members)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.joinedload') as mock_joinedload:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.joinedload'):
                 result = await member_repo.get_projects_of_user(sample_uuid)
                 assert len(result) == 1
 
@@ -2114,8 +2111,8 @@ class TestProjectRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=mock_member)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.project_repository.select') as mock_select:
-            with patch('db.repositories.project_repository.and_') as mock_and:
+        with patch('db.repositories.project_repository.select'):
+            with patch('db.repositories.project_repository.and_'):
                 result = await member_repo.remove_member(sample_uuid, sample_uuid)
                 assert result is True
 
@@ -2227,8 +2224,8 @@ class TestAuditLogRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.search_logs(resource_type="project")
                 assert len(result) == 1
 
@@ -2238,8 +2235,8 @@ class TestAuditLogRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.search_logs(result="success")
                 assert len(result) == 1
 
@@ -2249,11 +2246,11 @@ class TestAuditLogRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_logs)
         mock_session.execute.return_value = mock_result
 
-        from datetime import datetime, timedelta
+        from datetime import datetime
         until = datetime.utcnow()
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.search_logs(until=until)
                 assert len(result) == 1
 
@@ -2266,8 +2263,8 @@ class TestAuditLogRepositoryEdgeCases:
         from datetime import datetime, timedelta
         since = datetime.utcnow() - timedelta(hours=1)
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.get_failed_actions(since=since)
                 assert len(result) == 1
 
@@ -2280,8 +2277,8 @@ class TestAuditLogRepositoryEdgeCases:
         from datetime import datetime, timedelta
         since = datetime.utcnow() - timedelta(hours=24)
 
-        with patch('db.repositories.audit_log_repository.select') as mock_select:
-            with patch('db.repositories.audit_log_repository.and_') as mock_and:
+        with patch('db.repositories.audit_log_repository.select'):
+            with patch('db.repositories.audit_log_repository.and_'):
                 result = await audit_repo.get_by_ip_address("192.168.1.1", since=since)
                 assert len(result) == 1
 
@@ -2302,8 +2299,8 @@ class TestKnowledgeGraphRepositoryEdgeCases:
         mock_result = MockSelectResult(scalars_value=mock_edges)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
-            with patch('db.repositories.knowledge_graph_repository.and_') as mock_and:
+        with patch('db.repositories.knowledge_graph_repository.select'):
+            with patch('db.repositories.knowledge_graph_repository.and_'):
                 result = await kg_repo.get_edges(target_id="node2")
                 assert len(result) == 1
 
@@ -2312,7 +2309,7 @@ class TestKnowledgeGraphRepositoryEdgeCases:
         mock_result = MockSelectResult(scalar_value=15)
         mock_session.execute.return_value = mock_result
 
-        with patch('db.repositories.knowledge_graph_repository.select') as mock_select:
+        with patch('db.repositories.knowledge_graph_repository.select'):
             result = await kg_repo.count_edges(edge_type="KNOWS")
             assert result == 15
 
@@ -2532,11 +2529,11 @@ class TestTermRepositoryFindSimilarTerms:
         other_term.id = uuid.uuid4()  # Different id - SQL filtering handles this in real code
         other_term.synonyms = ["syn1"]
         other_term.domain = "other_domain"
-        
+
         # Set up mock_session.execute to return proper result
         mock_result = MockSelectResult(scalars_value=[other_term])
         mock_session.execute = AsyncMock(return_value=mock_result)
-        
+
         with patch.object(term_repo, 'get_by_id', return_value=mock_term):
             result = await term_repo.find_similar_terms(sample_uuid)
             assert len(result) == 1
@@ -2551,11 +2548,11 @@ class TestTermRepositoryFindSimilarTerms:
         other_term.id = uuid.uuid4()
         other_term.synonyms = []
         other_term.domain = "test_domain"
-        
+
         # Set up mock_session.execute to return proper result
         mock_result = MockSelectResult(scalars_value=[other_term])
         mock_session.execute = AsyncMock(return_value=mock_result)
-        
+
         with patch.object(term_repo, 'get_by_id', return_value=mock_term):
             result = await term_repo.find_similar_terms(sample_uuid)
             assert other_term in result

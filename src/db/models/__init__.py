@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import (
     Boolean,
@@ -55,7 +54,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(String(50), nullable=False, default="viewer")
-    organization_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
     clearance_level: Mapped[int] = mapped_column(Integer, default=1)
@@ -69,16 +68,16 @@ class User(Base):
         onupdate=func.now(),
     )
 
-    roles: Mapped[list["Role"]] = relationship(
+    roles: Mapped[list[Role]] = relationship(
         secondary="user_roles", back_populates="users"
     )
-    owned_projects: Mapped[list["Project"]] = relationship(
+    owned_projects: Mapped[list[Project]] = relationship(
         back_populates="owner", foreign_keys="Project.owner_id"
     )
-    project_memberships: Mapped[list["ProjectMember"]] = relationship(
+    project_memberships: Mapped[list[ProjectMember]] = relationship(
         back_populates="user"
     )
-    reviews: Mapped[list["Review"]] = relationship(back_populates="reviewer")
+    reviews: Mapped[list[Review]] = relationship(back_populates="reviewer")
 
     __table_args__ = (
         Index("idx_users_email", "email"),
@@ -96,16 +95,16 @@ class Role(Base):
         default=generate_uuid,
     )
     name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
     )
 
-    users: Mapped[list["User"]] = relationship(
+    users: Mapped[list[User]] = relationship(
         secondary="user_roles", back_populates="roles"
     )
-    permissions: Mapped[list["Permission"]] = relationship(
+    permissions: Mapped[list[Permission]] = relationship(
         secondary="role_permissions", back_populates="roles"
     )
 
@@ -121,9 +120,9 @@ class Permission(Base):
     )
     resource: Mapped[str] = mapped_column(String(100), nullable=False)
     action: Mapped[str] = mapped_column(String(50), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    roles: Mapped[list["Role"]] = relationship(
+    roles: Mapped[list[Role]] = relationship(
         secondary="role_permissions", back_populates="permissions"
     )
 
@@ -179,9 +178,9 @@ class Project(Base):
         default=generate_uuid,
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="draft")
-    owner_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    owner_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id"),
         nullable=True,
@@ -198,13 +197,13 @@ class Project(Base):
         onupdate=func.now(),
     )
 
-    owner: Mapped[Optional["User"]] = relationship(
+    owner: Mapped[User | None] = relationship(
         back_populates="owned_projects", foreign_keys=[owner_id]
     )
-    members: Mapped[list["ProjectMember"]] = relationship(
+    members: Mapped[list[ProjectMember]] = relationship(
         back_populates="project", cascade="all, delete-orphan"
     )
-    chapters: Mapped[list["Chapter"]] = relationship(
+    chapters: Mapped[list[Chapter]] = relationship(
         back_populates="project", cascade="all, delete-orphan"
     )
 
@@ -234,8 +233,8 @@ class ProjectMember(Base):
         server_default=func.now(),
     )
 
-    project: Mapped["Project"] = relationship(back_populates="members")
-    user: Mapped["User"] = relationship(back_populates="project_memberships")
+    project: Mapped[Project] = relationship(back_populates="members")
+    user: Mapped[User] = relationship(back_populates="project_memberships")
 
 
 class Review(Base):
@@ -252,20 +251,20 @@ class Review(Base):
         ForeignKey("chapters.id", ondelete="CASCADE"),
         nullable=False,
     )
-    reviewer_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    reviewer_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id"),
         nullable=True,
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False)
-    comments: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    comments: Mapped[str | None] = mapped_column(Text, nullable=True)
     reviewed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
     )
 
-    chapter: Mapped["Chapter"] = relationship(back_populates="reviews")
-    reviewer: Mapped[Optional["User"]] = relationship(back_populates="reviews")
+    chapter: Mapped[Chapter] = relationship(back_populates="reviews")
+    reviewer: Mapped[User | None] = relationship(back_populates="reviews")
 
     __table_args__ = (
         Index("idx_reviews_chapter", "chapter_id"),
@@ -298,8 +297,8 @@ class Chapter(Base):
     status: Mapped[str] = mapped_column(String(20), default="draft")
     word_count: Mapped[int] = mapped_column(Integer, default=0)
     version: Mapped[str] = mapped_column(String(20), nullable=False)
-    content_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    parent_chapter_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    parent_chapter_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("chapters.id"),
         nullable=True,
@@ -314,19 +313,19 @@ class Chapter(Base):
         onupdate=func.now(),
     )
 
-    project: Mapped["Project"] = relationship(back_populates="chapters")
-    parent_chapter: Mapped[Optional["Chapter"]] = relationship(
+    project: Mapped[Project] = relationship(back_populates="chapters")
+    parent_chapter: Mapped[Chapter | None] = relationship(
         remote_side="Chapter.id", back_populates="child_chapters"
     )
-    child_chapters: Mapped[list["Chapter"]] = relationship(back_populates="parent_chapter")
-    contents: Mapped[list["ChapterContent"]] = relationship(
+    child_chapters: Mapped[list[Chapter]] = relationship(back_populates="parent_chapter")
+    contents: Mapped[list[ChapterContent]] = relationship(
         back_populates="chapter", cascade="all, delete-orphan"
     )
-    sections: Mapped[list["Section"]] = relationship(
+    sections: Mapped[list[Section]] = relationship(
         back_populates="chapter", cascade="all, delete-orphan"
     )
-    reviews: Mapped[list["Review"]] = relationship(back_populates="chapter")
-    citations: Mapped[list["Citation"]] = relationship(
+    reviews: Mapped[list[Review]] = relationship(back_populates="chapter")
+    citations: Mapped[list[Citation]] = relationship(
         back_populates="chapter", cascade="all, delete-orphan"
     )
 
@@ -352,10 +351,10 @@ class ChapterContent(Base):
         ForeignKey("chapters.id", ondelete="CASCADE"),
         nullable=False,
     )
-    content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    content: Mapped[str | None] = mapped_column(Text, nullable=True)
     version: Mapped[str] = mapped_column(String(20), nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -363,7 +362,7 @@ class ChapterContent(Base):
         server_default=func.now(),
     )
 
-    chapter: Mapped["Chapter"] = relationship(back_populates="contents")
+    chapter: Mapped[Chapter] = relationship(back_populates="contents")
 
     __table_args__ = (
         Index("idx_chapter_content_chapter", "chapter_id"),
@@ -389,7 +388,7 @@ class Section(Base):
     order_num: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="draft")
     word_count: Mapped[int] = mapped_column(Integer, default=0)
-    parent_section_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    parent_section_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("sections.id"),
         nullable=True,
@@ -404,11 +403,11 @@ class Section(Base):
         onupdate=func.now(),
     )
 
-    chapter: Mapped["Chapter"] = relationship(back_populates="sections")
-    parent_section: Mapped[Optional["Section"]] = relationship(
+    chapter: Mapped[Chapter] = relationship(back_populates="sections")
+    parent_section: Mapped[Section | None] = relationship(
         remote_side="Section.id", back_populates="child_sections"
     )
-    child_sections: Mapped[list["Section"]] = relationship(back_populates="parent_section")
+    child_sections: Mapped[list[Section]] = relationship(back_populates="parent_section")
 
     __table_args__ = (
         Index("idx_sections_chapter", "chapter_id"),
@@ -428,21 +427,21 @@ class Concept(Base):
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     definition: Mapped[str] = mapped_column(Text, nullable=False)
-    domain: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    related_terms: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String), nullable=True)
-    source_chapter_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    domain: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    related_terms: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    source_chapter_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("chapters.id"),
         nullable=True,
     )
     locked: Mapped[bool] = mapped_column(Boolean, default=False)
-    properties: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    properties: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
     )
 
-    source_chapter: Mapped[Optional["Chapter"]] = relationship(back_populates="concepts")
+    source_chapter: Mapped[Chapter | None] = relationship(back_populates="concepts")
 
     __table_args__ = (
         Index("idx_concepts_domain", "domain"),
@@ -462,11 +461,11 @@ class Term(Base):
     )
     term: Mapped[str] = mapped_column(String(200), nullable=False)
     definition: Mapped[str] = mapped_column(Text, nullable=False)
-    synonyms: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String), nullable=True)
-    domain: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    first_defined_at: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    synonyms: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    domain: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    first_defined_at: Mapped[str | None] = mapped_column(String(50), nullable=True)
     locked: Mapped[bool] = mapped_column(Boolean, default=False)
-    properties: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    properties: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -494,19 +493,19 @@ class AuditLog(Base):
         default=generate_uuid,
     )
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
-    resource_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    resource_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    resource_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    resource_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
-    action: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    result: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    details: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    signature: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    action: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    result: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    details: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
+    signature: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -536,9 +535,9 @@ class ContentVersion(Base):
     )
     version: Mapped[str] = mapped_column(String(20), nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    merkle_root: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    change_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+    merkle_root: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    change_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -567,18 +566,18 @@ class MaterialAsset(Base):
         default=generate_uuid,
     )
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    file_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    file_size: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    mime_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    source_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    copyright_info: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    uploaded_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+    file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    file_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    mime_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    copyright_info: Mapped[str | None] = mapped_column(Text, nullable=True)
+    uploaded_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id"),
         nullable=True,
     )
-    properties: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    properties: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -604,23 +603,23 @@ class Citation(Base):
         ForeignKey("chapters.id", ondelete="CASCADE"),
         nullable=False,
     )
-    doi: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    title: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    authors: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String), nullable=True)
-    journal: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    doi: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    authors: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    journal: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    url: Mapped[str | None] = mapped_column(Text, nullable=True)
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    verified_at: Mapped[Optional[datetime]] = mapped_column(
+    verified_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    properties: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    properties: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
     )
 
-    chapter: Mapped["Chapter"] = relationship(back_populates="citations")
+    chapter: Mapped[Chapter] = relationship(back_populates="citations")
 
     __table_args__ = (
         Index("idx_citations_chapter", "chapter_id"),
@@ -651,12 +650,12 @@ class GraphNode(Base):
         onupdate=func.now(),
     )
 
-    outgoing_edges: Mapped[list["GraphEdge"]] = relationship(
+    outgoing_edges: Mapped[list[GraphEdge]] = relationship(
         foreign_keys="GraphEdge.source_id",
         back_populates="source_node",
         cascade="all, delete-orphan",
     )
-    incoming_edges: Mapped[list["GraphEdge"]] = relationship(
+    incoming_edges: Mapped[list[GraphEdge]] = relationship(
         foreign_keys="GraphEdge.target_id",
         back_populates="target_node",
         cascade="all, delete-orphan",
@@ -690,10 +689,10 @@ class GraphEdge(Base):
         server_default=func.now(),
     )
 
-    source_node: Mapped["GraphNode"] = relationship(
+    source_node: Mapped[GraphNode] = relationship(
         foreign_keys=[source_id], back_populates="outgoing_edges"
     )
-    target_node: Mapped["GraphNode"] = relationship(
+    target_node: Mapped[GraphNode] = relationship(
         foreign_keys=[target_id], back_populates="incoming_edges"
     )
 

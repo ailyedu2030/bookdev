@@ -2,19 +2,15 @@
 F26: 血缘追踪系统 - TDD测试
 测试数据血缘追踪、影响分析和传播验证功能
 """
-import unittest
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timezone
-from enum import Enum
-
-import sys
 import os
+import sys
+import unittest
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lineage_tracker import DataLineageTracker, LineageNode, ImpactReport, DataSource
-from lineage_node import NodeType, LineageEdge
 from impact_analyzer import ImpactAnalyzer
+from lineage_node import LineageEdge
+from lineage_tracker import DataLineageTracker, DataSource
 from propagation_verifier import PropagationVerifier
 
 
@@ -77,7 +73,7 @@ class TestLineageTrackerBasic(unittest.TestCase):
         tracker = DataLineageTracker()
 
         source1 = DataSource(source_id="src_001", source_type="api", name="API数据源")
-        source2 = DataSource(source_id="src_002", source_type="file", name="文件数据源")
+        DataSource(source_id="src_002", source_type="file", name="文件数据源")
 
         tracker.track_provenance(
             data_id="merged_data",
@@ -121,7 +117,7 @@ class TestLineageChain(unittest.TestCase):
         tracker = DataLineageTracker()
 
         source1 = DataSource(source_id="src_001", source_type="database", name="数据库A")
-        source2 = DataSource(source_id="src_002", source_type="database", name="数据库B")
+        DataSource(source_id="src_002", source_type="database", name="数据库B")
 
         tracker.track_provenance(
             data_id="raw_data",
@@ -296,7 +292,6 @@ class TestPropagationDepth(unittest.TestCase):
             metadata={}
         )
 
-        current_id = "data_root"
         for i in range(1, 10):
             next_id = f"data_level_{i}"
             tracker.track_provenance(
@@ -305,7 +300,6 @@ class TestPropagationDepth(unittest.TestCase):
                 transformation=f"TRANSFORM_{i}",
                 metadata={"depth": i}
             )
-            current_id = next_id
 
         result = verifier.verify_propagation_depth("data_root", max_depth=5)
         self.assertFalse(result)
@@ -999,7 +993,7 @@ class TestLineageTrackerUncoveredBranches(unittest.TestCase):
         """detect_circular_lineage处理通用异常 (覆盖lines 135-136)"""
         tracker = DataLineageTracker()
         has_cycle = tracker.detect_circular_lineage()
-        assert has_cycle == False
+        assert has_cycle is False
 
     def test_get_children_nonexistent(self):
         """获取不存在节点的子节点 (覆盖line 145-146)"""
@@ -1138,8 +1132,8 @@ class TestGoldenSampleMethods(unittest.TestCase):
 
     def test_golden_sample_get_method(self):
         """测试GoldenSample.get方法"""
-        import sys
         import os
+        import sys
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import GoldenSample
         sample = GoldenSample(
@@ -1156,8 +1150,8 @@ class TestGoldenSampleMethods(unittest.TestCase):
 
     def test_golden_sample_getitem_method(self):
         """测试GoldenSample.__getitem__方法"""
-        import sys
         import os
+        import sys
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import GoldenSample
         sample = GoldenSample(
@@ -1177,9 +1171,9 @@ class TestDatasetBuilderSave(unittest.TestCase):
 
     def test_save_sample_with_explicit_path(self):
         """测试save_sample指定路径"""
-        import tempfile
         import os
         import sys
+        import tempfile
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import DatasetBuilder, GoldenSample
 
@@ -1200,9 +1194,9 @@ class TestDatasetBuilderSave(unittest.TestCase):
 
     def test_save_sample_with_samples_dir(self):
         """测试save_sample使用_samples_dir"""
-        import tempfile
         import os
         import sys
+        import tempfile
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import DatasetBuilder, GoldenSample
 
@@ -1223,8 +1217,8 @@ class TestDatasetBuilderSave(unittest.TestCase):
 
     def test_save_sample_no_path_available(self):
         """测试save_sample无法确定路径时返回False"""
-        import sys
         import os
+        import sys
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "f30_golden_dataset"))
         from dataset_builder import DatasetBuilder, GoldenSample
         builder = DatasetBuilder()
@@ -1275,7 +1269,6 @@ class TestLineageTrackerFinalCoverage(unittest.TestCase):
 
     def test_detect_circular_lineage_with_cycle(self):
         """lineage_tracker.py:132 - 检测到循环返回True"""
-        import networkx as nx
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
         tracker.track_provenance("data_001", source=source, transformation="INGEST", metadata={})
@@ -1336,6 +1329,7 @@ class TestImpactAnalyzerExceptionCoverage(unittest.TestCase):
     def test_compute_impact_analysis_descendants_exception(self):
         """impact_analyzer.py:59-60 - nx.descendants抛出NetworkXError"""
         from unittest.mock import patch
+
         import networkx as nx
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
@@ -1350,6 +1344,7 @@ class TestImpactAnalyzerExceptionCoverage(unittest.TestCase):
     def test_compute_upstream_impact_ancestors_exception(self):
         """impact_analyzer.py:115-116 - nx.ancestors抛出NetworkXError"""
         from unittest.mock import patch
+
         import networkx as nx
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
@@ -1368,6 +1363,7 @@ class TestLineageTrackerExceptionCoverage(unittest.TestCase):
     def test_get_lineage_chain_ancestors_exception(self):
         """lineage_tracker.py:125-126 - nx.ancestors抛出NetworkXError"""
         from unittest.mock import patch
+
         import networkx as nx
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")
@@ -1381,6 +1377,7 @@ class TestLineageTrackerExceptionCoverage(unittest.TestCase):
     def test_detect_circular_lineage_networkx_error_return_false(self):
         """lineage_tracker.py:134 - nx.find_cycle抛出NetworkXError"""
         from unittest.mock import patch
+
         import networkx as nx
         tracker = DataLineageTracker()
         source = DataSource(source_id="src_001", source_type="db", name="DB")

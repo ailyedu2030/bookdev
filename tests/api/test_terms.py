@@ -9,11 +9,8 @@ Tests for term endpoints:
 - POST /api/terms/search - Search terms
 """
 
-import pytest
-from datetime import datetime
 
-from api.deps import generate_uuid
-from tests.api.conftest import create_test_term, get_auth_header, get_csrf_headers
+from tests.api.conftest import create_test_term
 
 
 class TestListTerms:

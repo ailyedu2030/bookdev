@@ -2,11 +2,9 @@
 F06: Tier1数值核实引擎 - Tier1Verifier实现
 """
 import asyncio
-import hashlib
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class VerificationStatus(Enum):
@@ -22,8 +20,8 @@ class VerificationResult:
     discrepancy: float = 0.0
     reason: str = ""
     status: VerificationStatus = VerificationStatus.PENDING
-    source: Optional[str] = None
-    external_value: Optional[Any] = None
+    source: str | None = None
+    external_value: Any | None = None
 
 
 class Tier1Verifier:
@@ -54,12 +52,12 @@ class Tier1Verifier:
         self,
         data_type: str,
         value: Any,
-        year: Optional[int] = None,
-        region: Optional[str] = None,
+        year: int | None = None,
+        region: str | None = None,
         **context
     ) -> VerificationResult:
         """核实数值数据"""
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, int | float):
             return VerificationResult(
                 is_verified=False,
                 reason="INVALID_TYPE",
@@ -124,7 +122,7 @@ class Tier1Verifier:
                 status=VerificationStatus.FAILED
             )
 
-    def _check_value_range(self, data_type: str, value: Any) -> Optional[VerificationResult]:
+    def _check_value_range(self, data_type: str, value: Any) -> VerificationResult | None:
         """检查数值是否在合理范围内"""
         if data_type not in self.VALUE_RANGES:
             return None
@@ -138,13 +136,13 @@ class Tier1Verifier:
             )
         return None
 
-    def _check_anomaly(self, data_type: str, value: Any) -> Optional[VerificationResult]:
+    def _check_anomaly(self, data_type: str, value: Any) -> VerificationResult | None:
         """检测异常值（捏造数值）"""
         if data_type not in self.ANOMALY_THRESHOLDS:
             return None
 
         threshold = self.ANOMALY_THRESHOLDS[data_type]
-        if isinstance(value, (int, float)) and value > threshold:
+        if isinstance(value, int | float) and value > threshold:
             return VerificationResult(
                 is_verified=False,
                 reason="ANOMALY_DETECTED",
@@ -156,17 +154,17 @@ class Tier1Verifier:
         self,
         data_type: str,
         value: Any,
-        year: Optional[int] = None,
-        region: Optional[str] = None,
+        year: int | None = None,
+        region: str | None = None,
         **context
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """调用外部API核实数据"""
         if self.use_api and data_type in self.API_ENDPOINTS:
             # Actually call the external API (would need aiohttp in real implementation)
             api_result = await self._fetch_from_api(data_type, year, region)
             if api_result:
                 return api_result
-        
+
         # Fallback to mock data if API unavailable or use_api is False
         api_result = await asyncio.wait_for(
             self._fetch_external_data(data_type, year, region),
@@ -177,16 +175,16 @@ class Tier1Verifier:
     async def _fetch_from_api(
         self,
         data_type: str,
-        year: Optional[int],
-        region: Optional[str]
-    ) -> Optional[Dict[str, Any]]:
+        year: int | None,
+        region: str | None
+    ) -> dict[str, Any] | None:
         """从外部API获取数据"""
         # This would be implemented with aiohttp in a real scenario
         # For now, we'll simulate API unavailability
         endpoint = self.API_ENDPOINTS.get(data_type)
         if not endpoint:
             return None
-        
+
         # Simulate API call - in real implementation, use aiohttp
         # For demonstration, we'll just return None to trigger mock fallback
         return None
@@ -194,9 +192,9 @@ class Tier1Verifier:
     async def _fetch_external_data(
         self,
         data_type: str,
-        year: Optional[int],
-        region: Optional[str]
-    ) -> Dict[str, Any]:
+        year: int | None,
+        region: str | None
+    ) -> dict[str, Any]:
         """获取外部数据 - Mock实现"""
         mock_data = {
             "gdp": {
@@ -226,18 +224,18 @@ class Tier1Verifier:
         """计算两个值之间的偏差 - 避免浮点精度问题"""
         if value2 == 0:
             return 1.0 if value1 != 0 else 0.0
-        
+
         # Use relative difference with proper handling for large numbers
         # Using Decimal would be more precise, but this avoids float comparison issues
         abs_diff = abs(value1 - value2)
-        
+
         # For very large numbers, ensure we don't lose precision in division
         # Use a small epsilon to prevent division by very small numbers
         if abs(value2) < 1e-10:
             return 1.0
-        
+
         relative_error = abs_diff / abs(value2)
-        
+
         # Cap at 1.0 for extreme discrepancies
         return min(relative_error, 1.0)
 
@@ -260,8 +258,8 @@ class ExternalDataVerifier:
         self,
         data_type: str,
         value: Any,
-        year: Optional[int] = None,
-        region: Optional[str] = None,
+        year: int | None = None,
+        region: str | None = None,
         **context
     ) -> VerificationResult:
         """调用外部API核实数据"""
@@ -276,8 +274,8 @@ class ExternalDataVerifier:
     async def _call_national_stats_api(
         self,
         data_type: str,
-        year: Optional[int],
-        region: Optional[str]
-    ) -> Dict[str, Any]:
+        year: int | None,
+        region: str | None
+    ) -> dict[str, Any]:
         """调用国家统计局API"""
         return await self._verifier._fetch_external_data(data_type, year, region)

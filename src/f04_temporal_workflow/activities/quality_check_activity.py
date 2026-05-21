@@ -3,8 +3,7 @@ Quality Check Activity - 内容质量检查
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
-from datetime import timedelta
+from typing import Any
 
 from temporalio import activity
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -16,7 +15,7 @@ class QualityCheckInput:
     chapter_id: str
     content: str
     outline: dict
-    check_types: List[str]
+    check_types: list[str]
     language: str = "zh-CN"
 
 
@@ -27,8 +26,8 @@ class QualityIssue:
     severity: str
     category: str
     description: str
-    location: Optional[str] = None
-    suggestion: Optional[str] = None
+    location: str | None = None
+    suggestion: str | None = None
 
 
 @dataclass
@@ -37,9 +36,9 @@ class QualityCheckOutput:
     chapter_id: str
     passed: bool
     overall_score: float
-    issues: List[QualityIssue]
-    checks_performed: Dict[str, bool]
-    recommendations: List[str]
+    issues: list[QualityIssue]
+    checks_performed: dict[str, bool]
+    recommendations: list[str]
 
 
 class QualityCheckActivity:
@@ -111,7 +110,7 @@ class QualityCheckActivity:
         )
 
     @staticmethod
-    async def _check_grammar(content: str) -> Dict[str, Any]:
+    async def _check_grammar(content: str) -> dict[str, Any]:
         """检查语法"""
         return {
             "passed": True,
@@ -119,7 +118,7 @@ class QualityCheckActivity:
         }
 
     @staticmethod
-    async def _check_coherence(content: str, outline: dict) -> Dict[str, Any]:
+    async def _check_coherence(content: str, outline: dict) -> dict[str, Any]:
         """检查连贯性"""
         issues = []
         word_count = len(content.split())
@@ -140,7 +139,7 @@ class QualityCheckActivity:
         }
 
     @staticmethod
-    async def _check_completeness(content: str, outline: dict) -> Dict[str, Any]:
+    async def _check_completeness(content: str, outline: dict) -> dict[str, Any]:
         """检查完整性"""
         issues = []
         sections = outline.get("sections", [])
@@ -162,7 +161,7 @@ class QualityCheckActivity:
         }
 
     @staticmethod
-    async def _check_readability(content: str) -> Dict[str, Any]:
+    async def _check_readability(content: str) -> dict[str, Any]:
         """检查可读性"""
         return {
             "passed": True,
@@ -170,7 +169,7 @@ class QualityCheckActivity:
         }
 
     @staticmethod
-    def _generate_recommendations(issues: List[QualityIssue]) -> List[str]:
+    def _generate_recommendations(issues: list[QualityIssue]) -> list[str]:
         """生成建议"""
         recommendations = []
         for issue in issues:
@@ -183,7 +182,7 @@ class QualityCheckActivity:
     @staticmethod
     @activity.defn(name="check_plagiarism")
     @retry(stop=stop_after_attempt(2))
-    async def check_plagiarism(chapter_id: str, content: str) -> Dict[str, Any]:
+    async def check_plagiarism(chapter_id: str, content: str) -> dict[str, Any]:
         """
         检查抄袭
 
@@ -205,7 +204,7 @@ class QualityCheckActivity:
 
     @staticmethod
     @activity.defn(name="validate_references")
-    async def validate_references(chapter_id: str, references: List[dict]) -> Dict[str, Any]:
+    async def validate_references(chapter_id: str, references: list[dict]) -> dict[str, Any]:
         """
         验证参考文献
 

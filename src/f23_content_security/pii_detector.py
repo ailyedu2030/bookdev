@@ -2,13 +2,12 @@
 F23: 内容安全过滤 - PII(个人身份信息)检测器
 """
 import re
-from typing import List, Tuple, Dict
 
 
 class PIIDetector:
     """PII个人身份信息检测器"""
 
-    PII_PATTERNS: Dict[str, Tuple[re.Pattern, float, str]] = {
+    PII_PATTERNS: dict[str, tuple[re.Pattern, float, str]] = {
         "id_card": (
             re.compile(r"\b\d{17}[\dXx]\b"),
             0.9,
@@ -48,7 +47,7 @@ class PIIDetector:
         self._severities = {k: v[1] for k, v in self.PII_PATTERNS.items()}
         self._descriptions = {k: v[2] for k, v in self.PII_PATTERNS.items()}
 
-    def detect(self, content: str) -> List[Tuple[str, str, float, int]]:
+    def detect(self, content: str) -> list[tuple[str, str, float, int]]:
         """检测PII信息
 
         Returns:
@@ -65,7 +64,7 @@ class PIIDetector:
 
         return results
 
-    def detect_with_name(self, content: str) -> List[Tuple[str, str, float, int]]:
+    def detect_with_name(self, content: str) -> list[tuple[str, str, float, int]]:
         """检测附带姓名的PII"""
         results = self.detect(content)
 
@@ -88,7 +87,7 @@ class PIIDetector:
             return 0.0
         return max(severity for _, _, severity, _ in detections)
 
-    def get_pii_types(self, content: str) -> List[str]:
+    def get_pii_types(self, content: str) -> list[str]:
         """获取检测到的PII类型"""
         detections = self.detect(content)
-        return list(set(desc for _, desc, _, _ in detections))
+        return list({desc for _, desc, _, _ in detections})

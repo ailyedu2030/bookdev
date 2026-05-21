@@ -4,14 +4,14 @@ Additional API Route Coverage Tests - Focused on Error Paths
 These tests target specific uncovered code paths in api/routes modules.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
-from datetime import datetime
+from unittest.mock import patch
 
-from api.deps import generate_uuid, create_access_token
+import pytest
+from api.deps import generate_uuid
+
 from tests.api.conftest import (
-    create_test_project,
     create_test_chapter,
+    create_test_project,
     create_test_term,
 )
 

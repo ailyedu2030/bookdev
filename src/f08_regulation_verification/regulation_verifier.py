@@ -3,8 +3,7 @@ F08: 法规引用核实系统 - 法规验证器
 """
 import asyncio
 import re
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from dataclasses import dataclass
 from enum import Enum
 
 from f08_regulation_verification.whitelist_manager import WhitelistManager
@@ -47,14 +46,14 @@ class RegulationVerifier:
         "按照相关规定"
     ]
 
-    def __init__(self, whitelist_manager: Optional[WhitelistManager] = None):
+    def __init__(self, whitelist_manager: WhitelistManager | None = None):
         self.whitelist_manager = whitelist_manager or WhitelistManager()
 
     async def verify(
         self,
         law_name: str,
         article_num: int,
-        cited_content: Optional[str] = None
+        cited_content: str | None = None
     ) -> RegulationResult:
         """三级核实流程"""
         result = RegulationResult(
@@ -146,7 +145,7 @@ class RegulationVerifier:
         article_num: int
     ) -> float:
         """计算内容相似度 - 增强的相似度计算
-        
+
         VM-016: 使用更复杂的相似度计算，防止被简单关键词绕过
         - 考虑词序
         - 考虑同义词
@@ -158,8 +157,8 @@ class RegulationVerifier:
             return 0.5
 
         content_lower = cited_content.lower()
-        content_words = set(content_lower.split())
-        
+        set(content_lower.split())
+
         # 计算匹配的关键词
         matched_keywords = 0
         for kw in keywords:
@@ -174,11 +173,11 @@ class RegulationVerifier:
                         matched_keywords += 0.5
 
         # 使用Jaccard相似度作为基础
-        keyword_set = set(kw.lower() for kw in keywords)
-        
+        {kw.lower() for kw in keywords}
+
         # 计算关键词覆盖率（更严格的要求）
         coverage = matched_keywords / max(1, len(keywords))
-        
+
         # 检查词序：如果多个关键词按顺序出现，加分
         kw_list = [kw.lower() for kw in keywords if len(kw) >= 2]
         if kw_list:
@@ -187,7 +186,7 @@ class RegulationVerifier:
                 idx = content_lower.find(kw)
                 if idx >= 0:
                     positions.append(idx)
-            
+
             # 如果关键词按顺序出现（位置递增），说明内容相关度高
             if len(positions) >= 2:
                 ordered_bonus = 0.1 if all(positions[i] < positions[i+1] for i in range(len(positions)-1)) else 0
@@ -195,10 +194,10 @@ class RegulationVerifier:
                 ordered_bonus = 0
         else:
             ordered_bonus = 0
-        
+
         # 综合评分：覆盖率为主，词序加分为辅
         score = min(1.0, coverage + ordered_bonus)
-        
+
         # 如果关键词过少，降低阈值敏感性
         if len(keywords) >= 5:
             # 关键词多，要求更严格
@@ -206,10 +205,10 @@ class RegulationVerifier:
         elif len(keywords) <= 2:
             # 关键词少，可以适当放宽
             score = max(score, 0.6)
-        
+
         return max(0.0, min(1.0, score))
 
-    def _get_law_keywords(self, law_name: str, article_num: int) -> List[str]:
+    def _get_law_keywords(self, law_name: str, article_num: int) -> list[str]:
         """获取法规条款关键词"""
         keyword_map = {
             "人工智能法": {
@@ -227,9 +226,9 @@ class RegulationVerifier:
 
         return ["法规", "法律", "规定"]
 
-    async def _get_article_content(self, law_name: str, article_num: int) -> Optional[str]:
+    async def _get_article_content(self, law_name: str, article_num: int) -> str | None:
         """获取条款内容
-        
+
         VM-017: 应该抛出NotImplementedError而不是返回None
         """
         await asyncio.sleep(0.001)

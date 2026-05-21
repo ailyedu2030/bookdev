@@ -4,37 +4,30 @@ Test Configuration and Fixtures for API Integration Tests
 This module provides pytest fixtures for testing the FastAPI application.
 """
 
-import sys
 import os
-from datetime import datetime, timedelta
-from typing import Generator, Optional
-from unittest.mock import MagicMock, AsyncMock, patch
+import sys
+from collections.abc import Generator
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
-
-import sys
-import os
 
 src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 sys.path.insert(0, src_path)
 
 from api.deps import (
-    User,
     DatabaseSession,
-    get_db,
-    get_current_user,
-    get_current_active_user,
+    User,
     create_access_token,
     create_refresh_token,
     generate_uuid,
+    get_db,
     get_password_hash,
-    ROLE_PERMISSIONS,
 )
+from api.middleware.csrf import csrf_protect, csrf_token_manager
 from api.router import api_router
-from api.middleware.csrf import csrf_token_manager, CSRF_TOKEN_COOKIE_NAME, csrf_protect
 from api.routes.workflows import _workflows_store
 
 
@@ -62,7 +55,7 @@ class TestDatabaseSession(DatabaseSession):
             user_data["password_hash"] = get_password_hash(user_data.pop("password"))
         return super().create_user(user_data)
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
+    def get_user_by_email(self, email: str) -> User | None:
         for user in self._users.values():
             if user.email == email:
                 return user

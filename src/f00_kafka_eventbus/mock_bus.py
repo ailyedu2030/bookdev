@@ -5,13 +5,12 @@ F00: Mock事件总线
 支持发布/订阅、事件溯源、死信队列和至少一次语义。
 """
 
-import threading
 import fnmatch
-import uuid
+import threading
 import time
 import traceback
-from collections import deque
-from typing import Callable, Optional, Any
+from collections.abc import Callable
+from typing import Any
 
 
 class MockEventBus:
@@ -137,8 +136,9 @@ class MockEventBus:
 
     def _send_to_dlq(self, original_event: Any, error: Exception):
         """将失败事件发送到死信队列"""
-        from f00_kafka_eventbus.event_definitions import Event
         from datetime import datetime
+
+        from f00_kafka_eventbus.event_definitions import Event
 
         dlq_event = Event(
             event_type="pipeline.stage_changed",

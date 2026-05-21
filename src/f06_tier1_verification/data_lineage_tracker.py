@@ -1,12 +1,11 @@
 """
 F06: Tier1数值核实引擎 - 数据血缘追踪实现
 """
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Set, Any
-from datetime import datetime, timezone
-from enum import Enum
 import asyncio
-import uuid
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from enum import Enum
+from typing import Any
 
 
 class NodeStatus(Enum):
@@ -22,13 +21,13 @@ class DataNode:
     value: Any
     source: str
     is_raw: bool = True
-    formula: Optional[str] = None
-    input_data_ids: List[str] = field(default_factory=list)
+    formula: str | None = None
+    input_data_ids: list[str] = field(default_factory=list)
     depth: int = 0
     status: NodeStatus = NodeStatus.DRAFT
-    provenance: List[str] = field(default_factory=list)
-    derived_from: List[str] = field(default_factory=list)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    provenance: list[str] = field(default_factory=list)
+    derived_from: list[str] = field(default_factory=list)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     tampered: bool = False
 
     def add_derived_node(self, derived_id: str):
@@ -40,7 +39,7 @@ class DataNode:
 @dataclass
 class LineageResult:
     success: bool
-    node: Optional[DataNode] = None
+    node: DataNode | None = None
     rejected: bool = False
     reason: str = ""
 
@@ -58,7 +57,7 @@ class DataLineageTracker:
     ):
         self.max_depth = max_depth
         self.max_derivation_chain = max_derivation_chain
-        self._nodes: Dict[str, DataNode] = {}
+        self._nodes: dict[str, DataNode] = {}
         self._lock = asyncio.Lock()
 
         self.VALUE_RANGES = {
@@ -93,8 +92,8 @@ class DataLineageTracker:
     async def register_derived_data(
         self,
         data_id: str,
-        formula: Optional[str],
-        input_data_ids: List[str],
+        formula: str | None,
+        input_data_ids: list[str],
         **kwargs
     ) -> LineageResult:
         """注册派生数据"""
@@ -156,11 +155,11 @@ class DataLineageTracker:
 
             return LineageResult(success=True, node=node)
 
-    def get_node(self, data_id: str) -> Optional[DataNode]:
+    def get_node(self, data_id: str) -> DataNode | None:
         """获取数据节点"""
         return self._nodes.get(data_id)
 
-    def get_propagation_chain(self, data_id: str) -> List[DataNode]:
+    def get_propagation_chain(self, data_id: str) -> list[DataNode]:
         """获取传播链 - 原始数据在前，派生数据在后"""
         if data_id not in self._nodes:
             raise ValueError(f"Data node {data_id} not found")
@@ -175,8 +174,8 @@ class DataLineageTracker:
     def _build_propagation_chain(
         self,
         data_id: str,
-        chain: List[DataNode],
-        visited: Set[str]
+        chain: list[DataNode],
+        visited: set[str]
     ):
         """递归构建传播链 - 深度优先，后序遍历确保原始数据在前"""
         if data_id in visited:
@@ -196,7 +195,7 @@ class DataLineageTracker:
         # Then add current node (post-order ensures raw data comes first after reverse)
         chain.append(node)
 
-    def get_all_nodes(self) -> List[DataNode]:
+    def get_all_nodes(self) -> list[DataNode]:
         """获取所有节点"""
         return list(self._nodes.values())
 
@@ -212,9 +211,9 @@ class DataLineageTracker:
 
         return False
 
-    def _check_value_range(self, value: Any) -> Optional[str]:
+    def _check_value_range(self, value: Any) -> str | None:
         """检查值是否在合理范围内"""
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, int | float):
             return None
 
         for range_info in self.VALUE_RANGES.values():
@@ -223,9 +222,9 @@ class DataLineageTracker:
 
         return "INVALID_RANGE"
 
-    def _calculate_derivation_chain(self, input_data_ids: List[str]) -> int:
+    def _calculate_derivation_chain(self, input_data_ids: list[str]) -> int:
         """计算派生链长度 - 从root到当前节点的链长度
-        
+
         派生链长度是指从根节点到当前节点的步数。
         如果当前节点的输入是原始数据(depth=0)，则链长度为1。
         如果输入是派生数据(depth=1)，则链长度为2，以此类推。
@@ -241,7 +240,7 @@ class DataLineageTracker:
                 max_chain_length = max(max_chain_length, chain_length)
         return max_chain_length
 
-    def get_root_nodes(self) -> List[DataNode]:
+    def get_root_nodes(self) -> list[DataNode]:
         """获取所有根节点（原始数据）"""
         return [node for node in self._nodes.values() if node.is_raw]
 
@@ -250,14 +249,14 @@ class DataLineageTracker:
         node = self._nodes.get(data_id)
         if not node:
             return 0
-        
+
         if node.is_raw:
             return 0
-        
+
         # 沿着输入链递归计算最大深度
         max_depth = 0
         for input_id in node.input_data_ids:
             input_depth = self.get_derivation_depth(input_id)
             max_depth = max(max_depth, input_depth)
-        
+
         return max_depth + 1

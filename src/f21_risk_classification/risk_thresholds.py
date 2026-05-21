@@ -4,10 +4,9 @@ F21: 风险分级复核系统 - 风险阈值配置
 定义风险等级及其阈值
 """
 
-from typing import Dict, Any
+from typing import Any
 
-
-RISK_LEVELS: Dict[str, Dict[str, Any]] = {
+RISK_LEVELS: dict[str, dict[str, Any]] = {
     "CRITICAL": {
         "score_range": [0.0, 0.3],  # 0 <= score <= 0.3
         "review_ratio": 1.0,

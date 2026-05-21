@@ -14,21 +14,21 @@ F32: PostgreSQL 知识图谱
 
 from __future__ import annotations
 
-import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
+from f05_knowledge_graph.edges import Edge, create_edge
 from f05_knowledge_graph.nodes import (
     ChapterNode,
+    ConceptNode,
+    NodeStatus,
     SectionNode,
     SubsectionNode,
-    ConceptNode,
     TermNode,
-    NodeStatus,
     create_node,
 )
-from f05_knowledge_graph.edges import Edge, EdgeType, create_edge
-from f32_pg_knowledge_graph.pg_adapter import PGAdapter, MockPGAdapter
+
+from f32_pg_knowledge_graph.pg_adapter import PGAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class PGKnowledgeGraph:
     使用 PGAdapter 进行数据库操作，支持 MockPGAdapter 用于测试。
     """
 
-    def __init__(self, adapter=None, connection_string: Optional[str] = None):
+    def __init__(self, adapter=None, connection_string: str | None = None):
         if adapter is not None:
             self._adapter = adapter
         else:
@@ -166,7 +166,7 @@ class PGKnowledgeGraph:
         domain: str,
         # KG-008: Fixed mutable default argument
         related_terms: list[str] = None,
-        source_chapter_id: Optional[str] = None,
+        source_chapter_id: str | None = None,
     ) -> ConceptNode:
         """创建概念节点"""
         # Fix: Use None instead of mutable default
@@ -189,7 +189,7 @@ class PGKnowledgeGraph:
         domain: str,
         # KG-008: Fixed mutable default argument
         synonyms: list[str] = None,
-        first_defined_at: Optional[str] = None,
+        first_defined_at: str | None = None,
     ) -> TermNode:
         """创建术语节点"""
         # Fix: Use None instead of mutable default
@@ -206,7 +206,7 @@ class PGKnowledgeGraph:
 
     # ── 节点查询 ──────────────────────────────────────────
 
-    def get_node(self, node_id: str) -> Optional[Any]:
+    def get_node(self, node_id: str) -> Any | None:
         """获取节点"""
         self._ensure_initialized()
         record = self._adapter.get_node(node_id)
@@ -258,7 +258,7 @@ class PGKnowledgeGraph:
     def get_chapter_context(self, chapter_id: str) -> dict:
         """
         获取章节上下文
-        
+
         KG-006: Fixed N+1 query problem - batch fetch section word counts
         """
         self._ensure_initialized()
@@ -393,7 +393,7 @@ class PGKnowledgeGraph:
                 concepts.append(node)
         return concepts
 
-    def get_term(self, term_id: str) -> Optional[TermNode]:
+    def get_term(self, term_id: str) -> TermNode | None:
         """获取术语"""
         self._ensure_initialized()
         record = self._adapter.get_node(term_id)
@@ -435,7 +435,7 @@ class PGKnowledgeGraph:
         self._ensure_initialized()
         return self._adapter.dfs_traverse(start_id)
 
-    def find_path(self, start_id: str, end_id: str) -> Optional[list[str]]:
+    def find_path(self, start_id: str, end_id: str) -> list[str] | None:
         """查找两个节点之间的路径"""
         self._ensure_initialized()
         if start_id == end_id:

@@ -1,5 +1,9 @@
 """AI多Agent教材编写系统 - Web API"""
-import sys, os, asyncio, json, time
+import json
+import os
+import sys
+import time
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
@@ -13,25 +17,23 @@ if os.path.exists(env_file):
             k, v = line.split("=", 1)
             os.environ[k.strip()] = v.strip().strip('"').strip("'")
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel
-from typing import Optional, List
 import uvicorn
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 
 app = FastAPI(title="AI多Agent教材编写系统", version="1.0.0")
 
-from f31_minimax_client.minimax_client import MiniMaxClient
 from f01_immutable_log.immutable_log import ImmutableLog
 from f02_context_budget.context_budget_manager import ContextBudgetManager
 from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
-from f23_content_security.content_filter import ContentSecurityFilter
 from f20_llm_judge.judge_service import JudgeService, MockLLMClient
 from f21_risk_classification.risk_classifier import RiskClassifier
+from f23_content_security.content_filter import ContentSecurityFilter
 from f24_config_center.config_center import ConfigCenter
 from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard
 from f29_quality_gate.quality_gate import QualityGate
+from f31_minimax_client.minimax_client import MiniMaxClient
 
 # Global instances
 log = ImmutableLog()

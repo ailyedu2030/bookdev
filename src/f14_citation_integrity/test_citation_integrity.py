@@ -2,12 +2,7 @@
 F14: 引用完整性校验 - 单元测试
 TDD RED阶段：测试必须失败，因为实现不存在
 """
-import pytest
 import hashlib
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Set, Any
-from datetime import datetime, timezone
-from enum import Enum
 
 
 class TestCitationRegistry:
@@ -147,7 +142,7 @@ class TestCitationIntegrityManager:
             content="测试内容"
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
 
     def test_detect_unverified_citations(self):
         """F14-T009: 检测未验证的引用"""
@@ -187,7 +182,7 @@ class TestCitationIntegrityManager:
 
         chain = manager.validate_citation_chain(["10.1234/A", "10.1234/B", "10.1234/C"])
 
-        assert chain.is_valid == True
+        assert chain.is_valid is True
 
     def test_detect_fact_collision(self):
         """F14-T012: 检测事实冲突"""
@@ -218,7 +213,7 @@ class TestSecurityTests:
             content="捏造内容"
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
 
     def test_hash_collision_detection(self):
         """F14-S002: 哈希碰撞检测"""
@@ -243,8 +238,8 @@ class TestSecurityTests:
             content=content_b
         )
 
-        assert result1.is_valid == True
-        assert result2.is_valid == True
+        assert result1.is_valid is True
+        assert result2.is_valid is True
 
     def test_empty_doi_rejection(self):
         """F14-S003: 空DOI拒绝"""
@@ -258,7 +253,7 @@ class TestSecurityTests:
             content="内容"
         )
 
-        assert result.is_valid == False
+        assert result.is_valid is False
 
     def test_nonexistent_doi_in_chain(self):
         """F14-S004: 链中不存在的DOI"""
@@ -268,7 +263,7 @@ class TestSecurityTests:
 
         chain = manager.validate_citation_chain(["10.1234/A", "10.DOES.NOT.EXIST"])
 
-        assert chain.is_valid == False
+        assert chain.is_valid is False
 
     def test_self_referencing_citation(self):
         """F14-S005: 自我引用检测"""
@@ -280,7 +275,7 @@ class TestSecurityTests:
 
         result = manager.validate_citation_chain(["10.1234/self"])
 
-        assert result.is_biased == False
+        assert result.is_biased is False
 
     def test_citation_integrity_tampering_detection(self):
         """F14-S006: 引用完整性篡改检测"""
@@ -297,7 +292,7 @@ class TestSecurityTests:
             content=original_content
         )
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
         tampered_result = manager.verify_citation_integrity(
             doi="10.1234/tampered",
@@ -305,7 +300,7 @@ class TestSecurityTests:
             content="被篡改的内容"
         )
 
-        assert tampered_result.is_valid == False
+        assert tampered_result.is_valid is False
 
 
 class TestIntegrationTests:
@@ -322,7 +317,7 @@ class TestIntegrationTests:
         content = "测试内容"
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        citation_id = registry.register_citation(
+        registry.register_citation(
             doi="10.1234/fulltest",
             fact_hash=content_hash,
             position={"page": 1}
@@ -334,7 +329,7 @@ class TestIntegrationTests:
             content=content
         )
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_registry_and_manager_integration(self):
         """F14-I002: 注册表和管理器集成"""
@@ -364,7 +359,7 @@ class TestCitationIntegrityUncovered:
 
         manager = CitationIntegrityManager()
         result = manager.mark_citation_verified("10.9999/nonexistent", "nonexistent_hash")
-        assert result == False
+        assert result is False
 
     def test_validate_citation_chain_invalid_format(self):
         """validate_citation_chain处理无效DOI格式 (覆盖line 132)"""
@@ -406,7 +401,7 @@ class TestCitationIntegrityUncovered:
 
         manager = CitationIntegrityManager()
         result = manager._is_valid_doi_format("")
-        assert result == False
+        assert result is False
 
     def test_registry_property(self):
         """registry属性返回注册表 (覆盖line 195)"""

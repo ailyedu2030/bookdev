@@ -4,7 +4,8 @@ F22: 向量存储
 内存向量存储实现，支持添加、搜索、删除操作
 """
 
-from typing import List, Dict, Any
+from typing import Any
+
 import numpy as np
 
 
@@ -13,8 +14,8 @@ class InMemoryVectorStore:
 
     def __init__(self, dimension: int = 1024):
         self.dimension = dimension
-        self._vectors: Dict[str, np.ndarray] = {}
-        self._metadata: Dict[str, dict] = {}
+        self._vectors: dict[str, np.ndarray] = {}
+        self._metadata: dict[str, dict] = {}
 
     def add(self, id: str, vector: np.ndarray, metadata: dict = None) -> None:
         """
@@ -32,7 +33,7 @@ class InMemoryVectorStore:
         if metadata:
             self._metadata[id] = metadata
 
-    def search(self, query_vector: np.ndarray, top_k: int = 5) -> List[Dict[str, Any]]:
+    def search(self, query_vector: np.ndarray, top_k: int = 5) -> list[dict[str, Any]]:
         """
         搜索最相似的向量
 

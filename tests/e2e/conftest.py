@@ -1,9 +1,11 @@
 """
 Pytest configuration and fixtures for E2E tests.
 """
-import pytest
-from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page, Error as PlaywrightError
 import os
+
+import pytest
+from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
+from playwright.sync_api import Error as PlaywrightError
 
 
 @pytest.fixture(scope="session")

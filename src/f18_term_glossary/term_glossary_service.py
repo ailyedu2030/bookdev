@@ -6,7 +6,6 @@ F18: 术语表服务
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -19,7 +18,7 @@ class RegisteredTerm:
     synonyms: list[str] = field(default_factory=list)
     locked: bool = False
     version: int = 1
-    first_defined_at: Optional[str] = None
+    first_defined_at: str | None = None
     usage_locations: list[str] = field(default_factory=list)
 
 
@@ -27,8 +26,8 @@ class RegisteredTerm:
 class OperationResult:
     """操作结果"""
     success: bool
-    term: Optional[RegisteredTerm] = None
-    error: Optional[str] = None
+    term: RegisteredTerm | None = None
+    error: str | None = None
 
 
 class TermGlossaryService:
@@ -72,11 +71,11 @@ class TermGlossaryService:
 
         return OperationResult(success=True, term=registered_term)
 
-    def get_term(self, term_id: str) -> Optional[RegisteredTerm]:
+    def get_term(self, term_id: str) -> RegisteredTerm | None:
         """通过ID获取术语"""
         return self._terms.get(term_id)
 
-    def find_term(self, term_or_synonym: str) -> Optional[RegisteredTerm]:
+    def find_term(self, term_or_synonym: str) -> RegisteredTerm | None:
         """通过名称或同义词查找术语"""
         term_id = self._terms_by_name.get(term_or_synonym)
         if term_id:

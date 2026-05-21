@@ -6,8 +6,7 @@ F21: 风险分级复核系统 - 审核调度器
 
 import random
 import uuid
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 
@@ -34,7 +33,7 @@ class ReviewPriority(Enum):
 class ReviewTask:
     """
     审核任务
-    
+
     QC-009 Fix: 使用frozen dataclass确保不可变性
     """
     task_id: str
@@ -45,10 +44,10 @@ class ReviewTask:
     priority: int
     created_at: datetime
     due_date: datetime
-    completed_at: Optional[datetime] = None
-    result: Optional[str] = None
-    reviewer_id: Optional[str] = None
-    comments: Optional[str] = None
+    completed_at: datetime | None = None
+    result: str | None = None
+    reviewer_id: str | None = None
+    comments: str | None = None
 
     def __post_init__(self):
         if isinstance(self.status, str):
@@ -75,14 +74,14 @@ class ReviewScheduler:
         "LOW": ReviewPriority.LOW.value
     }
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int | None = None):
         """
         初始化审核调度器
 
         Args:
             seed: 随机种子（用于测试）
         """
-        self._tasks: Dict[str, ReviewTask] = {}
+        self._tasks: dict[str, ReviewTask] = {}
         self._random = random.Random(seed)  # QC-007 Fix: 使用实例随机数生成器，支持种子
 
     def requires_review(self, risk_level: str) -> bool:
@@ -158,7 +157,7 @@ class ReviewScheduler:
         self._tasks[task_id] = task
         return task
 
-    def get_pending_reviews(self) -> List[ReviewTask]:
+    def get_pending_reviews(self) -> list[ReviewTask]:
         """
         获取待审核任务列表
 
@@ -171,7 +170,7 @@ class ReviewScheduler:
         ]
         return sorted(pending, key=lambda t: t.priority)
 
-    def get_review_task(self, task_id: str) -> Optional[ReviewTask]:
+    def get_review_task(self, task_id: str) -> ReviewTask | None:
         """
         获取审核任务
 
@@ -264,7 +263,7 @@ class ReviewScheduler:
         """获取任务总数"""
         return len(self._tasks)
 
-    def get_tasks_by_status(self, status: ReviewStatus) -> List[ReviewTask]:
+    def get_tasks_by_status(self, status: ReviewStatus) -> list[ReviewTask]:
         """获取指定状态的任务"""
         return [
             task for task in self._tasks.values()

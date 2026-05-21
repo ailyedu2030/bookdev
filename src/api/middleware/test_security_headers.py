@@ -4,13 +4,14 @@ Security Headers Middleware Tests
 Tests for security headers middleware including CSP, HSTS, X-Frame-Options, etc.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 from api.middleware.security_headers import (
-    SecurityHeadersMiddleware,
-    SecurityHeadersConfig,
     DEFAULT_SECURITY_CONFIG,
+    SecurityHeadersConfig,
+    SecurityHeadersMiddleware,
 )
 
 

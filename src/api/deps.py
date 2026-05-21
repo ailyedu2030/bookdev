@@ -7,21 +7,18 @@ Provides FastAPI dependencies for:
 - RBAC (Role-Based Access Control)
 """
 
+import hashlib
 import os
 import sys
 import time
 import uuid
-import hashlib
-import secrets
-from typing import Optional, Callable, List
-from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
-from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -50,8 +47,8 @@ class User:
     username: str
     email: str
     role: str
-    password_hash: Optional[str] = None
-    organization_id: Optional[str] = None
+    password_hash: str | None = None
+    organization_id: str | None = None
     clearance_level: int = 1
 
 
@@ -154,10 +151,10 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create a JWT access token"""
     to_encode = data.copy()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expire = now + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({
         "exp": int(expire.timestamp()),
@@ -170,7 +167,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 def create_refresh_token(data: dict) -> str:
     """Create a JWT refresh token"""
     to_encode = data.copy()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expire = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({
         "exp": int(expire.timestamp()),
@@ -222,8 +219,8 @@ def hash_content(content: str) -> str:
 
 async def get_current_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-) -> Optional[User]:
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+) -> User | None:
     """Get current authenticated user from JWT token"""
     if not credentials:
         if hasattr(request.state, "user"):
@@ -256,7 +253,7 @@ async def get_current_user(
 class RBACChecker:
     """RBAC permission checker"""
 
-    def __init__(self, required_permissions: List[str]):
+    def __init__(self, required_permissions: list[str]):
         self.required_permissions = required_permissions
 
     def __call__(self, user: User = Depends(get_current_user)) -> User:
@@ -353,7 +350,7 @@ def require_min_role(min_role: str):
 
 
 async def get_current_active_user(
-    user: Optional[User] = Depends(get_current_user),
+    user: User | None = Depends(get_current_user),
 ) -> User:
     """Get current active (authenticated) user"""
     if not user:
@@ -371,8 +368,8 @@ async def get_current_active_user(
 
 async def get_optional_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-) -> Optional[User]:
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+) -> User | None:
     """Get user if authenticated, None otherwise"""
     return await get_current_user(request, credentials)
 
@@ -410,16 +407,16 @@ class DatabaseSession:
         self._users[user_id] = user
         return user
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
+    def get_user_by_email(self, email: str) -> User | None:
         for user in self._users.values():
             if user.email == email:
                 return user
         return None
 
-    def get_user_by_id(self, user_id: str) -> Optional[User]:
+    def get_user_by_id(self, user_id: str) -> User | None:
         return self._users.get(user_id)
 
-    def update_user(self, user_id: str, update_data: dict) -> Optional[User]:
+    def update_user(self, user_id: str, update_data: dict) -> User | None:
         if user_id in self._users:
             user = self._users[user_id]
             for key, value in update_data.items():
@@ -444,16 +441,16 @@ class DatabaseSession:
         self._projects[project_id] = project
         return project
 
-    def get_project(self, project_id: str) -> Optional[dict]:
+    def get_project(self, project_id: str) -> dict | None:
         return self._projects.get(project_id)
 
-    def list_projects(self, owner_id: str = None) -> List[dict]:
+    def list_projects(self, owner_id: str = None) -> list[dict]:
         projects = list(self._projects.values())
         if owner_id:
             projects = [p for p in projects if p.get("owner_id") == owner_id]
         return projects
 
-    def update_project(self, project_id: str, update_data: dict) -> Optional[dict]:
+    def update_project(self, project_id: str, update_data: dict) -> dict | None:
         if project_id in self._projects:
             self._projects[project_id].update(update_data)
             self._projects[project_id]["updated_at"] = datetime.utcnow().isoformat()
@@ -484,16 +481,16 @@ class DatabaseSession:
         self._chapters[chapter_id] = chapter
         return chapter
 
-    def get_chapter(self, chapter_id: str) -> Optional[dict]:
+    def get_chapter(self, chapter_id: str) -> dict | None:
         return self._chapters.get(chapter_id)
 
-    def list_chapters_by_project(self, project_id: str) -> List[dict]:
+    def list_chapters_by_project(self, project_id: str) -> list[dict]:
         return [
             c for c in self._chapters.values()
             if c.get("project_id") == project_id
         ]
 
-    def update_chapter(self, chapter_id: str, update_data: dict) -> Optional[dict]:
+    def update_chapter(self, chapter_id: str, update_data: dict) -> dict | None:
         if chapter_id in self._chapters:
             self._chapters[chapter_id].update(update_data)
             self._chapters[chapter_id]["updated_at"] = datetime.utcnow().isoformat()
@@ -523,16 +520,16 @@ class DatabaseSession:
         self._terms[term_id] = term
         return term
 
-    def get_term(self, term_id: str) -> Optional[dict]:
+    def get_term(self, term_id: str) -> dict | None:
         return self._terms.get(term_id)
 
-    def list_terms(self, domain: str = None) -> List[dict]:
+    def list_terms(self, domain: str = None) -> list[dict]:
         terms = list(self._terms.values())
         if domain:
             terms = [t for t in terms if t.get("domain") == domain]
         return terms
 
-    def update_term(self, term_id: str, update_data: dict) -> Optional[dict]:
+    def update_term(self, term_id: str, update_data: dict) -> dict | None:
         if term_id in self._terms:
             self._terms[term_id].update(update_data)
             return self._terms[term_id]
@@ -544,7 +541,7 @@ class DatabaseSession:
             return True
         return False
 
-    def lock_term(self, term_id: str, reason: str = None) -> Optional[dict]:
+    def lock_term(self, term_id: str, reason: str = None) -> dict | None:
         if term_id in self._terms:
             self._terms[term_id]["locked"] = True
             self._terms[term_id]["lock_reason"] = reason
@@ -567,10 +564,10 @@ class DatabaseSession:
         self._sections[section_id] = section
         return section
 
-    def get_section(self, section_id: str) -> Optional[dict]:
+    def get_section(self, section_id: str) -> dict | None:
         return self._sections.get(section_id)
 
-    def update_section(self, section_id: str, update_data: dict) -> Optional[dict]:
+    def update_section(self, section_id: str, update_data: dict) -> dict | None:
         if section_id in self._sections:
             self._sections[section_id].update(update_data)
             self._sections[section_id]["updated_at"] = datetime.utcnow().isoformat()
@@ -594,7 +591,7 @@ class DatabaseSession:
         expire_at = time.time() + expires_in
         self._sessions[token] = {"user_id": user_id, "expire_at": expire_at}
 
-    def get_session(self, token: str) -> Optional[str]:
+    def get_session(self, token: str) -> str | None:
         """Get session user_id if session exists and is not expired."""
         session = self._sessions.get(token)
         if not session:

@@ -24,26 +24,24 @@ import logging
 import os
 import time
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Any
 
 from .exceptions import (
     BudgetExceededError,
     CheckpointError,
     PipelineAbortedError,
-    PipelineError,
     SecurityViolationError,
     StageExecutionError,
 )
-from .integration_config import MockModeConfig, ModuleConfig, PipelineConfig, StageConfig
+from .integration_config import PipelineConfig, StageConfig
 from .pipeline_stages import (
     STAGE_DEPENDENCIES,
     STAGE_MODULES,
-    STAGE_ORDER,
     PipelineStage,
     PipelineStageStatus,
     PipelineState,
-    StageResult,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,14 +55,14 @@ class MockEventBus:
     """F00: 模拟 Kafka 事件总线。"""
 
     def __init__(self):
-        self._events: List[Dict[str, Any]] = []
-        self._subscribers: Dict[str, List[Callable]] = {}
+        self._events: list[dict[str, Any]] = []
+        self._subscribers: dict[str, list[Callable]] = {}
 
-    async def publish(self, topic: str, event: Dict[str, Any]) -> None:
+    async def publish(self, topic: str, event: dict[str, Any]) -> None:
         record = {
             "topic": topic,
             "event": event,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "offset": len(self._events),
         }
         self._events.append(record)
@@ -73,7 +71,7 @@ class MockEventBus:
     async def subscribe(self, topic: str, handler: Callable) -> None:
         self._subscribers.setdefault(topic, []).append(handler)
 
-    def consumed_events(self) -> List[Dict[str, Any]]:
+    def consumed_events(self) -> list[dict[str, Any]]:
         return self._events
 
     def event_count(self) -> int:
@@ -84,26 +82,26 @@ class MockImmutableLog:
     """F01: 不可变日志 — 支持断点续传的状态持久化。"""
 
     def __init__(self):
-        self._entries: List[Dict[str, Any]] = []
-        self._snapshots: Dict[str, Dict[str, Any]] = {}
+        self._entries: list[dict[str, Any]] = []
+        self._snapshots: dict[str, dict[str, Any]] = {}
 
-    async def append(self, entry: Dict[str, Any]) -> int:
+    async def append(self, entry: dict[str, Any]) -> int:
         record = {
             "index": len(self._entries),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "hash": hashlib.sha256(str(entry).encode()).hexdigest()[:16],
             **entry,
         }
         self._entries.append(record)
         return len(self._entries) - 1
 
-    async def read_since(self, index: int) -> List[Dict[str, Any]]:
+    async def read_since(self, index: int) -> list[dict[str, Any]]:
         return self._entries[index:]
 
-    async def save_snapshot(self, key: str, data: Dict[str, Any]) -> None:
+    async def save_snapshot(self, key: str, data: dict[str, Any]) -> None:
         self._snapshots[key] = data
 
-    async def load_snapshot(self, key: str) -> Optional[Dict[str, Any]]:
+    async def load_snapshot(self, key: str) -> dict[str, Any] | None:
         return self._snapshots.get(key)
 
     async def entry_count(self) -> int:
@@ -115,7 +113,7 @@ class MockContextBudgetManager:
 
     def __init__(self, max_tokens: int = 128000):
         self.max_tokens = max_tokens
-        self._allocations: Dict[str, int] = {}
+        self._allocations: dict[str, int] = {}
 
     async def allocate(self, scope: str, tokens: int) -> bool:
         current = sum(self._allocations.values())
@@ -138,16 +136,16 @@ class MockKnowledgeGraph:
     """F05: 知识图谱。"""
 
     def __init__(self):
-        self._nodes: Dict[str, Dict[str, Any]] = {}
-        self._edges: List[Tuple[str, str, str]] = []
+        self._nodes: dict[str, dict[str, Any]] = {}
+        self._edges: list[tuple[str, str, str]] = []
 
-    async def add_node(self, node_id: str, data: Dict[str, Any]) -> None:
+    async def add_node(self, node_id: str, data: dict[str, Any]) -> None:
         self._nodes[node_id] = data
 
     async def add_edge(self, source: str, target: str, relation: str) -> None:
         self._edges.append((source, target, relation))
 
-    async def get_node(self, node_id: str) -> Optional[Dict[str, Any]]:
+    async def get_node(self, node_id: str) -> dict[str, Any] | None:
         return self._nodes.get(node_id)
 
     async def node_count(self) -> int:
@@ -160,7 +158,7 @@ class MockKnowledgeGraph:
 class MockMaterialRAG:
     """F22: 素材RAG召回。"""
 
-    async def retrieve(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    async def retrieve(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
         return [
             {
                 "doc_id": f"doc-{i}",
@@ -191,7 +189,7 @@ class MockModelRouter:
 class MockContentSecurityFilter:
     """F09-F15, F23: 组合安全过滤器。"""
 
-    async def scan_all(self, content: str) -> Dict[str, Any]:
+    async def scan_all(self, content: str) -> dict[str, Any]:
         return {
             "status": "PASS",
             "violations": [],
@@ -205,7 +203,7 @@ class MockContentSecurityFilter:
             },
         }
 
-    async def scan_with_injection(self, content: str, inject_violation: bool = False) -> Dict[str, Any]:
+    async def scan_with_injection(self, content: str, inject_violation: bool = False) -> dict[str, Any]:
         if inject_violation:
             return {
                 "status": "FAIL",
@@ -224,42 +222,42 @@ class MockContentSecurityFilter:
 class MockTier1Verification:
     """F06: Tier1 数值核实。"""
 
-    async def verify(self, content: str) -> Dict[str, Any]:
+    async def verify(self, content: str) -> dict[str, Any]:
         return {"status": "PASS", "verified_facts": 15, "failed_facts": 0, "accuracy": 0.98}
 
 
 class MockDoiVerification:
     """F07: DOI 验证。"""
 
-    async def verify(self, references: List[str]) -> Dict[str, Any]:
+    async def verify(self, references: list[str]) -> dict[str, Any]:
         return {"status": "PASS", "total_refs": len(references), "valid_dois": len(references)}
 
 
 class MockRegulationVerification:
     """F08: 法规核实。"""
 
-    async def verify(self, content: str, jurisdiction: str = "CN") -> Dict[str, Any]:
+    async def verify(self, content: str, jurisdiction: str = "CN") -> dict[str, Any]:
         return {"status": "PASS", "jurisdiction": jurisdiction, "compliance_score": 1.0}
 
 
 class MockCitationIntegrity:
     """F14: 引用完整性。"""
 
-    async def check(self, content: str) -> Dict[str, Any]:
+    async def check(self, content: str) -> dict[str, Any]:
         return {"status": "PASS", "citations_found": 5, "broken_citations": 0}
 
 
 class MockCrossReference:
     """F17: 跨章引用。"""
 
-    async def validate(self, chapters: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def validate(self, chapters: list[dict[str, Any]]) -> dict[str, Any]:
         return {"status": "PASS", "cross_refs_found": 10, "broken_refs": 0}
 
 
 class MockTermGlossary:
     """F18: 术语表。"""
 
-    async def extract(self, chapters: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def extract(self, chapters: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return [
             {"term": "低空经济", "definition": "以低空空域为依托的经济活动总称", "occurrences": 5},
             {"term": "eVTOL", "definition": "电动垂直起降飞行器", "occurrences": 3},
@@ -269,21 +267,21 @@ class MockTermGlossary:
 class MockLogicChain:
     """F19: 逻辑链。"""
 
-    async def validate(self, content: str) -> Dict[str, Any]:
+    async def validate(self, content: str) -> dict[str, Any]:
         return {"status": "PASS", "logical_fallacies": 0, "coherence_score": 0.92}
 
 
 class MockStatisticalSampling:
     """F16: 统计抽样。"""
 
-    async def sample(self, chapters: List[Dict[str, Any]], sample_rate: float = 0.2) -> Dict[str, Any]:
+    async def sample(self, chapters: list[dict[str, Any]], sample_rate: float = 0.2) -> dict[str, Any]:
         return {"sampled_count": max(1, int(len(chapters) * sample_rate)), "confidence_level": 0.95}
 
 
 class MockLLMJudge:
     """F20: LLM 评判。"""
 
-    async def evaluate(self, content: str, rubric: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def evaluate(self, content: str, rubric: dict[str, Any] | None = None) -> dict[str, Any]:
         return {
             "overall_score": 82.5,
             "dimensions": {
@@ -301,7 +299,7 @@ class MockLLMJudge:
 class MockRiskClassifier:
     """F21: 风险分级。"""
 
-    async def classify(self, quality_scores: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def classify(self, quality_scores: list[dict[str, Any]]) -> dict[str, Any]:
         return {"overall_risk": "LOW", "risk_levels": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 1, "LOW": 5}}
 
 
@@ -309,25 +307,27 @@ class MockLineageTracker:
     """F26: 血缘追踪。"""
 
     def __init__(self):
-        self._lineage: List[Dict[str, Any]] = []
+        self._lineage: list[dict[str, Any]] = []
 
-    async def record(self, source_id: str, target_id: str, operation: str, metadata: Dict[str, Any] = {}) -> None:
+    async def record(self, source_id: str, target_id: str, operation: str, metadata: dict[str, Any] = None) -> None:
+        if metadata is None:
+            metadata = {}
         self._lineage.append({
             "source_id": source_id,
             "target_id": target_id,
             "operation": operation,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "metadata": metadata,
         })
 
-    async def trace(self, target_id: str) -> List[Dict[str, Any]]:
+    async def trace(self, target_id: str) -> list[dict[str, Any]]:
         return [r for r in self._lineage if r["target_id"] == target_id]
 
 
 class MockGraphRAG:
     """F27: GraphRAG 问答。"""
 
-    async def query(self, question: str, kg_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def query(self, question: str, kg_context: dict[str, Any] | None = None) -> dict[str, Any]:
         return {"answer": f"Mock GraphRAG answer for: {question[:60]}", "sources": ["kg_node_1", "kg_node_2"], "confidence": 0.89}
 
 
@@ -335,9 +335,9 @@ class MockConfigCenter:
     """F24: 配置中心。"""
 
     def __init__(self):
-        self._config: Dict[str, Any] = {}
+        self._config: dict[str, Any] = {}
 
-    async def load(self) -> Dict[str, Any]:
+    async def load(self) -> dict[str, Any]:
         self._config = {"version": "1.0.0", "mock_mode": True}
         return self._config
 
@@ -352,20 +352,22 @@ class MockMonitoringDashboard:
     """F28: 监控仪表盘。"""
 
     def __init__(self):
-        self._metrics: List[Dict[str, Any]] = []
+        self._metrics: list[dict[str, Any]] = []
 
-    async def record_metric(self, name: str, value: float, tags: Dict[str, str] = {}) -> None:
+    async def record_metric(self, name: str, value: float, tags: dict[str, str] = None) -> None:
+        if tags is None:
+            tags = {}
         self._metrics.append({
             "name": name,
             "value": value,
             "tags": tags,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         })
 
-    async def get_metrics(self) -> List[Dict[str, Any]]:
+    async def get_metrics(self) -> list[dict[str, Any]]:
         return self._metrics
 
-    async def stage_latency(self, stage: str) -> Optional[float]:
+    async def stage_latency(self, stage: str) -> float | None:
         latencies = [m["value"] for m in self._metrics if m["name"] == "stage_latency" and m["tags"].get("stage") == stage]
         return sum(latencies) / len(latencies) if latencies else None
 
@@ -373,7 +375,7 @@ class MockMonitoringDashboard:
 class MockQualityGate:
     """F29: 质量门禁。"""
 
-    async def evaluate(self, pipeline_result: Dict[str, Any], threshold: float = 70.0) -> Dict[str, Any]:
+    async def evaluate(self, pipeline_result: dict[str, Any], threshold: float = 70.0) -> dict[str, Any]:
         overall = pipeline_result.get("summary", {}).get("average_quality_score", 0)
         passed = overall >= threshold
         return {
@@ -387,7 +389,7 @@ class MockQualityGate:
 class MockGoldenDataset:
     """F30: Golden Dataset。"""
 
-    async def compare(self, generated_content: str, reference: Optional[str] = None) -> Dict[str, Any]:
+    async def compare(self, generated_content: str, reference: str | None = None) -> dict[str, Any]:
         return {"similarity_score": 0.88, "passed": True, "benchmark_name": "textbook_golden_v1"}
 
 
@@ -400,7 +402,7 @@ class MockContentAddressing:
     async def store(self, content: str) -> str:
         return await self.hash_content(content)
 
-    async def retrieve(self, content_hash: str) -> Optional[str]:
+    async def retrieve(self, content_hash: str) -> str | None:
         return None
 
 
@@ -415,7 +417,7 @@ class PipelineResult:
         pipeline_id: str,
         status: str,
         state: PipelineState,
-        output: Dict[str, Any],
+        output: dict[str, Any],
         started_at: datetime,
         finished_at: datetime,
     ):
@@ -430,7 +432,7 @@ class PipelineResult:
     def duration_seconds(self) -> float:
         return (self.finished_at - self.started_at).total_seconds()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "pipeline_id": self.pipeline_id,
             "status": self.status,
@@ -460,7 +462,7 @@ class TextbookPipeline:
         result = await pipeline.run(textbook_config)
     """
 
-    def __init__(self, config: Optional[PipelineConfig] = None):
+    def __init__(self, config: PipelineConfig | None = None):
         self.config = config or PipelineConfig(testing=True)
         self.mock = self.config.mock
 
@@ -511,12 +513,12 @@ class TextbookPipeline:
 
     # ── Public API ──────────────────────────────────────────────────────
 
-    async def run(self, textbook_config: Dict[str, Any]) -> PipelineResult:
+    async def run(self, textbook_config: dict[str, Any]) -> PipelineResult:
         """运行完整教材编写流水线。"""
         pipeline_id = textbook_config.get("pipeline_id", f"pipeline-{uuid.uuid4().hex[:8]}")
         self.state = PipelineState.new(pipeline_id)
         self._abort_flag = False
-        started_at = datetime.now(timezone.utc)
+        started_at = datetime.now(UTC)
 
         logger.info(f"[Pipeline:{pipeline_id}] Starting textbook pipeline: {textbook_config.get('title', 'Untitled')}")
 
@@ -537,7 +539,7 @@ class TextbookPipeline:
                 self.state.current_stage or PipelineStage.INITIALIZATION
             )
 
-        finished_at = datetime.now(timezone.utc)
+        finished_at = datetime.now(UTC)
         output = self._build_output(textbook_config)
 
         result = PipelineResult(
@@ -552,7 +554,7 @@ class TextbookPipeline:
         await self.event_bus.publish("pipeline.completed", result.to_dict())
         return result
 
-    async def resume(self, checkpoint_data: Dict[str, Any], textbook_config: Dict[str, Any]) -> PipelineResult:
+    async def resume(self, checkpoint_data: dict[str, Any], textbook_config: dict[str, Any]) -> PipelineResult:
         """从断点恢复执行流水线。"""
         self.state = PipelineState.from_checkpoint(checkpoint_data)
         pipeline_id = self.state.pipeline_id
@@ -566,7 +568,7 @@ class TextbookPipeline:
 
         logger.info(f"[Pipeline:{pipeline_id}] Resuming from stage: {resumed_stage}")
 
-        started_at = datetime.now(timezone.utc)
+        started_at = datetime.now(UTC)
         self.state.start_time = started_at
 
         try:
@@ -580,7 +582,7 @@ class TextbookPipeline:
             status = "FAILED"
             logger.error(f"[Pipeline:{pipeline_id}] Resume failed: {e}")
 
-        finished_at = datetime.now(timezone.utc)
+        finished_at = datetime.now(UTC)
         output = self._build_output(textbook_config)
 
         return PipelineResult(
@@ -601,8 +603,8 @@ class TextbookPipeline:
 
     async def _execute_stages(
         self,
-        textbook_config: Dict[str, Any],
-        resume_from: Optional[PipelineStage] = None,
+        textbook_config: dict[str, Any],
+        resume_from: PipelineStage | None = None,
     ) -> None:
         """顺序执行所有流水线阶段，支持从指定阶段恢复。"""
         skip_until = resume_from is not None
@@ -633,12 +635,12 @@ class TextbookPipeline:
     async def _execute_stage(
         self,
         stage: PipelineStage,
-        textbook_config: Dict[str, Any],
+        textbook_config: dict[str, Any],
     ) -> None:
         """执行单个流水线阶段。"""
         result = self.state.stage_results[stage]
         result.status = PipelineStageStatus.RUNNING
-        result.start_time = datetime.now(timezone.utc)
+        result.start_time = datetime.now(UTC)
         self.state.current_stage = stage
 
         logger.info(f"[Pipeline] Stage START: {stage.value}")
@@ -675,7 +677,7 @@ class TextbookPipeline:
             raise
 
         finally:
-            result.end_time = datetime.now(timezone.utc)
+            result.end_time = datetime.now(UTC)
             result.duration_seconds = (result.end_time - result.start_time).total_seconds()
 
             await self.monitoring.record_metric(
@@ -706,10 +708,10 @@ class TextbookPipeline:
 
     async def _execute_modules_sequential(
         self,
-        module_ids: List[str],
+        module_ids: list[str],
         stage: PipelineStage,
-        textbook_config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        textbook_config: dict[str, Any],
+    ) -> dict[str, Any]:
         outputs = {}
         for mid in module_ids:
             if self._abort_flag:
@@ -719,10 +721,10 @@ class TextbookPipeline:
 
     async def _execute_modules_parallel(
         self,
-        module_ids: List[str],
+        module_ids: list[str],
         stage: PipelineStage,
-        textbook_config: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        textbook_config: dict[str, Any],
+    ) -> dict[str, Any]:
         tasks = [self._execute_module(mid, stage, textbook_config) for mid in module_ids]
         results_list = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -741,7 +743,7 @@ class TextbookPipeline:
         self,
         module_id: str,
         stage: PipelineStage,
-        textbook_config: Dict[str, Any],
+        textbook_config: dict[str, Any],
     ) -> Any:
         """执行单个模块。分发到对应的 mock 方法。"""
         module_start = time.monotonic()
@@ -783,10 +785,10 @@ class TextbookPipeline:
     # ── Module Handlers ─────────────────────────────────────────────────
 
     @property
-    def _module_handlers(self) -> Dict[str, Callable]:
+    def _module_handlers(self) -> dict[str, Callable]:
         return self._handlers
 
-    def _build_handlers(self) -> Dict[str, Callable]:
+    def _build_handlers(self) -> dict[str, Callable]:
         return {
             # 基础设施层
             "F00": self._h_init_eventbus,
@@ -985,7 +987,7 @@ class TextbookPipeline:
 
     # ── Helpers ─────────────────────────────────────────────────────────
 
-    def _get_stage_config(self, stage: PipelineStage) -> Optional[StageConfig]:
+    def _get_stage_config(self, stage: PipelineStage) -> StageConfig | None:
         for sc in self.config.stages:
             if sc.stage_name == stage.value:
                 return sc
@@ -1002,7 +1004,7 @@ class TextbookPipeline:
             "completed": [s.value for s in self.state.completed_stages],
         })
 
-    def _build_output(self, textbook_config: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_output(self, textbook_config: dict[str, Any]) -> dict[str, Any]:
         chapter_results = []
         temporal_output = None
         for sr in self.state.stage_results.values():
@@ -1038,7 +1040,7 @@ class TextbookPipeline:
             ],
         }
 
-    def _mock_outline(self, textbook_config: Dict[str, Any]) -> Dict[str, Any]:
+    def _mock_outline(self, textbook_config: dict[str, Any]) -> dict[str, Any]:
         chapters = textbook_config.get("chapters", [])
         outline = []
         for i, ch in enumerate(chapters, 1):
@@ -1053,7 +1055,7 @@ class TextbookPipeline:
             })
         return {"textbook_outline": outline, "total_chapters": len(chapters)}
 
-    def _mock_chapter_content(self, chapter_config: Dict[str, Any], textbook_config: Dict[str, Any]) -> str:
+    def _mock_chapter_content(self, chapter_config: dict[str, Any], textbook_config: dict[str, Any]) -> str:
         title = chapter_config.get("title", "Untitled")
         subject = textbook_config.get("subject", "低空经济")
         return (

@@ -1,18 +1,18 @@
 """Comprehensive tests for api/routes/knowledge_graph.py"""
 
+import os
+import sys
 import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock
 
 import pytest
 
-import sys
-import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import api.routes.knowledge_graph as kg_module
-from api.routes.knowledge_graph import NodeCreate, EdgeCreate, GraphQueryRequest
 from api.deps import User
+from api.routes.knowledge_graph import EdgeCreate, GraphQueryRequest, NodeCreate
 
 
 @pytest.fixture(autouse=True)
@@ -370,7 +370,7 @@ class TestListEdges:
             "properties": {}, "created_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat(),
         }
-        for i in range(10):
+        for _i in range(10):
             kg_module._edge_id_counter += 1
             edge_id = kg_module._edge_id_counter
             kg_module._in_memory_edges[edge_id] = {

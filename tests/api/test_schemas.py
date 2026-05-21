@@ -9,80 +9,76 @@ Tests for schema validation:
 - Term schemas
 """
 
-import pytest
-from datetime import datetime
-from pydantic import ValidationError
 
+import pytest
 from api.schemas.auth import (
+    PasswordChange,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    PermissionResponse,
+    RefreshTokenRequest,
+    RoleResponse,
+    Token,
+    TokenPayload,
     UserCreate,
     UserLogin,
     UserResponse,
-    UserUpdate,
     UserRoleUpdate,
-    Token,
-    TokenPayload,
-    RefreshTokenRequest,
-    PasswordChange,
-    PasswordResetRequest,
-    PasswordResetConfirm,
-    RoleResponse,
-    PermissionResponse,
-)
-from api.schemas.common import (
-    PaginatedResponse,
-    ErrorResponse,
-    SuccessResponse,
-    HealthResponse,
-    MetricsResponse,
-    LogEntry,
-    PaginationParams,
-    IDParams,
-    ProjectIDParams,
-    ChapterIDParams,
-    ScanRequest,
-    ScanResponse,
-    DOIVerifyRequest,
-    DOIVerifyResponse,
-    RegulationVerifyRequest,
-    RegulationVerifyResponse,
-    SemanticScanRequest,
-    SemanticScanResponse,
-)
-from api.schemas.project import (
-    ProjectCreate,
-    ProjectUpdate,
-    ProjectResponse,
-    ProjectListResponse,
-    ProjectMemberAdd,
-    ProjectMemberResponse,
-    ProjectStats,
+    UserUpdate,
 )
 from api.schemas.chapter import (
     ChapterCreate,
-    ChapterUpdate,
     ChapterResponse,
-    ReviewSubmit,
+    ChapterUpdate,
+    ContentVersionResponse,
     ReviewApprove,
     ReviewReject,
     ReviewResponse,
+    ReviewSubmit,
     SectionCreate,
-    SectionUpdate,
     SectionResponse,
-    ContentVersionResponse,
+    SectionUpdate,
+)
+from api.schemas.common import (
+    ChapterIDParams,
+    DOIVerifyRequest,
+    DOIVerifyResponse,
+    ErrorResponse,
+    HealthResponse,
+    IDParams,
+    LogEntry,
+    MetricsResponse,
+    PaginatedResponse,
+    PaginationParams,
+    ProjectIDParams,
+    RegulationVerifyRequest,
+    RegulationVerifyResponse,
+    ScanRequest,
+    ScanResponse,
+    SemanticScanRequest,
+    SemanticScanResponse,
+    SuccessResponse,
+)
+from api.schemas.project import (
+    ProjectCreate,
+    ProjectMemberAdd,
+    ProjectResponse,
+    ProjectStats,
+    ProjectUpdate,
 )
 from api.schemas.term import (
+    CitationCreate,
+    CitationResponse,
+    ConceptCreate,
+    ConceptResponse,
+    ConceptUpdate,
     TermCreate,
-    TermUpdate,
     TermLockRequest,
     TermResponse,
     TermSearchRequest,
-    TermSearchResponse,
-    ConceptCreate,
-    ConceptUpdate,
-    ConceptResponse,
-    CitationCreate,
-    CitationResponse,
+    TermUpdate,
 )
+from pydantic import ValidationError
 
 
 class TestAuthSchemas:

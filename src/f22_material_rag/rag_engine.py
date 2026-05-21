@@ -4,13 +4,14 @@ F22: 素材RAG召回引擎
 基于知识图谱和上下文预算管理器的检索增强生成召回系统
 """
 
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
-import numpy as np
 import os
+from dataclasses import dataclass, field
+from typing import Any
 
-from f22_material_rag.material import Material
+import numpy as np
+
 from f22_material_rag.embedding_client import MiniMaxEmbeddingClient
+from f22_material_rag.material import Material
 from f22_material_rag.vector_store import InMemoryVectorStore
 
 
@@ -21,8 +22,8 @@ class RetrievedMaterial:
     content: str
     score: float
     token_count: int
-    source_chapter_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    source_chapter_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class MaterialRAGEngine:
@@ -42,7 +43,7 @@ class MaterialRAGEngine:
         self.kg = knowledge_graph
         self.budget = context_budget
         self.embedding_dim = embedding_dim or self.DEFAULT_EMBEDDING_DIM
-        
+
         # KG-003: Use environment variable instead of hardcoded mock key
         api_key = os.environ.get("MINIMAX_API_KEY", "")
         self.embedding_model = embedding_model or MiniMaxEmbeddingClient(
@@ -50,9 +51,9 @@ class MaterialRAGEngine:
             dimension=self.embedding_dim
         )
         self.vector_store = InMemoryVectorStore(dimension=self.embedding_dim)
-        self._materials: Dict[str, Material] = {}
-        self._embeddings: Dict[str, np.ndarray] = {}
-        self._embedding_cache: Dict[str, np.ndarray] = {}  # KG-007: Cache for embeddings
+        self._materials: dict[str, Material] = {}
+        self._embeddings: dict[str, np.ndarray] = {}
+        self._embedding_cache: dict[str, np.ndarray] = {}  # KG-007: Cache for embeddings
 
     def add_material(self, material_data: dict) -> None:
         """
@@ -96,7 +97,7 @@ class MaterialRAGEngine:
         use_kg_enhancement: bool = False,
         deduplicate: bool = True,
         similarity_threshold: float = 0.9,
-    ) -> List[RetrievedMaterial]:
+    ) -> list[RetrievedMaterial]:
         """
         检索相关素材
 
@@ -156,7 +157,7 @@ class MaterialRAGEngine:
 
     def build_context_from_materials(
         self,
-        materials: List[RetrievedMaterial],
+        materials: list[RetrievedMaterial],
         max_tokens: int = None,
     ) -> str:
         """
@@ -193,11 +194,11 @@ class MaterialRAGEngine:
         """Smart truncation that breaks at word boundary"""
         if len(text) <= max_chars:
             return text
-        
+
         truncated = text[:max_chars]
         last_space = truncated.rfind(' ')
         last_newline = truncated.rfind('\n')
-        
+
         # Break at the last space or newline before max_chars
         break_point = max(last_space, last_newline)
         if break_point > max_chars * 0.7:  # Only break if we don't lose too much
@@ -208,7 +209,7 @@ class MaterialRAGEngine:
         """获取素材数量"""
         return len(self._materials)
 
-    def get_embedding(self, material_id: str) -> Optional[np.ndarray]:
+    def get_embedding(self, material_id: str) -> np.ndarray | None:
         """获取素材嵌入"""
         return self._embeddings.get(material_id)
 
@@ -219,11 +220,11 @@ class MaterialRAGEngine:
         """
         if not text:
             return 0
-        
+
         # Simple approximation: count characters and adjust by language
         chinese_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
         other_chars = len(text) - chinese_chars
-        
+
         # Rough approximation: Chinese ~1 char/token, English ~3.5 chars/token
         estimated = chinese_chars + (other_chars / 3.5)
         return max(1, int(estimated))
@@ -232,21 +233,21 @@ class MaterialRAGEngine:
         """KG-007: Get embedding from cache or generate new one"""
         if text in self._embedding_cache:
             return self._embedding_cache[text]
-        
+
         embedding = self.embedding_model.generate_embedding(text)
         self._embedding_cache[text] = embedding
         return embedding
 
     def _kg_enhance_results(
         self,
-        results: List[Dict[str, Any]],
+        results: list[dict[str, Any]],
         query: str,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """知识图谱增强检索结果"""
         if not self.kg:
             return results
 
-        query_embedding = self._get_or_generate_embedding(query)
+        self._get_or_generate_embedding(query)
         query_terms = set(query.lower().split())
 
         enhanced_results = []
@@ -284,9 +285,9 @@ class MaterialRAGEngine:
 
     def _deduplicate_results(
         self,
-        results: List[Dict[str, Any]],
+        results: list[dict[str, Any]],
         threshold: float = 0.9,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """去重相似结果"""
         if not results:
             return results

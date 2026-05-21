@@ -12,17 +12,11 @@ Tests for chapter endpoints:
 - POST /api/chapters/{id}/reject - Reject chapter
 """
 
-import pytest
-from datetime import datetime
 
-from api.deps import generate_uuid, create_access_token
 from tests.api.conftest import (
-    create_test_project,
     create_test_chapter,
-    create_test_user,
+    create_test_project,
     create_test_section,
-    get_auth_header,
-    get_csrf_headers,
 )
 
 

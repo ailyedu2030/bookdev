@@ -13,14 +13,12 @@ F31: MiniMax M2.7 API客户端 - TDD RED阶段测试
 - 单元测试覆盖率 ≥80%
 """
 
-import pytest
 import json
 import time
-import asyncio
-import aiohttp
-from unittest.mock import AsyncMock, MagicMock, patch, ANY
-from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
+import pytest
 
 # ============================================================================
 # RateLimiter 测试
@@ -534,7 +532,7 @@ class TestMiniMaxClient:
     @pytest.mark.asyncio
     async def test_mock_client_rate_limit(self):
         """F31-T037: Mock客户端速率限制"""
-        from f31_minimax_client.minimax_client import MockMiniMaxClient, MiniMaxClientError
+        from f31_minimax_client.minimax_client import MiniMaxClientError, MockMiniMaxClient
         from f31_minimax_client.rate_limiter import RateLimiter
 
         # 使用低限制测试
@@ -639,8 +637,8 @@ class TestMiniMaxClient:
     @pytest.mark.asyncio
     async def test_client_usage_stats_format(self):
         """F31-T044: 使用统计格式正确"""
-        from f31_minimax_client.minimax_client import MockMiniMaxClient
         from f31_minimax_client.cost_tracker import UsageStats
+        from f31_minimax_client.minimax_client import MockMiniMaxClient
 
         client = MockMiniMaxClient()
         await client.generate(system_prompt="s", user_prompt="u")
@@ -669,7 +667,7 @@ class TestMiniMaxClient:
     @pytest.mark.asyncio
     async def test_generate_with_retry_all_fail(self):
         """F31-T046: 全部重试失败时抛出异常"""
-        from f31_minimax_client.minimax_client import MockMiniMaxClient, MiniMaxClientError
+        from f31_minimax_client.minimax_client import MiniMaxClientError, MockMiniMaxClient
         from f31_minimax_client.rate_limiter import RateLimiter
 
         # 创建rate_limit=1的客户端
@@ -1064,9 +1062,9 @@ class TestMiniMaxClientMockBranches:
 
     def test_mock_minimax_client_init(self):
         """F31-T065: MockMiniMaxClient初始化 (covers MockMiniMaxClient.__init__)"""
+        from f31_minimax_client.cost_tracker import CostTracker
         from f31_minimax_client.minimax_client import MockMiniMaxClient
         from f31_minimax_client.rate_limiter import RateLimiter
-        from f31_minimax_client.cost_tracker import CostTracker
         from f31_minimax_client.token_counter import TokenCounter
 
         limiter = RateLimiter(max_rpm=30)
@@ -1100,7 +1098,7 @@ class TestMiniMaxClientMockBranches:
 
     def test_generate_result_defaults(self):
         """F31-T067: GenerateResult默认值和post_init"""
-        from f31_minimax_client.minimax_client import GenerateResult, TokenUsage
+        from f31_minimax_client.minimax_client import GenerateResult
 
         result = GenerateResult(content="test")
         assert result.finish_reason == "stop"

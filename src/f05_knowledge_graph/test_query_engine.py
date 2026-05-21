@@ -3,9 +3,10 @@ F05: QueryEngine Tests
 """
 
 import pytest
-from f05_knowledge_graph.nodes import ConceptNode, ChapterNode, NodeType, NodeStatus
-from f05_knowledge_graph.edges import Edge, EdgeType
+
+from f05_knowledge_graph.edges import EdgeType
 from f05_knowledge_graph.knowledge_graph import KnowledgeGraph
+from f05_knowledge_graph.nodes import NodeStatus, NodeType
 from f05_knowledge_graph.query_engine import QueryEngine
 
 
@@ -14,14 +15,14 @@ def knowledge_graph():
     """Create a test knowledge graph with sample data"""
     kg = KnowledgeGraph()
 
-    chapter1 = kg.create_chapter(
+    kg.create_chapter(
         chapter_id="chapter1",
         title="Introduction",
         order=1,
         status=NodeStatus.PUBLISHED,
     )
 
-    concept1 = kg.create_concept(
+    kg.create_concept(
         concept_id="concept1",
         name="Machine Learning",
         definition="A subset of AI",
@@ -30,7 +31,7 @@ def knowledge_graph():
         source_chapter_id="chapter1",
     )
 
-    concept2 = kg.create_concept(
+    kg.create_concept(
         concept_id="concept2",
         name="Deep Learning",
         definition="Neural networks with multiple layers",
@@ -39,7 +40,7 @@ def knowledge_graph():
         source_chapter_id="chapter1",
     )
 
-    concept3 = kg.create_concept(
+    kg.create_concept(
         concept_id="concept3",
         name="Python",
         definition="A programming language",

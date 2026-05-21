@@ -7,10 +7,11 @@ AuditLogRepository - 审计日志仓储
 from __future__ import annotations
 
 import uuid
+from collections.abc import Sequence
 from datetime import datetime, timedelta
-from typing import Any, Optional, Sequence
+from typing import Any
 
-from sqlalchemy import select, func, and_, or_, text
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import AuditLog
@@ -60,7 +61,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         self,
         event_type: str,
         *,
-        since: Optional[datetime] = None,
+        since: datetime | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> Sequence[AuditLog]:
@@ -109,13 +110,13 @@ class AuditLogRepository(BaseRepository[AuditLog]):
     async def search_logs(
         self,
         *,
-        event_type: Optional[str] = None,
-        user_id: Optional[uuid.UUID] = None,
-        resource_type: Optional[str] = None,
-        action: Optional[str] = None,
-        result: Optional[str] = None,
-        since: Optional[datetime] = None,
-        until: Optional[datetime] = None,
+        event_type: str | None = None,
+        user_id: uuid.UUID | None = None,
+        resource_type: str | None = None,
+        action: str | None = None,
+        result: str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> Sequence[AuditLog]:
@@ -148,15 +149,15 @@ class AuditLogRepository(BaseRepository[AuditLog]):
     async def create_log(
         self,
         event_type: str,
-        action: Optional[str] = None,
-        result: Optional[str] = None,
-        user_id: Optional[uuid.UUID] = None,
-        resource_type: Optional[str] = None,
-        resource_id: Optional[uuid.UUID] = None,
-        details: Optional[dict[str, Any]] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
-        signature: Optional[str] = None,
+        action: str | None = None,
+        result: str | None = None,
+        user_id: uuid.UUID | None = None,
+        resource_type: str | None = None,
+        resource_id: uuid.UUID | None = None,
+        details: dict[str, Any] | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        signature: str | None = None,
     ) -> AuditLog:
         """创建审计日志的便捷方法"""
         return await self.create(
@@ -173,7 +174,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         )
 
     async def count_by_event_type(
-        self, event_type: str, *, since: Optional[datetime] = None
+        self, event_type: str, *, since: datetime | None = None
     ) -> int:
         """统计特定事件类型的日志数量"""
         if since:
@@ -192,7 +193,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         return await self.count(filters={"event_type": event_type})
 
     async def count_by_user(
-        self, user_id: uuid.UUID, *, since: Optional[datetime] = None
+        self, user_id: uuid.UUID, *, since: datetime | None = None
     ) -> int:
         """统计用户的日志数量"""
         if since:
@@ -213,7 +214,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
     async def get_failed_actions(
         self,
         *,
-        since: Optional[datetime] = None,
+        since: datetime | None = None,
         limit: int = 100,
     ) -> Sequence[AuditLog]:
         """获取失败的操作日志"""
@@ -235,7 +236,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         self,
         ip_address: str,
         *,
-        since: Optional[datetime] = None,
+        since: datetime | None = None,
         limit: int = 100,
     ) -> Sequence[AuditLog]:
         """根据 IP 地址获取日志"""

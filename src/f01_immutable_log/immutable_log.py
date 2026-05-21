@@ -7,9 +7,8 @@ F01: 不可变日志系统 - GREEN阶段实现
 
 import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 class ImmutableLogError(Exception):
@@ -36,7 +35,7 @@ class LogEntry:
     timestamp: datetime
     operation_type: str
     payload: dict
-    previous_hash: Optional[str]
+    previous_hash: str | None
 
     def modify(self, new_payload: dict) -> None:
         """
@@ -60,7 +59,7 @@ class ImmutableLog:
 
     def __init__(self):
         self._entries: list[LogEntry] = []
-        self._chain_hash: Optional[str] = None
+        self._chain_hash: str | None = None
 
     def append(self, operation_type: str, payload: dict) -> LogEntry:
         """
@@ -98,7 +97,7 @@ class ImmutableLog:
         """获取所有日志条目"""
         return self._entries.copy()
 
-    def get_latest_hash(self) -> Optional[str]:
+    def get_latest_hash(self) -> str | None:
         """获取最新条目的版本戳"""
         if not self._entries:
             return None
@@ -106,13 +105,13 @@ class ImmutableLog:
 
 
 # 全局链状态(用于create_log_entry的链式调用)
-_global_chain_hash: Optional[str] = None
+_global_chain_hash: str | None = None
 
 
 def create_log_entry(
     operation_type: str,
     payload: dict,
-    previous_hash: Optional[str] = None
+    previous_hash: str | None = None
 ) -> LogEntry:
     """
     创建单个日志条目的便捷函数

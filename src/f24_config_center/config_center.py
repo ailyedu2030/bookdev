@@ -4,9 +4,9 @@ F24: 配置中心 - GREEN阶段实现
 按照TDD原则，此实现仅包含让测试通过的最简代码。
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Optional, List, Dict
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
 
 
 @dataclass
@@ -23,10 +23,10 @@ class ConfigCenter:
     """配置中心"""
 
     def __init__(self):
-        self.configs: Dict[str, Any] = {}
-        self.version_history: List[ConfigVersion] = []
-        self._version_counters: Dict[str, int] = {}
-        self._key_histories: Dict[str, List[ConfigVersion]] = {}
+        self.configs: dict[str, Any] = {}
+        self.version_history: list[ConfigVersion] = []
+        self._version_counters: dict[str, int] = {}
+        self._key_histories: dict[str, list[ConfigVersion]] = {}
 
     def get_config(self, key: str, default: Any = None) -> Any:
         """获取配置"""
@@ -43,7 +43,7 @@ class ConfigCenter:
             key=key,
             value=value,
             previous_value=previous_value,
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(UTC)
         )
 
         if key not in self._key_histories:
@@ -54,7 +54,7 @@ class ConfigCenter:
         self.configs[key] = value
         return config_version
 
-    def get_version_history(self, key: str) -> List[ConfigVersion]:
+    def get_version_history(self, key: str) -> list[ConfigVersion]:
         """获取配置版本历史"""
         return self._key_histories.get(key, [])
 
@@ -76,6 +76,6 @@ class ConfigCenter:
         self.set_config(key, target_version.value)
         return True
 
-    def get_all_keys(self) -> List[str]:
+    def get_all_keys(self) -> list[str]:
         """获取所有配置键"""
         return list(self.configs.keys())

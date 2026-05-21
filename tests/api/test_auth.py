@@ -8,19 +8,14 @@ Tests for authentication endpoints:
 - POST /api/auth/logout - Logout
 """
 
-import pytest
-from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
+from datetime import UTC
+from unittest.mock import patch
 
+import pytest
 from api.deps import (
     create_access_token,
     create_refresh_token,
-    decode_token,
-    get_password_hash,
-    verify_password,
-    generate_uuid,
 )
-from tests.api.conftest import get_auth_header, get_csrf_headers
 
 
 class TestRegistration:
@@ -206,11 +201,12 @@ class TestTokenRefresh:
 
     def test_refresh_token_expired(self, test_client, test_db, test_user):
         """Test refresh with expired token fails"""
-        from datetime import datetime, timedelta, timezone
-        from jose import jwt
-        from api.deps import REFRESH_SECRET_KEY, ALGORITHM
+        from datetime import datetime, timedelta
 
-        now = datetime.now(timezone.utc)
+        from api.deps import ALGORITHM, REFRESH_SECRET_KEY
+        from jose import jwt
+
+        now = datetime.now(UTC)
         expired_token = jwt.encode(
             {
                 "sub": test_user.id,
@@ -385,8 +381,6 @@ class TestRefreshTokenEdgeCases:
 
     def test_refresh_token_user_not_found(self, test_client, test_db, test_user):
         """Test refresh with valid token but user deleted from DB (line 178)"""
-        from jose import jwt
-        from api.deps import REFRESH_SECRET_KEY, ALGORITHM
 
         token = create_refresh_token({
             "sub": test_user.id,

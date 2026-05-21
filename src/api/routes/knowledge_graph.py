@@ -11,22 +11,20 @@ Handles knowledge graph operations:
 """
 
 from datetime import datetime
-from typing import Optional, List, Any, Literal
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
-from pydantic import BaseModel, Field
-from pydantic import BaseModel
 
-from api.schemas.common import SuccessResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
+
 from api.deps import (
-    get_db,
-    get_current_active_user,
     DatabaseSession,
     User,
+    generate_uuid,
+    get_db,
     require_permission,
     require_role,
-    generate_uuid,
 )
 from api.middleware.csrf import csrf_protect
+from api.schemas.common import SuccessResponse
 
 router = APIRouter(prefix="/api/knowledge-graph", tags=["Knowledge Graph"])
 
@@ -41,14 +39,14 @@ class NodeResponse(BaseModel):
     node_type: str
     properties: dict
     created_at: str
-    updated_at: Optional[str] = None
+    updated_at: str | None = None
 
 
 class EdgeCreate(BaseModel):
     source_id: str
     target_id: str
     edge_type: str
-    properties: Optional[dict] = None
+    properties: dict | None = None
 
 
 class EdgeResponse(BaseModel):
@@ -62,15 +60,15 @@ class EdgeResponse(BaseModel):
 
 class GraphQueryRequest(BaseModel):
     query: str = Field(..., max_length=500)
-    node_types: Optional[List[str]] = None
-    max_depth: Optional[int] = Field(default=3, ge=1, le=10)
-    limit: Optional[int] = Field(default=100, ge=1, le=1000)
+    node_types: list[str] | None = None
+    max_depth: int | None = Field(default=3, ge=1, le=10)
+    limit: int | None = Field(default=100, ge=1, le=1000)
 
 
 class GraphQueryResponse(BaseModel):
     success: bool = True
-    nodes: List[NodeResponse]
-    edges: List[EdgeResponse]
+    nodes: list[NodeResponse]
+    edges: list[EdgeResponse]
     total_nodes: int
     total_edges: int
 
@@ -80,9 +78,9 @@ _in_memory_edges: dict = {}
 _edge_id_counter = 0
 
 
-@router.get("/nodes", response_model=List[NodeResponse])
+@router.get("/nodes", response_model=list[NodeResponse])
 async def list_nodes(
-    node_type: Optional[str] = Query(default=None),
+    node_type: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=50, ge=1, le=200),
     user: User = Depends(require_permission("knowledge_graph:read")),
@@ -100,7 +98,7 @@ async def list_nodes(
     if node_type:
         nodes = [n for n in nodes if n.get("node_type") == node_type]
 
-    total = len(nodes)
+    len(nodes)
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
 
@@ -235,11 +233,11 @@ async def delete_node(
     )
 
 
-@router.get("/edges", response_model=List[EdgeResponse])
+@router.get("/edges", response_model=list[EdgeResponse])
 async def list_edges(
-    edge_type: Optional[str] = Query(default=None),
-    source_id: Optional[str] = Query(default=None),
-    target_id: Optional[str] = Query(default=None),
+    edge_type: str | None = Query(default=None),
+    source_id: str | None = Query(default=None),
+    target_id: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=50, ge=1, le=200),
     user: User = Depends(require_permission("knowledge_graph:read")),
@@ -263,7 +261,7 @@ async def list_edges(
     if target_id:
         edges = [e for e in edges if e.get("target_id") == target_id]
 
-    total = len(edges)
+    len(edges)
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
 

@@ -2,14 +2,12 @@
 F26: 血缘追踪系统 - 影响分析器
 计算数据变更对下游的影响范围
 """
-from typing import List, Set, Dict, Any
-from dataclasses import dataclass, field
 import logging
 
 logger = logging.getLogger(__name__)
 
+from lineage_node import ImpactReport
 from lineage_tracker import DataLineageTracker
-from lineage_node import LineageNode, ImpactReport
 
 
 class ImpactAnalyzer:
@@ -31,9 +29,9 @@ class ImpactAnalyzer:
                 critical_paths=[]
             )
 
-        affected_nodes: List[str] = []
+        affected_nodes: list[str] = []
         max_depth = 0
-        critical_paths: List[List[str]] = []
+        critical_paths: list[list[str]] = []
 
         if node_id not in self.tracker.lineage_graph:
             return ImpactReport(
@@ -76,10 +74,10 @@ class ImpactAnalyzer:
     def _find_critical_paths(
         self,
         source_id: str,
-        target_ids: List[str]
-    ) -> List[List[str]]:
+        target_ids: list[str]
+    ) -> list[list[str]]:
         """查找关键路径"""
-        paths: List[List[str]] = []
+        paths: list[list[str]] = []
 
         try:
             for target_id in target_ids[:5]:
@@ -112,7 +110,7 @@ class ImpactAnalyzer:
                 critical_paths=[]
             )
 
-        affected_nodes: List[str] = []
+        affected_nodes: list[str] = []
 
         if node_id in self.tracker.lineage_graph:
             try:

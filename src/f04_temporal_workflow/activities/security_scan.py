@@ -13,7 +13,7 @@
 
 import hashlib
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..workflows.mock_client import TemporalActivity
 
@@ -48,7 +48,7 @@ async def scan_chapter(
     chapter_id: str,
     content: str,
     scan_level: str = "STANDARD",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """扫描单个章节的安全合规性 (幂等)"""
     logger.info(f"[SecurityScan] Scanning chapter '{chapter_id}' (level={scan_level})")
 
@@ -62,7 +62,7 @@ async def scan_chapter(
     }
 
     # 汇总
-    total_checks = sum(len(v.get("findings", v if isinstance(v, list) else [])) for v in results.values() if isinstance(v, (dict, list)))
+    total_checks = sum(len(v.get("findings", v if isinstance(v, list) else [])) for v in results.values() if isinstance(v, dict | list))
     violations = [
         finding
         for category in results.values()
@@ -97,9 +97,9 @@ async def scan_chapter(
     idempotent=True,
 )
 async def batch_scan_chapters(
-    chapters: List[Dict[str, Any]],
+    chapters: list[dict[str, Any]],
     scan_level: str = "STANDARD",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     批量安全扫描 (幂等)
     TEMP-014: 添加了幂等性保护
@@ -147,7 +147,7 @@ async def batch_scan_chapters(
     }
 
 
-def _scan_sensitive_content(content: str) -> Dict[str, Any]:
+def _scan_sensitive_content(content: str) -> dict[str, Any]:
     """敏感内容检测"""
     findings = []
     content_lower = content.lower()
@@ -169,7 +169,7 @@ def _scan_sensitive_content(content: str) -> Dict[str, Any]:
     }
 
 
-def _scan_privacy(content: str) -> Dict[str, Any]:
+def _scan_privacy(content: str) -> dict[str, Any]:
     """隐私检查 - 检测潜在的个人信息泄露"""
     import re
 
@@ -198,7 +198,7 @@ def _scan_privacy(content: str) -> Dict[str, Any]:
     }
 
 
-def _scan_copyright(content: str) -> Dict[str, Any]:
+def _scan_copyright(content: str) -> dict[str, Any]:
     """版权合规检查"""
     findings = []
 
@@ -219,7 +219,7 @@ def _scan_copyright(content: str) -> Dict[str, Any]:
     }
 
 
-def _scan_compliance(content: str, scan_level: str) -> Dict[str, Any]:
+def _scan_compliance(content: str, scan_level: str) -> dict[str, Any]:
     """合规检查"""
     findings = []
 
@@ -251,7 +251,7 @@ def _scan_compliance(content: str, scan_level: str) -> Dict[str, Any]:
     }
 
 
-def _get_scan_recommendation(status: str, violations: List[Dict]) -> str:
+def _get_scan_recommendation(status: str, violations: list[dict]) -> str:
     if status == "PASS":
         return "SCAN_PASS - 安全扫描通过，内容可进入下一阶段"
     elif status == "WARNING":
@@ -265,9 +265,9 @@ class SecurityScan:
     """安全扫描活动集合"""
 
     @staticmethod
-    async def scan(chapter_id: str, content: str, scan_level: str = "STANDARD") -> Dict[str, Any]:
+    async def scan(chapter_id: str, content: str, scan_level: str = "STANDARD") -> dict[str, Any]:
         return await scan_chapter(chapter_id, content, scan_level)
 
     @staticmethod
-    async def batch_scan(chapters: List[Dict[str, Any]], scan_level: str = "STANDARD") -> Dict[str, Any]:
+    async def batch_scan(chapters: list[dict[str, Any]], scan_level: str = "STANDARD") -> dict[str, Any]:
         return await batch_scan_chapters(chapters, scan_level)
