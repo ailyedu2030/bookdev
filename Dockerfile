@@ -11,8 +11,7 @@ FROM python:3.11-slim-bookworm AS builder
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_IGNORE_INSTALLED=0
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /build
 
@@ -22,10 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml .
+COPY requirements.txt .
 
-RUN pip install --prefix=/install \
-    -r pyproject.toml
+RUN pip install --prefix=/install -r requirements.txt
 
 # =============================================================================
 # Stage 2: Runtime
