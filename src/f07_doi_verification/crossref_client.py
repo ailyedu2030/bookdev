@@ -20,8 +20,8 @@ class CrossRefClient:
 
         try:
             await asyncio.wait_for(asyncio.sleep(0.01), timeout=effective_timeout)  # Simulate network delay
-        except asyncio.TimeoutError:
-            raise asyncio.TimeoutError(f"Request timed out after {effective_timeout} seconds")
+        except TimeoutError:
+            raise TimeoutError(f"Request timed out after {effective_timeout} seconds")
 
         mock_dois = {
             "10.1234/example.123": {

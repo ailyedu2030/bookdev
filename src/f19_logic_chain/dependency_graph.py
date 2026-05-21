@@ -114,7 +114,7 @@ class DependencyGraph:
 
     def topological_sort(self) -> list[str]:
         """拓扑排序"""
-        in_degree = {node: 0 for node in self._nodes}
+        in_degree = dict.fromkeys(self._nodes, 0)
         for _source, targets in self._adjacency.items():
             for target in targets:
                 in_degree[target] += 1

@@ -160,7 +160,7 @@ class DOIVerifier:
 
             return DOIResult(exists=True, doi=doi, metadata=metadata, status=DOIValidationStatus.EXISTS)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return DOIResult(
                 exists=False,
                 doi=doi,

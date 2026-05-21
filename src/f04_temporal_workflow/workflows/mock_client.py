@@ -482,7 +482,7 @@ class MockTemporalClient:
                     logger.info(f"[MockTemporal] Activity '{activity_name}' completed (attempt {attempt})")
                     return result
 
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     last_error = TimeoutError(f"Activity '{activity_name}' timed out after {timeout}s")
                     ctx.error = str(last_error)
                     logger.warning(f"[MockTemporal] Activity '{activity_name}' timed out (attempt {attempt})")

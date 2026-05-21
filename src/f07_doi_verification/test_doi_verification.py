@@ -434,7 +434,7 @@ class TestDOIVerifierUncovered:
         verifier = DOIVerifier()
 
         with patch.object(verifier, "_fetch_doi_metadata", new_callable=AsyncMock) as mock_fetch:
-            mock_fetch.side_effect = asyncio.TimeoutError()
+            mock_fetch.side_effect = TimeoutError()
 
             result = await verifier.verify("10.1234/test")
 

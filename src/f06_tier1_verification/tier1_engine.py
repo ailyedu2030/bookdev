@@ -89,7 +89,7 @@ class Tier1Verifier:
                 external_value=external_data.get("value"),
             )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return VerificationResult(is_verified=False, reason="TIMEOUT", status=VerificationStatus.TIMEOUT)
         except (ValueError, TypeError, KeyError, AttributeError) as e:
             # VM-010: Only catch expected exceptions, not system-exiting ones
