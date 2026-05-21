@@ -59,12 +59,13 @@ class RealEventBus:
         self._consumer_group = config.get("consumer_group", "textbook-system")
         self._topic_prefix = config.get("topic_prefix", "textbook")
 
-        self._producer: "RealKafkaProducer" | None = None
+        from f00_kafka_eventbus.real_producer import RealKafkaProducer
+        self._producer: RealKafkaProducer | None = None
         self._consumers: dict = {}
         self._subscribers: dict = {}
         self._dlq_handlers: list = []
         self._running = False
-        self._dlq_handler: "DLQHandler" | None = None
+        self._dlq_handler = None
 
     async def initialize(self) -> None:
         """初始化事件总线"""

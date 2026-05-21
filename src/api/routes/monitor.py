@@ -199,7 +199,7 @@ async def get_alerts(
     alerts = []
 
     try:
-        from f28_monitoring_dashboard.monitoring_dashboard import Alert, MonitoringDashboard
+        from f28_monitoring_dashboard.monitoring_dashboard import MonitoringDashboard
 
         dashboard = MonitoringDashboard()
 

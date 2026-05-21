@@ -2,6 +2,7 @@
 Term Check Activity - 术语检查
 """
 
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 
